@@ -36,19 +36,29 @@ PROMETHEUS_CONFIG_DIR="/etc/prometheus"
 PROMETHEUS_DATA_DIR="/var/lib/prometheus/data"
 PROMETHEUS_CONFIG_FILE="${PROMETHEUS_CONFIG_DIR}/prometheus.yml"
 
-# Create Prometheus configuration
-create_prometheus_config() {
-    log_info "Creating Prometheus configuration..."
+# Prepare host volumes and directories
+prepare_prometheus_directories() {
+    log_info "Preparing Prometheus host volumes and directories..."
     
-    # Create directories
+    # Create Prometheus configuration directory
     mkdir -p "${PROMETHEUS_CONFIG_DIR}"
+    
+    # Create Prometheus data directory
     mkdir -p "${PROMETHEUS_DATA_DIR}"
     
-    # Backup existing config if it exists
-    if [[ -f "${PROMETHEUS_CONFIG_FILE}" ]]; then
+    # Create prometheus.yml if it doesn't exist
+    if [[ ! -f "${PROMETHEUS_CONFIG_FILE}" ]]; then
+        touch "${PROMETHEUS_CONFIG_FILE}"
+        log_info "Created ${PROMETHEUS_CONFIG_FILE}"
+    else
         log_warn "Backing up existing Prometheus configuration..."
         cp "${PROMETHEUS_CONFIG_FILE}" "${PROMETHEUS_CONFIG_FILE}.backup.$(date +%Y%m%d_%H%M%S)"
     fi
+}
+
+# Create Prometheus configuration
+create_prometheus_config() {
+    log_info "Creating Prometheus configuration..."
     
     # Create Prometheus configuration
     cat > "${PROMETHEUS_CONFIG_FILE}" << 'PROMETHEUS_EOF'
@@ -113,25 +123,23 @@ deploy_prometheus() {
     fi
     
     # Pull latest image
-    log_info "Pulling Prometheus image..."
+    log_info "Pulling Prometheus image: ${PROMETHEUS_IMAGE}..."
     podman pull "${PROMETHEUS_IMAGE}" || {
-        log_error "Failed to pull Prometheus image"
+        log_error "Failed to pull Prometheus image: ${PROMETHEUS_IMAGE}"
+        log_error "Ensure you have internet connectivity and Podman can access Docker Hub"
         exit 1
     }
+    log_info "Successfully pulled Prometheus image: ${PROMETHEUS_IMAGE}"
     
     # Run Prometheus container
     log_info "Starting Prometheus container..."
     podman run -d \
         --name "${PROMETHEUS_CONTAINER_NAME}" \
+        -v /etc/hosts:/etc/hosts:Z \
+        -v "${PROMETHEUS_CONFIG_DIR}:/etc/prometheus:Z" \
         -p "${PROMETHEUS_PORT}:9090" \
-        -v "${PROMETHEUS_CONFIG_DIR}:/etc/prometheus:ro" \
-        -v "${PROMETHEUS_DATA_DIR}:/prometheus" \
-        --restart=unless-stopped \
         "${PROMETHEUS_IMAGE}" \
-        --config.file=/etc/prometheus/prometheus.yml \
-        --storage.tsdb.path=/prometheus \
-        --web.console.libraries=/usr/share/prometheus/console_libraries \
-        --web.console.templates=/usr/share/prometheus/consoles || {
+        --config.file=/etc/prometheus/prometheus.yml || {
         log_error "Failed to start Prometheus container"
         exit 1
     }
@@ -191,6 +199,9 @@ main() {
         log_error "This script must be run as root or with sudo"
         exit 1
     fi
+    
+    # Prepare directories
+    prepare_prometheus_directories
     
     # Create configuration
     create_prometheus_config

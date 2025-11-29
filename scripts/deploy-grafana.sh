@@ -32,17 +32,48 @@ log_error() {
 GRAFANA_CONTAINER_NAME="grafana"
 GRAFANA_IMAGE="docker.io/grafana/grafana:latest"
 GRAFANA_PORT="3000"
-GRAFANA_CONFIG_DIR="/etc/grafana"
-GRAFANA_DATA_DIR="/var/lib/grafana/data"
+GRAFANA_DATA_DIR="/var/lib/grafana"
+GRAFANA_CONFIG_DIR="/etc/grafana/config"
 GRAFANA_CONFIG_FILE="${GRAFANA_CONFIG_DIR}/grafana.ini"
+GRAFANA_PROVISIONING_DIR="/etc/grafana/provisioning"
+GRAFANA_PROVISIONING_DASHBOARDS="${GRAFANA_PROVISIONING_DIR}/dashboards"
+GRAFANA_PROVISIONING_DATASOURCES="${GRAFANA_PROVISIONING_DIR}/datasources"
+GRAFANA_PROVISIONING_ALERTING="${GRAFANA_PROVISIONING_DIR}/alerting"
+
+# Prepare host volumes and directories
+prepare_grafana_directories() {
+    log_info "Preparing Grafana host volumes and directories..."
+    
+    # Data directory (DB files, plugins, uploads, etc.)
+    mkdir -p "${GRAFANA_DATA_DIR}"
+    
+    # Main Grafana config directory
+    mkdir -p "${GRAFANA_CONFIG_DIR}"
+    
+    # Provisioning subdirectories
+    mkdir -p "${GRAFANA_PROVISIONING_DASHBOARDS}"
+    mkdir -p "${GRAFANA_PROVISIONING_DATASOURCES}"
+    mkdir -p "${GRAFANA_PROVISIONING_ALERTING}"
+    
+    log_info "Grafana directories created"
+}
+
+# Set permissions (SELinux/Ownership)
+set_grafana_permissions() {
+    log_info "Setting Grafana directory permissions..."
+    
+    # Set ownership to Grafana user (UID 472), recommended for volume mounts
+    chown -R 472:472 "${GRAFANA_CONFIG_DIR}" || log_warn "Could not set ownership for config directory"
+    chown -R 472:472 "${GRAFANA_DATA_DIR}" || log_warn "Could not set ownership for data directory"
+    chown -R 472:472 "${GRAFANA_PROVISIONING_DIR}" || log_warn "Could not set ownership for provisioning directory"
+    
+    log_info "Permissions set (UID 472:472 for Grafana user)"
+    log_info "Note: :Z flag in Podman volumes will handle SELinux context"
+}
 
 # Create Grafana configuration
 create_grafana_config() {
     log_info "Creating Grafana configuration..."
-    
-    # Create directories
-    mkdir -p "${GRAFANA_CONFIG_DIR}"
-    mkdir -p "${GRAFANA_DATA_DIR}"
     
     # Backup existing config if it exists
     if [[ -f "${GRAFANA_CONFIG_FILE}" ]]; then
@@ -100,20 +131,27 @@ deploy_grafana() {
     fi
     
     # Pull latest image
-    log_info "Pulling Grafana image..."
+    log_info "Pulling Grafana image: ${GRAFANA_IMAGE}..."
     podman pull "${GRAFANA_IMAGE}" || {
-        log_error "Failed to pull Grafana image"
+        log_error "Failed to pull Grafana image: ${GRAFANA_IMAGE}"
+        log_error "Ensure you have internet connectivity and Podman can access Docker Hub"
         exit 1
     }
+    log_info "Successfully pulled Grafana image: ${GRAFANA_IMAGE}"
     
     # Run Grafana container
     log_info "Starting Grafana container..."
     podman run -d \
         --name "${GRAFANA_CONTAINER_NAME}" \
+        --dns 8.8.8.8 \
+        --dns 1.1.1.1 \
         -p "${GRAFANA_PORT}:3000" \
-        -v "${GRAFANA_CONFIG_DIR}:/etc/grafana:ro" \
-        -v "${GRAFANA_DATA_DIR}:/var/lib/grafana" \
-        --restart=unless-stopped \
+        -v /etc/hosts:/etc/hosts:Z \
+        -v "${GRAFANA_DATA_DIR}:/var/lib/grafana:Z" \
+        -v "${GRAFANA_CONFIG_FILE}:/etc/grafana/grafana.ini:Z" \
+        -v "${GRAFANA_PROVISIONING_ALERTING}:/etc/grafana/provisioning/alerting:Z" \
+        -v "${GRAFANA_PROVISIONING_DATASOURCES}:/etc/grafana/provisioning/datasources:Z" \
+        -v "${GRAFANA_PROVISIONING_DASHBOARDS}:/etc/grafana/provisioning/dashboards:Z" \
         "${GRAFANA_IMAGE}" || {
         log_error "Failed to start Grafana container"
         exit 1
@@ -174,6 +212,12 @@ main() {
         log_error "This script must be run as root or with sudo"
         exit 1
     fi
+    
+    # Prepare directories
+    prepare_grafana_directories
+    
+    # Set permissions
+    set_grafana_permissions
     
     # Create configuration
     create_grafana_config

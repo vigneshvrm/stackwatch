@@ -129,7 +129,43 @@ npm run build
 
 **Expected Result:** `dist/` directory created with frontend build files
 
+### 3.2.1 Set Script Execution Permissions
+
+**⚠️ MANDATORY STEP - Execute before running any scripts**
+
+**What chmod does:**
+The `chmod +x` command adds execute permission to files, allowing them to be run as programs. Without execute permission, the shell cannot execute the script files.
+
+**Why it is required:**
+Script files in the repository may not have execute permissions set by default. Attempting to run a script without execute permission will result in a "Permission denied" error.
+
+**What error occurs if skipped:**
+```bash
+bash: ./scripts/deploy-nginx.sh: Permission denied
+```
+
+**Set permissions for all deployment scripts:**
+```bash
+chmod +x ./scripts/deploy-nginx.sh
+chmod +x ./scripts/deploy-prometheus.sh
+chmod +x ./scripts/deploy-grafana.sh
+chmod +x ./scripts/configure-firewall.sh
+chmod +x ./scripts/deploy-stackbill.sh
+chmod +x ./scripts/health-check.sh
+```
+
+**Verification:**
+```bash
+ls -l ./scripts/*.sh
+```
+
+**Expected Result:** All script files show `-rwxr-xr-x` (execute permission enabled)
+
+**Note:** If you run scripts with `bash ./scripts/deploy-nginx.sh`, execute permissions are not required, but using `./scripts/deploy-nginx.sh` requires execute permissions.
+
 ### 3.3 Deploy Nginx
+
+**⚠️ IMPORTANT: Ensure script has execute permissions (see Section 3.2.1)**
 
 Run the Nginx deployment script:
 
@@ -199,6 +235,8 @@ podman --version
 
 ### 4.2 Deploy Prometheus
 
+**⚠️ IMPORTANT: Ensure script has execute permissions (see Section 3.2.1)**
+
 **Test Podman Image Pull (Recommended):**
 
 Before running the deployment script, test that Podman can pull the image:
@@ -222,13 +260,16 @@ sudo ./scripts/deploy-prometheus.sh
 ```
 
 **What the script does:**
-1. Creates Prometheus configuration directory: `/etc/prometheus`
-2. Creates Prometheus data directory: `/var/lib/prometheus/data`
-3. Generates initial `prometheus.yml` configuration file
-4. Pulls Prometheus container image (`docker.io/prom/prometheus:latest`)
-5. Runs Prometheus container on port 9090
-6. Creates systemd service for auto-start on boot
-7. Verifies container is running
+1. Prepares host volumes and directories:
+   - Creates `/etc/prometheus` directory
+   - Creates `/var/lib/prometheus/data` directory
+   - Creates `prometheus.yml` file if it doesn't exist
+2. Creates Prometheus configuration file at `/etc/prometheus/prometheus.yml`
+3. Pulls Prometheus container image (`docker.io/prom/prometheus:latest`)
+4. Runs Prometheus container with proper volume mounts and SELinux context (:Z flags)
+5. Creates systemd service for auto-start on boot
+6. Verifies container is running
+
 
 **Verification:**
 
@@ -287,11 +328,21 @@ sudo ./scripts/deploy-grafana.sh
 ```
 
 **What the script does:**
-1. Creates Grafana configuration directory: `/etc/grafana`
-2. Creates Grafana data directory: `/var/lib/grafana/data`
-3. Generates `grafana.ini` configuration file with sub-path support
+1. Prepares host volumes and directories:
+   - Creates `/var/lib/grafana` (data directory for DB files, plugins, uploads)
+   - Creates `/etc/grafana/config` (main Grafana config directory)
+   - Creates `/etc/grafana/provisioning/dashboards` (dashboard provisioning)
+   - Creates `/etc/grafana/provisioning/datasources` (datasource provisioning)
+   - Creates `/etc/grafana/provisioning/alerting` (alerting provisioning)
+2. Sets permissions:
+   - Sets ownership to Grafana user (UID 472:472) for all directories
+   - SELinux context handled by :Z flags in Podman volumes
+3. Creates `grafana.ini` configuration file at `/etc/grafana/config/grafana.ini`
 4. Pulls Grafana container image (`docker.io/grafana/grafana:latest`)
-5. Runs Grafana container on port 3000
+5. Runs Grafana container with:
+   - DNS servers (8.8.8.8, 1.1.1.1)
+   - Proper volume mounts with SELinux context (:Z flags)
+   - All provisioning directories mapped
 6. Creates systemd service for auto-start on boot
 7. Verifies container is running
 
