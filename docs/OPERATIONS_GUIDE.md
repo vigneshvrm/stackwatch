@@ -51,6 +51,7 @@ All services are accessible through Nginx at the root path (`/`), with Prometheu
 
 **On Control Node:**
 - Git (to clone repository)
+- Node.js 20.x (required for frontend build)
 - Ansible 2.9+ (for Linux Node Exporter deployment)
 - Podman (for Prometheus and Grafana containers)
 - Nginx (web server)
@@ -77,7 +78,31 @@ sudo yum install -y git ansible podman nginx python3
 ```bash
 sudo apt update
 sudo apt install -y git ansible podman nginx python3
+
+# Install Node.js 20.x (required for frontend build)
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt install nodejs -y
 ```
+
+**RHEL/CentOS:**
+```bash
+sudo yum install -y git ansible podman nginx python3
+
+# Install Node.js 20.x (required for frontend build)
+curl -fsSL https://rpm.nodesource.com/setup_20.x | sudo bash -
+sudo yum install -y nodejs
+```
+
+**Why Node.js is Required:**
+Node.js is required to build the StackBill frontend application. The frontend uses npm (Node Package Manager) to install dependencies and build the production-ready static files that Nginx serves. Node.js must be installed BEFORE building the frontend (Section 3.2).
+
+**Verify Node.js Installation:**
+```bash
+node --version
+npm --version
+```
+
+**Expected Result:** Node.js version 20.x and npm version displayed
 
 ---
 
@@ -174,7 +199,23 @@ podman --version
 
 ### 4.2 Deploy Prometheus
 
-Run the Prometheus deployment script:
+**Test Podman Image Pull (Recommended):**
+
+Before running the deployment script, test that Podman can pull the image:
+
+```bash
+# Test Prometheus image pull
+sudo podman pull docker.io/prom/prometheus:latest
+```
+
+**Expected Result:** Image downloads successfully without "short-name did not resolve" errors
+
+**Verify image is available:**
+```bash
+sudo podman images | grep prometheus
+```
+
+**Run the Prometheus deployment script:**
 
 ```bash
 sudo ./scripts/deploy-prometheus.sh
@@ -184,7 +225,7 @@ sudo ./scripts/deploy-prometheus.sh
 1. Creates Prometheus configuration directory: `/etc/prometheus`
 2. Creates Prometheus data directory: `/var/lib/prometheus/data`
 3. Generates initial `prometheus.yml` configuration file
-4. Pulls Prometheus container image (`prom/prometheus:latest`)
+4. Pulls Prometheus container image (`docker.io/prom/prometheus:latest`)
 5. Runs Prometheus container on port 9090
 6. Creates systemd service for auto-start on boot
 7. Verifies container is running
@@ -203,18 +244,43 @@ curl http://localhost/prometheus/-/healthy
 
 # Check systemd service (if created)
 sudo systemctl status container-prometheus.service
+
+# Check container logs for errors
+sudo podman logs prometheus | tail -20
 ```
 
 **Expected Result:**
 - Container is running
 - Health endpoint returns "Prometheus is Healthy."
 - Accessible via Nginx at `http://<server-ip>/prometheus`
+- No errors in container logs
+
+**If image pull failed:**
+- Verify internet connectivity: `ping 8.8.8.8`
+- Check Podman can access Docker Hub: `sudo podman pull docker.io/prom/prometheus:latest`
+- Review logs: `sudo podman logs prometheus`
 
 **Browser Access:** Open `http://<server-ip>/prometheus` in a web browser. You should see the Prometheus web UI.
 
 ### 4.3 Deploy Grafana
 
-Run the Grafana deployment script:
+**Test Podman Image Pull (Recommended):**
+
+Before running the deployment script, test that Podman can pull the image:
+
+```bash
+# Test Grafana image pull
+sudo podman pull docker.io/grafana/grafana:latest
+```
+
+**Expected Result:** Image downloads successfully without "short-name did not resolve" errors
+
+**Verify image is available:**
+```bash
+sudo podman images | grep grafana
+```
+
+**Run the Grafana deployment script:**
 
 ```bash
 sudo ./scripts/deploy-grafana.sh
@@ -224,7 +290,7 @@ sudo ./scripts/deploy-grafana.sh
 1. Creates Grafana configuration directory: `/etc/grafana`
 2. Creates Grafana data directory: `/var/lib/grafana/data`
 3. Generates `grafana.ini` configuration file with sub-path support
-4. Pulls Grafana container image (`grafana/grafana:latest`)
+4. Pulls Grafana container image (`docker.io/grafana/grafana:latest`)
 5. Runs Grafana container on port 3000
 6. Creates systemd service for auto-start on boot
 7. Verifies container is running
@@ -249,7 +315,15 @@ curl http://localhost/grafana/api/health
 
 # Check systemd service (if created)
 sudo systemctl status container-grafana.service
+
+# Check container logs for errors
+sudo podman logs grafana | tail -20
 ```
+
+**If image pull failed:**
+- Verify internet connectivity: `ping 8.8.8.8`
+- Check Podman can access Docker Hub: `sudo podman pull docker.io/grafana/grafana:latest`
+- Review logs: `sudo podman logs grafana`
 
 **Expected Result:**
 - Container is running
@@ -733,6 +807,105 @@ Use this checklist to verify the complete installation:
 
 ### 10.1 Nginx Issues
 
+**Problem: Nginx shows "Welcome to nginx!" instead of StackBill UI**
+
+This occurs when Nginx is serving the default site instead of the StackBill configuration.
+
+**Step 1: Verify Nginx root directory**
+
+```bash
+# Check which configuration Nginx is using
+sudo nginx -T | grep "root"
+
+# Check if StackBill config is loaded
+sudo nginx -T | grep "stackbill"
+```
+
+**Expected Result:** Should show `root /var/www/stackbill/dist;` in the active configuration
+
+**Step 2: Confirm StackBill files are present**
+
+```bash
+# Check if frontend files exist
+ls -la /var/www/stackbill/dist/
+
+# Verify index.html exists
+test -f /var/www/stackbill/dist/index.html && echo "File exists" || echo "File missing"
+```
+
+**Expected Result:** `index.html` and `assets/` directory should exist
+
+**Step 3: Check which config Nginx loaded**
+
+```bash
+# List enabled sites
+ls -la /etc/nginx/sites-enabled/
+
+# Check if StackBill config is enabled
+test -L /etc/nginx/sites-enabled/stackbill && echo "Enabled" || echo "Not enabled"
+
+# Check if default site is still enabled (this is the problem)
+test -L /etc/nginx/sites-enabled/default && echo "Default site enabled - DISABLE THIS" || echo "Default site disabled"
+```
+
+**Expected Result:** 
+- `/etc/nginx/sites-enabled/stackbill` should exist (symlink)
+- `/etc/nginx/sites-enabled/default` should NOT exist (or be disabled)
+
+**Step 4: Disable default site and enable StackBill**
+
+```bash
+# Disable default Nginx site (if it exists)
+sudo rm -f /etc/nginx/sites-enabled/default
+
+# Ensure StackBill site is enabled
+sudo ln -sf /etc/nginx/sites-available/stackbill /etc/nginx/sites-enabled/stackbill
+
+# Verify symlink
+ls -la /etc/nginx/sites-enabled/stackbill
+```
+
+**Expected Result:** Symlink points to `/etc/nginx/sites-available/stackbill`
+
+**Step 5: Reload Nginx properly**
+
+```bash
+# Test configuration first
+sudo nginx -t
+
+# If test passes, reload
+sudo systemctl reload nginx
+
+# OR if systemctl not available
+sudo service nginx reload
+
+# Verify Nginx is using correct config
+sudo nginx -T 2>&1 | grep -A 5 "server_name _"
+```
+
+**Expected Result:** Configuration shows `root /var/www/stackbill/dist;`
+
+**Step 6: Verify StackBill UI is served**
+
+```bash
+# Test from command line
+curl http://localhost/ | head -20
+
+# Check for StackBill content
+curl http://localhost/ | grep -i "stackbill"
+```
+
+**Expected Result:** HTML content contains "StackBill" text, not "Welcome to nginx!"
+
+**If files are missing, rebuild frontend:**
+```bash
+cd /opt/stackbill
+npm run build
+sudo ./scripts/deploy-nginx.sh
+```
+
+---
+
 **Problem: Nginx not serving StackBill frontend**
 
 **Check:**
@@ -773,6 +946,24 @@ curl http://localhost:3000/api/health
 
 ### 10.2 Prometheus Issues
 
+**Problem: Prometheus image pull fails**
+
+**Error:** `short-name "prom/prometheus:latest" did not resolve to an alias`
+
+**Check:**
+```bash
+# Test image pull manually
+sudo podman pull docker.io/prom/prometheus:latest
+
+# Check Podman registries configuration
+cat /etc/containers/registries.conf
+```
+
+**Solution:**
+- Script has been fixed to use `docker.io/prom/prometheus:latest`
+- If still failing, verify internet connectivity: `ping 8.8.8.8`
+- Check firewall allows outbound HTTPS (port 443) for Docker Hub access
+
 **Problem: Prometheus container not starting**
 
 **Check:**
@@ -788,6 +979,7 @@ sudo netstat -tlnp | grep :9090
 - If port conflict: Stop conflicting service or change Prometheus port
 - If configuration error: Check `/etc/prometheus/prometheus.yml` syntax
 - If permission error: Verify `/var/lib/prometheus/data` permissions
+- If image missing: Re-run deployment script or manually pull: `sudo podman pull docker.io/prom/prometheus:latest`
 
 **Problem: Prometheus targets showing DOWN**
 
@@ -809,6 +1001,24 @@ sudo ufw status              # UFW
 
 ### 10.3 Grafana Issues
 
+**Problem: Grafana image pull fails**
+
+**Error:** `short-name "grafana/grafana:latest" did not resolve`
+
+**Check:**
+```bash
+# Test image pull manually
+sudo podman pull docker.io/grafana/grafana:latest
+
+# Check Podman registries configuration
+cat /etc/containers/registries.conf
+```
+
+**Solution:**
+- Script has been fixed to use `docker.io/grafana/grafana:latest`
+- If still failing, verify internet connectivity: `ping 8.8.8.8`
+- Check firewall allows outbound HTTPS (port 443) for Docker Hub access
+
 **Problem: Cannot login to Grafana**
 
 **Check:**
@@ -824,6 +1034,24 @@ sudo podman logs grafana | tail -50
 - Default credentials: `admin` / `admin`
 - If forgot password: Reset via Grafana database or recreate container
 - If container not running: Restart with `sudo ./scripts/deploy-grafana.sh`
+
+**Problem: Grafana image pull fails**
+
+**Error:** `short-name "grafana/grafana:latest" did not resolve`
+
+**Check:**
+```bash
+# Test image pull manually
+sudo podman pull docker.io/grafana/grafana:latest
+
+# Check Podman registries configuration
+cat /etc/containers/registries.conf
+```
+
+**Solution:**
+- Script has been fixed to use `docker.io/grafana/grafana:latest`
+- If still failing, verify internet connectivity: `ping 8.8.8.8`
+- Check firewall allows outbound HTTPS (port 443) for Docker Hub access
 
 **Problem: Prometheus data source test fails**
 

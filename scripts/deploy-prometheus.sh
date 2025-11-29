@@ -30,7 +30,7 @@ log_error() {
 
 # Configuration
 PROMETHEUS_CONTAINER_NAME="prometheus"
-PROMETHEUS_IMAGE="prom/prometheus:latest"
+PROMETHEUS_IMAGE="docker.io/prom/prometheus:latest"
 PROMETHEUS_PORT="9090"
 PROMETHEUS_CONFIG_DIR="/etc/prometheus"
 PROMETHEUS_DATA_DIR="/var/lib/prometheus/data"

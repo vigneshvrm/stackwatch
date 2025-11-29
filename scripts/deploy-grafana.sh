@@ -30,7 +30,7 @@ log_error() {
 
 # Configuration
 GRAFANA_CONTAINER_NAME="grafana"
-GRAFANA_IMAGE="grafana/grafana:latest"
+GRAFANA_IMAGE="docker.io/grafana/grafana:latest"
 GRAFANA_PORT="3000"
 GRAFANA_CONFIG_DIR="/etc/grafana"
 GRAFANA_DATA_DIR="/var/lib/grafana/data"
