@@ -99,34 +99,73 @@ create_grafana_config() {
         cp "${GRAFANA_CONFIG_FILE}" "${GRAFANA_CONFIG_FILE}.backup.$(date +%Y%m%d_%H%M%S)"
     fi
     
-    # Detect server's primary IP address (non-localhost, non-loopback)
-    # Try to get the IP that's used for external access
+    # Detect server's public IP address (prefer public over private)
+    # Filter out private IP ranges: 10.x.x.x, 172.16-31.x.x, 192.168.x.x, 127.x.x.x
     SERVER_IP=""
+    
+    # Function to check if IP is private
+    is_private_ip() {
+        local ip="$1"
+        # Check for private IP ranges
+        if [[ "$ip" =~ ^10\. ]] || \
+           [[ "$ip" =~ ^172\.(1[6-9]|2[0-9]|3[0-1])\. ]] || \
+           [[ "$ip" =~ ^192\.168\. ]] || \
+           [[ "$ip" =~ ^127\. ]] || \
+           [[ "$ip" =~ ^169\.254\. ]]; then
+            return 0  # Is private
+        fi
+        return 1  # Is public
+    }
+    
+    # Collect all IPs from all interfaces
+    ALL_IPS=""
     if command -v hostname &> /dev/null; then
-        # Try to get IP from hostname resolution
-        HOSTNAME_IP=$(hostname -I 2>/dev/null | awk '{print $1}' | grep -v '^127\.' | head -n1)
-        if [[ -n "${HOSTNAME_IP}" ]]; then
-            SERVER_IP="${HOSTNAME_IP}"
+        ALL_IPS=$(hostname -I 2>/dev/null | tr ' ' '\n' | grep -v '^127\.' || true)
+    fi
+    
+    # Also check all network interfaces
+    if command -v ip &> /dev/null; then
+        INTERFACE_IPS=$(ip addr show 2>/dev/null | grep 'inet ' | awk '{print $2}' | cut -d'/' -f1 | grep -v '^127\.' || true)
+        if [[ -n "${INTERFACE_IPS}" ]]; then
+            ALL_IPS="${ALL_IPS}"$'\n'"${INTERFACE_IPS}"
         fi
     fi
     
-    # Fallback: try to get IP from default route interface
-    if [[ -z "${SERVER_IP}" ]]; then
-        DEFAULT_IFACE=$(ip route | grep default | awk '{print $5}' | head -n1)
-        if [[ -n "${DEFAULT_IFACE}" ]]; then
-            IFACE_IP=$(ip addr show "${DEFAULT_IFACE}" 2>/dev/null | grep 'inet ' | awk '{print $2}' | cut -d'/' -f1 | head -n1)
-            if [[ -n "${IFACE_IP}" && "${IFACE_IP}" != "127.0.0.1" ]]; then
-                SERVER_IP="${IFACE_IP}"
-            fi
+    # Filter and prioritize: public IPs first, then private IPs
+    PUBLIC_IP=""
+    PRIVATE_IP=""
+    
+    while IFS= read -r ip; do
+        [[ -z "$ip" ]] && continue
+        if is_private_ip "$ip"; then
+            # Store first private IP as fallback
+            [[ -z "$PRIVATE_IP" ]] && PRIVATE_IP="$ip"
+        else
+            # Store first public IP (preferred)
+            [[ -z "$PUBLIC_IP" ]] && PUBLIC_IP="$ip"
         fi
+    done <<< "$ALL_IPS"
+    
+    # Prefer public IP, fallback to private IP
+    if [[ -n "$PUBLIC_IP" ]]; then
+        SERVER_IP="$PUBLIC_IP"
+        log_info "Detected public IP: ${SERVER_IP}"
+    elif [[ -n "$PRIVATE_IP" ]]; then
+        SERVER_IP="$PRIVATE_IP"
+        log_warn "Only private IP detected: ${SERVER_IP}. Consider setting GRAFANA_DOMAIN environment variable."
     fi
     
-    # If still no IP found, use hostname or leave empty (Grafana will use Host header)
+    # Allow environment variable override
+    if [[ -n "${GRAFANA_DOMAIN:-}" ]]; then
+        SERVER_IP="${GRAFANA_DOMAIN}"
+        log_info "Using GRAFANA_DOMAIN environment variable: ${SERVER_IP}"
+    fi
+    
+    # If still no IP found, leave empty (Grafana will use Host header)
     if [[ -z "${SERVER_IP}" ]]; then
         log_warn "Could not detect server IP address. Grafana will use Host header from requests."
         SERVER_DOMAIN=""
     else
-        log_info "Detected server IP: ${SERVER_IP}"
         SERVER_DOMAIN="${SERVER_IP}"
     fi
     
