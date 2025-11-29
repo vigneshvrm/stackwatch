@@ -94,25 +94,19 @@ server {
     }
 
     # Route to Grafana (backend service)
-    # CRITICAL: Use proxy_redirect off to let Grafana handle redirects based on root_url
-    # When serve_from_sub_path=true, Grafana generates correct redirects - don't modify them
+    # CRITICAL: Use 127.0.0.1 (not localhost) and NO trailing slash in proxy_pass
+    # root_url in Grafana must be hardcoded with NO trailing slash
     location /grafana/ {
-        proxy_pass http://localhost:3000/;
+        proxy_pass http://127.0.0.1:3000;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_set_header X-Forwarded-Host $host;
-        proxy_set_header X-Forwarded-Port $server_port;
         
         # WebSocket support (if needed)
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
-        
-        # CRITICAL: Turn off proxy_redirect - let Grafana handle redirects via root_url
-        # Grafana with serve_from_sub_path=true generates correct redirects automatically
-        proxy_redirect off;
     }
     
     # Handle Grafana without trailing slash

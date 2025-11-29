@@ -182,8 +182,10 @@ create_grafana_config() {
 [server]
 http_port = 3000
 domain = ${SERVER_DOMAIN}
-root_url = %(protocol)s://%(domain)s/grafana/
+protocol = http
 serve_from_sub_path = true
+# CRITICAL: root_url must be hardcoded (no variables) and NO trailing slash
+root_url = http://${SERVER_DOMAIN}/grafana
 enforce_domain = false
 
 [database]
