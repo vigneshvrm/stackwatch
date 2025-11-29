@@ -41,24 +41,33 @@ prepare_prometheus_directories() {
     log_info "Preparing Prometheus host volumes and directories..."
     
     # Create Prometheus configuration directory
-    mkdir -p "${PROMETHEUS_CONFIG_DIR}"
+    mkdir -p "${PROMETHEUS_CONFIG_DIR}" || {
+        log_error "Failed to create Prometheus config directory: ${PROMETHEUS_CONFIG_DIR}"
+        exit 1
+    }
     
     # Create Prometheus data directory
-    mkdir -p "${PROMETHEUS_DATA_DIR}"
+    mkdir -p "${PROMETHEUS_DATA_DIR}" || {
+        log_error "Failed to create Prometheus data directory: ${PROMETHEUS_DATA_DIR}"
+        exit 1
+    }
     
-    # Create prometheus.yml if it doesn't exist
-    if [[ ! -f "${PROMETHEUS_CONFIG_FILE}" ]]; then
-        touch "${PROMETHEUS_CONFIG_FILE}"
-        log_info "Created ${PROMETHEUS_CONFIG_FILE}"
-    else
-        log_warn "Backing up existing Prometheus configuration..."
-        cp "${PROMETHEUS_CONFIG_FILE}" "${PROMETHEUS_CONFIG_FILE}.backup.$(date +%Y%m%d_%H%M%S)"
-    fi
+    log_info "Prometheus directories created successfully"
+    log_info "  Config: ${PROMETHEUS_CONFIG_DIR}"
+    log_info "  Data: ${PROMETHEUS_DATA_DIR}"
 }
 
 # Create Prometheus configuration
 create_prometheus_config() {
     log_info "Creating Prometheus configuration..."
+    
+    # Backup existing config if it exists
+    if [[ -f "${PROMETHEUS_CONFIG_FILE}" ]]; then
+        log_warn "Backing up existing Prometheus configuration..."
+        cp "${PROMETHEUS_CONFIG_FILE}" "${PROMETHEUS_CONFIG_FILE}.backup.$(date +%Y%m%d_%H%M%S)" || {
+            log_warn "Could not backup existing config, continuing..."
+        }
+    fi
     
     # Create Prometheus configuration
     cat > "${PROMETHEUS_CONFIG_FILE}" << 'PROMETHEUS_EOF'
@@ -68,7 +77,6 @@ create_prometheus_config() {
 global:
   scrape_interval: 15s
   evaluation_interval: 15s
-  external_url: 'http://localhost:9090'
 
 # Alertmanager configuration (if needed)
 # alerting:

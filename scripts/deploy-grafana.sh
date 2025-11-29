@@ -45,17 +45,35 @@ prepare_grafana_directories() {
     log_info "Preparing Grafana host volumes and directories..."
     
     # Data directory (DB files, plugins, uploads, etc.)
-    mkdir -p "${GRAFANA_DATA_DIR}"
+    mkdir -p "${GRAFANA_DATA_DIR}" || {
+        log_error "Failed to create Grafana data directory: ${GRAFANA_DATA_DIR}"
+        exit 1
+    }
     
     # Main Grafana config directory
-    mkdir -p "${GRAFANA_CONFIG_DIR}"
+    mkdir -p "${GRAFANA_CONFIG_DIR}" || {
+        log_error "Failed to create Grafana config directory: ${GRAFANA_CONFIG_DIR}"
+        exit 1
+    }
     
     # Provisioning subdirectories
-    mkdir -p "${GRAFANA_PROVISIONING_DASHBOARDS}"
-    mkdir -p "${GRAFANA_PROVISIONING_DATASOURCES}"
-    mkdir -p "${GRAFANA_PROVISIONING_ALERTING}"
+    mkdir -p "${GRAFANA_PROVISIONING_DASHBOARDS}" || {
+        log_error "Failed to create dashboards provisioning directory"
+        exit 1
+    }
+    mkdir -p "${GRAFANA_PROVISIONING_DATASOURCES}" || {
+        log_error "Failed to create datasources provisioning directory"
+        exit 1
+    }
+    mkdir -p "${GRAFANA_PROVISIONING_ALERTING}" || {
+        log_error "Failed to create alerting provisioning directory"
+        exit 1
+    }
     
-    log_info "Grafana directories created"
+    log_info "Grafana directories created successfully"
+    log_info "  Data: ${GRAFANA_DATA_DIR}"
+    log_info "  Config: ${GRAFANA_CONFIG_DIR}"
+    log_info "  Provisioning: ${GRAFANA_PROVISIONING_DIR}"
 }
 
 # Set permissions (SELinux/Ownership)

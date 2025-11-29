@@ -237,23 +237,9 @@ podman --version
 
 **⚠️ IMPORTANT: Ensure script has execute permissions (see Section 3.2.1)**
 
-**Test Podman Image Pull (Recommended):**
-
-Before running the deployment script, test that Podman can pull the image:
-
-```bash
-# Test Prometheus image pull
-sudo podman pull docker.io/prom/prometheus:latest
-```
-
-**Expected Result:** Image downloads successfully without "short-name did not resolve" errors
-
-**Verify image is available:**
-```bash
-sudo podman images | grep prometheus
-```
-
 **Run the Prometheus deployment script:**
+
+**Note:** The script will automatically pull the Prometheus image (`docker.io/prom/prometheus:latest`) before creating the container.
 
 ```bash
 sudo ./scripts/deploy-prometheus.sh
@@ -305,23 +291,11 @@ sudo podman logs prometheus | tail -20
 
 ### 4.3 Deploy Grafana
 
-**Test Podman Image Pull (Recommended):**
-
-Before running the deployment script, test that Podman can pull the image:
-
-```bash
-# Test Grafana image pull
-sudo podman pull docker.io/grafana/grafana:latest
-```
-
-**Expected Result:** Image downloads successfully without "short-name did not resolve" errors
-
-**Verify image is available:**
-```bash
-sudo podman images | grep grafana
-```
+**⚠️ IMPORTANT: Ensure script has execute permissions (see Section 3.2.1)**
 
 **Run the Grafana deployment script:**
+
+**Note:** The script will automatically pull the Grafana image (`docker.io/grafana/grafana:latest`) before creating the container.
 
 ```bash
 sudo ./scripts/deploy-grafana.sh
