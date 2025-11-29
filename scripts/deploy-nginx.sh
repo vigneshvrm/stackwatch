@@ -94,6 +94,7 @@ server {
     }
 
     # Route to Grafana (backend service)
+    # Standard approach: proxy_pass with trailing slash strips /grafana/ prefix automatically
     location /grafana/ {
         proxy_pass http://localhost:3000/;
         proxy_set_header Host $host;
@@ -108,8 +109,8 @@ server {
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
         
-        # Rewrite redirects to include /grafana prefix
-        # Handle both with and without trailing slash to prevent loops
+        # CRITICAL: Rewrite ALL redirects from Grafana to include /grafana prefix
+        # This prevents redirect loops by ensuring Grafana's redirects go through Nginx
         proxy_redirect http://localhost:3000/ /grafana/;
         proxy_redirect http://localhost:3000 /grafana/;
         proxy_redirect http://$host:3000/ /grafana/;
@@ -118,7 +119,8 @@ server {
         proxy_redirect https://localhost:3000 /grafana/;
         proxy_redirect https://$host:3000/ /grafana/;
         proxy_redirect https://$host:3000 /grafana/;
-        proxy_redirect default;
+        # Catch-all for any other redirects
+        proxy_redirect / /grafana/;
     }
     
     # Handle Grafana without trailing slash

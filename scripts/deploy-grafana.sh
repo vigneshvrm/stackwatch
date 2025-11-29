@@ -184,6 +184,7 @@ http_port = 3000
 domain = ${SERVER_DOMAIN}
 root_url = %(protocol)s://%(domain)s/grafana
 serve_from_sub_path = true
+enforce_domain = false
 
 [database]
 type = sqlite3
