@@ -79,6 +79,15 @@ server {
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
+        
+        # Rewrite redirects to include /prometheus prefix
+        proxy_redirect http://localhost:9090/ /prometheus/;
+        proxy_redirect http://$host:9090/ /prometheus/;
+    }
+    
+    # Handle Prometheus API endpoints without trailing slash
+    location /prometheus {
+        return 301 /prometheus/;
     }
 
     # Route to Grafana (backend service)
@@ -93,6 +102,15 @@ server {
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
+        
+        # Rewrite redirects to include /grafana prefix
+        proxy_redirect http://localhost:3000/ /grafana/;
+        proxy_redirect http://$host:3000/ /grafana/;
+    }
+    
+    # Handle Grafana without trailing slash
+    location /grafana {
+        return 301 /grafana/;
     }
 
     # Security headers
