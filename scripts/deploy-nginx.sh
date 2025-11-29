@@ -110,7 +110,9 @@ server {
         
         # Rewrite redirects to include /grafana prefix
         proxy_redirect http://localhost:3000/ /grafana/;
+        proxy_redirect http://localhost/grafana/ /grafana/;
         proxy_redirect http://$host:3000/ /grafana/;
+        proxy_redirect http://$host/grafana/ /grafana/;
         proxy_redirect default;
     }
     
