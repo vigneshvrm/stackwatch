@@ -135,6 +135,23 @@ deploy_frontend() {
     fi
 }
 
+# Disable default Nginx site
+disable_default_site() {
+    log_info "Checking for default Nginx site..."
+    
+    local default_site="/etc/nginx/sites-enabled/default"
+    
+    if [[ -L "${default_site}" ]] || [[ -f "${default_site}" ]]; then
+        log_warn "Default Nginx site found - disabling it..."
+        rm -f "${default_site}" || {
+            log_warn "Could not remove default site, continuing..."
+        }
+        log_info "Default Nginx site disabled"
+    else
+        log_info "Default Nginx site not found (already disabled)"
+    fi
+}
+
 # Enable Nginx site
 enable_nginx_site() {
     log_info "Enabling Nginx site..."
@@ -190,16 +207,48 @@ main() {
     # Deploy frontend (if build exists)
     deploy_frontend
     
+    # Disable default site
+    disable_default_site
+    
     # Enable site
     enable_nginx_site
     
     # Test and reload
     test_and_reload_nginx
     
+    # Verify deployment
+    log_info ""
+    log_info "Verifying deployment..."
+    
+    if [[ -f "${WEB_ROOT}/index.html" ]]; then
+        log_info "✓ Frontend files found at: ${WEB_ROOT}"
+    else
+        log_warn "✗ Frontend files NOT found at: ${WEB_ROOT}"
+        log_warn "  Run 'npm run build' in project root, then re-run this script"
+    fi
+    
+    if [[ -L "${NGINX_ENABLED}" ]]; then
+        log_info "✓ StackBill Nginx site is enabled"
+    else
+        log_warn "✗ StackBill Nginx site is NOT enabled"
+    fi
+    
+    if [[ -L "/etc/nginx/sites-enabled/default" ]] || [[ -f "/etc/nginx/sites-enabled/default" ]]; then
+        log_warn "✗ Default Nginx site is still enabled - this may cause issues"
+    else
+        log_info "✓ Default Nginx site is disabled"
+    fi
+    
     log_info ""
     log_info "Nginx deployment complete"
     log_info "Frontend served from: ${WEB_ROOT}"
     log_info "Backend routes: /prometheus, /grafana"
+    log_info ""
+    log_info "If you see 'Welcome to nginx!' instead of StackBill UI:"
+    log_info "  1. Verify frontend files exist: ls -la ${WEB_ROOT}/"
+    log_info "  2. Check enabled sites: ls -la /etc/nginx/sites-enabled/"
+    log_info "  3. Ensure default site is disabled: rm -f /etc/nginx/sites-enabled/default"
+    log_info "  4. Reload Nginx: systemctl reload nginx"
 }
 
 main "$@"
