@@ -94,7 +94,8 @@ server {
     }
 
     # Route to Grafana (backend service)
-    # Standard approach: proxy_pass with trailing slash strips /grafana/ prefix automatically
+    # CRITICAL: Use proxy_redirect off to let Grafana handle redirects based on root_url
+    # When serve_from_sub_path=true, Grafana generates correct redirects - don't modify them
     location /grafana/ {
         proxy_pass http://localhost:3000/;
         proxy_set_header Host $host;
@@ -109,18 +110,9 @@ server {
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
         
-        # CRITICAL: Rewrite ALL redirects from Grafana to include /grafana prefix
-        # This prevents redirect loops by ensuring Grafana's redirects go through Nginx
-        proxy_redirect http://localhost:3000/ /grafana/;
-        proxy_redirect http://localhost:3000 /grafana/;
-        proxy_redirect http://$host:3000/ /grafana/;
-        proxy_redirect http://$host:3000 /grafana/;
-        proxy_redirect https://localhost:3000/ /grafana/;
-        proxy_redirect https://localhost:3000 /grafana/;
-        proxy_redirect https://$host:3000/ /grafana/;
-        proxy_redirect https://$host:3000 /grafana/;
-        # Catch-all for any other redirects
-        proxy_redirect / /grafana/;
+        # CRITICAL: Turn off proxy_redirect - let Grafana handle redirects via root_url
+        # Grafana with serve_from_sub_path=true generates correct redirects automatically
+        proxy_redirect off;
     }
     
     # Handle Grafana without trailing slash
