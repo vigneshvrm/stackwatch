@@ -297,8 +297,23 @@ sudo podman logs prometheus | tail -20
 
 **Note:** The script will automatically pull the Grafana image (`docker.io/grafana/grafana:latest`) before creating the container.
 
+**IP Address Detection:**
+- **Most client deployments:** Servers with direct private IP addresses (e.g., `192.168.1.100`, `10.0.0.50`) - auto-detection works automatically
+- **NAT/Lab environments:** Servers behind NAT with public IP (e.g., `123.176.58.198`) - requires manual override (see below)
+
+**Standard deployment (direct private IP):**
 ```bash
 sudo ./scripts/deploy-grafana.sh
+```
+
+**NAT/Lab environment (public IP override):**
+```bash
+# Set the public IP or domain before deploying
+export GRAFANA_DOMAIN="123.176.58.198"
+sudo ./scripts/deploy-grafana.sh
+
+# Or set inline
+sudo GRAFANA_DOMAIN="123.176.58.198" ./scripts/deploy-grafana.sh
 ```
 
 **What the script does:**
@@ -311,9 +326,14 @@ sudo ./scripts/deploy-grafana.sh
 2. Sets permissions:
    - Sets ownership to Grafana user (UID 472:472) for all directories
    - SELinux context handled by :Z flags in Podman volumes
-3. Creates `grafana.ini` configuration file at `/etc/grafana/config/grafana.ini`
-4. Pulls Grafana container image (`docker.io/grafana/grafana:latest`)
-5. Runs Grafana container with:
+3. Detects server IP address:
+   - **Auto-detection:** Scans all network interfaces for IP addresses
+   - **Prioritizes public IPs** over private IPs when both are available
+   - **Uses private IP** when no public IP is detected (typical for direct private IP deployments)
+   - **Manual override:** `GRAFANA_DOMAIN` environment variable overrides auto-detection (required for NAT/lab environments)
+4. Creates `grafana.ini` configuration file at `/etc/grafana/config/grafana.ini` with detected/configured domain
+5. Pulls Grafana container image (`docker.io/grafana/grafana:latest`)
+6. Runs Grafana container with:
    - DNS servers (8.8.8.8, 1.1.1.1)
    - Proper volume mounts with SELinux context (:Z flags)
    - All provisioning directories mapped
