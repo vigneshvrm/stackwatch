@@ -99,7 +99,9 @@ create_grafana_config() {
         cp "${GRAFANA_CONFIG_FILE}" "${GRAFANA_CONFIG_FILE}.backup.$(date +%Y%m%d_%H%M%S)"
     fi
     
-    # Detect server's public IP address (prefer public over private)
+    # Detect server's IP address (prefer public over private)
+    # NOTE: Most client deployments will have direct private IP addresses (auto-detection works)
+    #       Lab/NAT environments behind public IP require GRAFANA_DOMAIN environment variable override
     # Filter out private IP ranges: 10.x.x.x, 172.16-31.x.x, 192.168.x.x, 127.x.x.x
     SERVER_IP=""
     
@@ -147,18 +149,21 @@ create_grafana_config() {
     done <<< "$ALL_IPS"
     
     # Prefer public IP, fallback to private IP
+    # For most client deployments with direct private IPs, auto-detection works fine
+    # For NAT/lab environments, use GRAFANA_DOMAIN environment variable to override
     if [[ -n "$PUBLIC_IP" ]]; then
         SERVER_IP="$PUBLIC_IP"
         log_info "Detected public IP: ${SERVER_IP}"
     elif [[ -n "$PRIVATE_IP" ]]; then
         SERVER_IP="$PRIVATE_IP"
-        log_warn "Only private IP detected: ${SERVER_IP}. Consider setting GRAFANA_DOMAIN environment variable."
+        log_info "Detected private IP: ${SERVER_IP} (typical for direct private IP deployments)"
+        log_info "For NAT/lab environments with public IP, set GRAFANA_DOMAIN environment variable"
     fi
     
-    # Allow environment variable override
+    # Allow environment variable override (required for NAT/lab environments)
     if [[ -n "${GRAFANA_DOMAIN:-}" ]]; then
         SERVER_IP="${GRAFANA_DOMAIN}"
-        log_info "Using GRAFANA_DOMAIN environment variable: ${SERVER_IP}"
+        log_info "Using GRAFANA_DOMAIN environment variable override: ${SERVER_IP}"
     fi
     
     # If still no IP found, leave empty (Grafana will use Host header)
@@ -177,7 +182,7 @@ create_grafana_config() {
 [server]
 http_port = 3000
 domain = ${SERVER_DOMAIN}
-root_url = %(protocol)s://%(domain)s/grafana/
+root_url = %(protocol)s://%(domain)s/grafana
 serve_from_sub_path = true
 
 [database]

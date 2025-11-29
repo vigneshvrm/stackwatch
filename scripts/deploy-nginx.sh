@@ -109,11 +109,16 @@ server {
         proxy_set_header Connection "upgrade";
         
         # Rewrite redirects to include /grafana prefix
-        # Only rewrite redirects that don't already have /grafana/ to prevent loops
+        # Handle both with and without trailing slash to prevent loops
         proxy_redirect http://localhost:3000/ /grafana/;
+        proxy_redirect http://localhost:3000 /grafana/;
         proxy_redirect http://$host:3000/ /grafana/;
+        proxy_redirect http://$host:3000 /grafana/;
         proxy_redirect https://localhost:3000/ /grafana/;
+        proxy_redirect https://localhost:3000 /grafana/;
         proxy_redirect https://$host:3000/ /grafana/;
+        proxy_redirect https://$host:3000 /grafana/;
+        proxy_redirect default;
     }
     
     # Handle Grafana without trailing slash
