@@ -99,13 +99,45 @@ create_grafana_config() {
         cp "${GRAFANA_CONFIG_FILE}" "${GRAFANA_CONFIG_FILE}.backup.$(date +%Y%m%d_%H%M%S)"
     fi
     
+    # Detect server's primary IP address (non-localhost, non-loopback)
+    # Try to get the IP that's used for external access
+    SERVER_IP=""
+    if command -v hostname &> /dev/null; then
+        # Try to get IP from hostname resolution
+        HOSTNAME_IP=$(hostname -I 2>/dev/null | awk '{print $1}' | grep -v '^127\.' | head -n1)
+        if [[ -n "${HOSTNAME_IP}" ]]; then
+            SERVER_IP="${HOSTNAME_IP}"
+        fi
+    fi
+    
+    # Fallback: try to get IP from default route interface
+    if [[ -z "${SERVER_IP}" ]]; then
+        DEFAULT_IFACE=$(ip route | grep default | awk '{print $5}' | head -n1)
+        if [[ -n "${DEFAULT_IFACE}" ]]; then
+            IFACE_IP=$(ip addr show "${DEFAULT_IFACE}" 2>/dev/null | grep 'inet ' | awk '{print $2}' | cut -d'/' -f1 | head -n1)
+            if [[ -n "${IFACE_IP}" && "${IFACE_IP}" != "127.0.0.1" ]]; then
+                SERVER_IP="${IFACE_IP}"
+            fi
+        fi
+    fi
+    
+    # If still no IP found, use hostname or leave empty (Grafana will use Host header)
+    if [[ -z "${SERVER_IP}" ]]; then
+        log_warn "Could not detect server IP address. Grafana will use Host header from requests."
+        SERVER_DOMAIN=""
+    else
+        log_info "Detected server IP: ${SERVER_IP}"
+        SERVER_DOMAIN="${SERVER_IP}"
+    fi
+    
     # Create Grafana configuration
-    cat > "${GRAFANA_CONFIG_FILE}" << 'GRAFANA_EOF'
+    cat > "${GRAFANA_CONFIG_FILE}" << EOF
 # STACKBILL: Grafana Configuration
 # Backend System Architect and Automation Engineer
 
 [server]
 http_port = 3000
+domain = ${SERVER_DOMAIN}
 root_url = %(protocol)s://%(domain)s/grafana/
 serve_from_sub_path = true
 
@@ -125,9 +157,14 @@ allow_sign_up = false
 [log]
 mode = console
 level = info
-GRAFANA_EOF
-
+EOF
+    
     log_info "Grafana configuration created: ${GRAFANA_CONFIG_FILE}"
+    if [[ -n "${SERVER_DOMAIN}" ]]; then
+        log_info "Grafana domain set to: ${SERVER_DOMAIN}"
+    else
+        log_warn "Grafana domain is empty - will use Host header from requests"
+    fi
     log_warn "IMPORTANT: Change admin_password and secret_key in production!"
 }
 
