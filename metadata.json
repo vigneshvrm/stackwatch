@@ -1,0 +1,5 @@
+{
+  "name": "stackbill",
+  "description": "Enterprise-grade static gateway portal for observability stack navigation.",
+  "requestFramePermissions": []
+}
