@@ -164,9 +164,17 @@ deploy_grafana() {
 create_systemd_service() {
     log_info "Creating systemd service for Grafana..."
     
-    # Generate systemd service file
-    podman generate systemd --name "${GRAFANA_CONTAINER_NAME}" --files --new || {
+    # Generate systemd service file in /etc/systemd/system/
+    SERVICE_FILE="/etc/systemd/system/container-${GRAFANA_CONTAINER_NAME}.service"
+    
+    podman generate systemd --name "${GRAFANA_CONTAINER_NAME}" --new > "${SERVICE_FILE}" || {
         log_warn "Failed to generate systemd service - container will not auto-start on boot"
+        return 0
+    }
+    
+    # Reload systemd daemon to recognize new service
+    systemctl daemon-reload || {
+        log_warn "Failed to reload systemd daemon"
         return 0
     }
     
@@ -176,7 +184,7 @@ create_systemd_service() {
         return 0
     }
     
-    log_info "Systemd service created and enabled"
+    log_info "Systemd service created and enabled: ${SERVICE_FILE}"
 }
 
 # Verify deployment
