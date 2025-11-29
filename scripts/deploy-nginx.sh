@@ -74,6 +74,8 @@ server {
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Forwarded-Port $server_port;
         
         # WebSocket support (if needed)
         proxy_http_version 1.1;
@@ -83,6 +85,7 @@ server {
         # Rewrite redirects to include /prometheus prefix
         proxy_redirect http://localhost:9090/ /prometheus/;
         proxy_redirect http://$host:9090/ /prometheus/;
+        proxy_redirect default;
     }
     
     # Handle Prometheus API endpoints without trailing slash
@@ -97,6 +100,8 @@ server {
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Forwarded-Port $server_port;
         
         # WebSocket support (if needed)
         proxy_http_version 1.1;
@@ -106,6 +111,7 @@ server {
         # Rewrite redirects to include /grafana prefix
         proxy_redirect http://localhost:3000/ /grafana/;
         proxy_redirect http://$host:3000/ /grafana/;
+        proxy_redirect default;
     }
     
     # Handle Grafana without trailing slash

@@ -248,8 +248,24 @@ main() {
     # Create configuration
     create_grafana_config
     
+    # Check if container already exists
+    local container_exists=false
+    if podman ps -a --format "{{.Names}}" | grep -q "^${GRAFANA_CONTAINER_NAME}$"; then
+        container_exists=true
+    fi
+    
     # Deploy container
     deploy_grafana
+    
+    # If container existed, restart it to apply config changes
+    if [[ "$container_exists" == "true" ]]; then
+        log_info "Restarting Grafana container to apply configuration changes..."
+        podman restart "${GRAFANA_CONTAINER_NAME}" || {
+            log_warn "Could not restart Grafana container - configuration may not be applied"
+        }
+        log_info "Waiting for Grafana to start..."
+        sleep 5
+    fi
     
     # Create systemd service
     create_systemd_service

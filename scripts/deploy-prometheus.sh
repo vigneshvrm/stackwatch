@@ -147,7 +147,9 @@ deploy_prometheus() {
         -v "${PROMETHEUS_CONFIG_DIR}:/etc/prometheus:Z" \
         -p "${PROMETHEUS_PORT}:9090" \
         "${PROMETHEUS_IMAGE}" \
-        --config.file=/etc/prometheus/prometheus.yml || {
+        --config.file=/etc/prometheus/prometheus.yml \
+        --web.external-url=/prometheus/ \
+        --web.route-prefix=/ || {
         log_error "Failed to start Prometheus container"
         exit 1
     }
