@@ -77,7 +77,7 @@ sudo yum install -y git ansible podman nginx python3
 **Debian/Ubuntu:**
 ```bash
 sudo apt update
-sudo apt install -y git ansible podman nginx python3
+sudo apt install -y git ansible podman nginx python3 sshpass
 
 # Install Node.js 20.x (required for frontend build)
 curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
@@ -86,7 +86,7 @@ sudo apt install nodejs -y
 
 **RHEL/CentOS:**
 ```bash
-sudo yum install -y git ansible podman nginx python3
+sudo yum install -y git ansible podman nginx python3 sshpass
 
 # Install Node.js 20.x (required for frontend build)
 curl -fsSL https://rpm.nodesource.com/setup_20.x | sudo bash -
