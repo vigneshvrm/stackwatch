@@ -69,11 +69,6 @@ All services are accessible through Nginx at the root path (`/`), with Prometheu
 
 ### Installation Commands
 
-**RHEL/CentOS:**
-```bash
-sudo yum install -y git ansible podman nginx python3
-```
-
 **Debian/Ubuntu:**
 ```bash
 sudo apt update
