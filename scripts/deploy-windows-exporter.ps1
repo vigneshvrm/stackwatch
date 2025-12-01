@@ -16,6 +16,10 @@ param(
 # Error handling
 $ErrorActionPreference = "Stop"
 
+# CRITICAL: Enforce TLS 1.2 for HTTPS downloads (required for GitHub)
+# Older PowerShell versions default to TLS 1.0 which GitHub no longer supports
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
 # Configuration
 $WindowsExporterPort = $NodeExporterPort
 $WindowsExporterInstallDir = "C:\Program Files\windows_exporter"
