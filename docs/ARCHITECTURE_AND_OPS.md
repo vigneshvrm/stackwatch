@@ -1,6 +1,6 @@
 # StackBill: Architectural & Operational Documentation
 
-**Version:** 1.0.0  
+**Version:** 1.0.1  
 **Classification:** Internal Technical Documentation  
 **Architect:** Senior Cloud UI Architect
 
@@ -77,14 +77,17 @@ graph TD
     Browser -- Render UI --> UI[Dashboard UI]
     UI -- Click 'Prometheus' --> Link1[href='/prometheus']
     UI -- Click 'Grafana' --> Link2[href='/grafana']
+    UI -- Click 'Help' --> Link3[href='/help']
     end
 
     Link1 -->|GET /prometheus| Nginx
     Link2 -->|GET /grafana| Nginx
+    Link3 -->|GET /help| Nginx
 
     subgraph Backend Routing
     Nginx -- Proxy Pass /prometheus --> Prom
     Nginx -- Proxy Pass /grafana --> Graf
+    Nginx -- Serve index.html --> SB
     end
 ```
 
@@ -101,6 +104,7 @@ Although StackBill is a static frontend, it relies on an implicit "Infrastructur
 **2. Routing Contract:**
 *   **Prometheus**: MUST be accessible at `<HOST>/prometheus`. Nginx must strip the prefix if Prometheus is not configured with `web.external-url`.
 *   **Grafana**: MUST be accessible at `<HOST>/grafana`. Nginx config `root_url` in `grafana.ini` must match.
+*   **Help**: MUST be accessible at `<HOST>/help`. Nginx must fallback to `index.html` for this path.
 
 ---
 
@@ -117,7 +121,8 @@ server {
     root /var/www/stackbill/dist; # Location of the React build output
     index index.html;
 
-    # 1. Serve StackBill Frontend
+    # 1. Serve StackBill Frontend & Routes
+    # 'try_files' is critical for the /help route to work (SPA Fallback)
     location / {
         try_files $uri $uri/ /index.html;
     }
@@ -141,13 +146,17 @@ server {
 1.  **Build Integrity**: Run `npm run build`. Verify `dist/index.html` exists.
 2.  **Asset Loading**: Open `index.html` locally. Verify Tailwind CSS styles apply.
 3.  **Navigation Check**: Hover over buttons. Verify URL bar shows `/prometheus` and `/grafana` (not full absolute URLs).
-4.  **Accessibility**: Tab through the interface. Verify focus rings appear on cards.
+4.  **Help Page**: Click "Help". Verify the URL changes to `/help` and the Help content renders. Refresh the page at `/help` to verify Nginx fallback works.
+5.  **Accessibility**: Tab through the interface. Verify focus rings appear on cards and the new Help button.
 
 ### Known Failure Scenarios
 
 *   **Scenario:** 404 on Service Click.
     *   *Cause:* Nginx `proxy_pass` misconfiguration or trailing slash issue.
     *   *Fix:* Ensure `location /prometheus/` matches the `proxy_pass` trailing slash policy.
+*   **Scenario:** 404 on Help Page Refresh.
+    *   *Cause:* Nginx missing `try_files ... /index.html`.
+    *   *Fix:* Update Nginx config to support SPA routing.
 *   **Scenario:** White screen on load.
     *   *Cause:* JavaScript disabled or React failed to mount.
     *   *Guard:* The `index.html` contains a basic background color to prevent flash-of-unstyled-content, but app requires JS.
