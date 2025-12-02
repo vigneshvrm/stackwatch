@@ -24,6 +24,14 @@ export const SERVICES: ServiceConfig[] = [
     icon: 'grafana',
     status: 'active',
   },
+  {
+    id: 'svc-help',
+    name: 'Help & Documentation',
+    description: 'User guides, tutorials, and documentation.',
+    path: '/help',
+    icon: 'help',
+    status: 'active',
+  },
 ];
 
 // SVG Icons defined as constants for performance and zero-dependency
@@ -44,6 +52,13 @@ export const ICONS = {
       <circle cx="10.8" cy="10.5" r="2" />
       <circle cx="13.6" cy="13.2" r="2" />
       <circle cx="18.7" cy="8" r="2" />
+    </svg>
+  ),
+  help: (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-12 h-12 text-blue-400">
+      <circle cx="12" cy="12" r="10" />
+      <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+      <path d="M12 17h.01" />
     </svg>
   )
 };

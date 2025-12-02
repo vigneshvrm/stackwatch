@@ -3,7 +3,7 @@ export interface ServiceConfig {
   name: string;
   description: string;
   path: string; // The relative path for Nginx routing
-  icon: 'prometheus' | 'grafana';
+  icon: 'prometheus' | 'grafana' | 'help';
   status: 'active' | 'maintenance' | 'deprecated';
 }
 

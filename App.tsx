@@ -1,12 +1,14 @@
 import React from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import ServiceCard from './components/ServiceCard';
+import HelpPage from './components/HelpPage';
 import { SERVICES } from './constants';
 
-const App: React.FC = () => {
+const Dashboard: React.FC = () => {
   return (
-    <div className="min-h-screen flex flex-col bg-brand-900 text-slate-100 font-sans selection:bg-blue-500/30">
+    <>
       <Header />
 
       <main className="flex-grow flex flex-col items-center justify-center p-4 sm:p-8 lg:p-12 relative overflow-hidden">
@@ -24,7 +26,7 @@ const App: React.FC = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
             {SERVICES.map((service) => (
               <ServiceCard key={service.id} service={service} />
             ))}
@@ -41,7 +43,20 @@ const App: React.FC = () => {
       </main>
 
       <Footer />
-    </div>
+    </>
+  );
+};
+
+const App: React.FC = () => {
+  return (
+    <BrowserRouter>
+      <div className="min-h-screen flex flex-col bg-brand-900 text-slate-100 font-sans selection:bg-blue-500/30">
+        <Routes>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/help" element={<HelpPage />} />
+        </Routes>
+      </div>
+    </BrowserRouter>
   );
 };
 
