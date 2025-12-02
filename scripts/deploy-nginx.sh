@@ -122,6 +122,14 @@ server {
         add_header Access-Control-Allow-Origin "*";
     }
 
+    # Serve Help Documentation Images
+    location /help/docs/images/ {
+        alias /var/www/stackbill/dist/help/docs/images/;
+        add_header Access-Control-Allow-Origin "*";
+        expires 30d;
+        add_header Cache-Control "public, immutable";
+    }
+
     # Security headers
     add_header X-Frame-Options "SAMEORIGIN" always;
     add_header X-Content-Type-Options "nosniff" always;

@@ -1,191 +1,101 @@
-# StackBill Help & Documentation
+STACKBILL - Installation, Setup & Grafana Walkthrough
 
-Welcome to the StackBill Observability Platform help documentation.
+_Version: 1.0.0_
 
-## Getting Started
+Prepared from: Uploaded STACKBILL operations guide and provided endpoints
 
-### Accessing Services
+# Document Overview
 
-- **Prometheus**: Access the Prometheus monitoring interface to view metrics and run queries
-- **Grafana**: Access Grafana dashboards for data visualization and analytics
-- **Help**: You're here! This documentation provides guidance on using the platform
+This document contains two parts:
 
-## Features
+Part 2 - Frontend-to-Grafana workflow: Grafana initial login, add Prometheus data source and import dashboards for Linux and Windows.
 
-### Prometheus
+# Frontend to Grafana: GUI Walkthrough
 
-Prometheus is a powerful time-series database and monitoring system.
+- Scope: Steps from the frontend URL through Grafana initial login, configuring the Prometheus data source, and importing dashboards.
 
-#### Key Features:
-- **Time-series Data Collection**: Automatically collects metrics from configured targets
-- **PromQL Query Language**: Powerful query language for data analysis
-- **Alert Management**: Configure and manage alerting rules
-- **Target Monitoring**: Monitor the health of scrape targets
+## Endpoints and Credentials
 
-#### Common Tasks:
+• Frontend URL: <http://IPAddress/>
 
-**Viewing Metrics:**
-1. Navigate to the Prometheus interface
-2. Use the Graph tab to visualize metrics
-3. Enter PromQL queries in the query bar
-4. View results in table or graph format
+• Prometheus URL: <http://IPAddress/prometheus>
 
-**Example Queries:**
-```
-# CPU usage
-100 - (avg by (instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)
+• Help URL: <http://IPAddress/help>
 
-# Memory usage
-100 * (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes))
+• Grafana URL: <http://IPAddress/grafana>
 
-# Disk usage
-100 * (1 - (node_filesystem_avail_bytes / node_filesystem_size_bytes))
-```
+• Grafana login: Username: admin | Password: admin
 
-### Grafana
+• Recommended dashboard IDs from Grafana.com: Linux: 1860 | Windows: 19269
 
-Grafana provides interactive dashboards and data visualization.
+## Step A - Access the frontend
 
-#### Key Features:
-- **Interactive Dashboards**: Create and customize monitoring dashboards
-- **Data Visualization**: Multiple visualization types (graphs, tables, gauges, etc.)
-- **Alert Notifications**: Set up alerts based on metric thresholds
-- **Data Source Management**: Connect to Prometheus and other data sources
+1) Open a browser and navigate to the frontend URL. Confirm the home page renders and links to Grafana and Prometheus are visible.
 
-#### Common Tasks:
+![frontend](/help/docs/images/Picture1.png)
 
-**Accessing Dashboards:**
-1. Navigate to the Grafana interface
-2. Log in with your credentials (default: admin/admin)
-3. Browse pre-configured dashboards or create new ones
-4. Customize panels and visualizations as needed
+## Step B - Grafana: Initial login
 
-**Creating a Dashboard:**
-1. Click "Create" → "Dashboard"
-2. Add a new panel
-3. Select Prometheus as the data source
-4. Enter a PromQL query
-5. Choose visualization type
-6. Save the dashboard
+- 1) Open Grafana at the Grafana URL and login using provided credentials. On first login, change the default password.
 
-## Service Configuration
+![frontend](/help/docs/images/Picture2.png)
 
-### Default Credentials
+Figure 2: Grafana login page (placeholder).
 
-**Grafana:**
-- Username: `admin`
-- Password: `admin`
-- **Important**: Change these credentials in production!
+## Step C - Add Prometheus data source
 
-**Prometheus:**
-- No authentication required (internal network only)
-- Accessible via Nginx reverse proxy
+- Procedure:
 
-### Network Access
+**1) In Grafana:**
 
-All services are accessed through the Nginx reverse proxy:
-- Prometheus: `http://your-server-ip/prometheus/`
-- Grafana: `http://your-server-ip/grafana/`
-- Help: `http://your-server-ip/help`
+Configuration (gear) → Data Sources → Add data source → Prometheus.
 
-Direct access to service ports (9090, 3000) is disabled for security.
+**2) Configure:**
 
-## Troubleshooting
+• Name: Prometheus
 
-### Service Not Accessible
+• URL: <http://localhost:9090> (use host IP or container network alias if required)
 
-1. **Check Service Status:**
-   ```bash
-   # Check Prometheus
-   systemctl status container-prometheus
-   
-   # Check Grafana
-   systemctl status container-grafana
-   
-   # Check Nginx
-   systemctl status nginx
-   ```
+• Access: Server (default)
 
-2. **Check Service Logs:**
-   ```bash
-   # Prometheus logs
-   podman logs container-prometheus
-   
-   # Grafana logs
-   podman logs container-grafana
-   
-   # Nginx logs
-   tail -f /var/log/nginx/error.log
-   ```
+3) Click Save & Test - expected: Data source is working (green confirmation).
 
-3. **Verify Ports:**
-   ```bash
-   # Check if services are listening
-   netstat -tlnp | grep -E '9090|3000|80'
-   ```
+![Grafana](/help/docs/images/Picture3.png)
 
-### Metrics Not Appearing
+Figure 3: Data source configuration (placeholder).
 
-1. **Check Prometheus Targets:**
-   - Navigate to Prometheus → Status → Targets
-   - Verify all targets are "UP"
-   - Check for scrape errors
+## Step D - Import dashboards
 
-2. **Verify Exporter Installation:**
-   - Linux: Check if node_exporter service is running
-   - Windows: Check if windows_exporter service is running
+- Recommended community dashboards and IDs:
+- Linux (Node Exporter Full) - Dashboard ID: 1860
+- Windows (Windows Exporter) - Dashboard ID: 19269
 
-3. **Check Firewall Rules:**
-   - Ensure exporter ports (9100, 9182) are accessible from Prometheus server
+- **Import steps:**
 
-### Dashboard Issues
+1) In Grafana: Click + → Import.
 
-1. **Data Source Connection:**
-   - Verify Prometheus data source is configured correctly
-   - Test the connection in Grafana data source settings
+2) Enter dashboard ID (e.g., 1860) and click Load.
 
-2. **Query Errors:**
-   - Check PromQL syntax
-   - Verify metric names exist in Prometheus
-   - Use Prometheus query interface to test queries
+3) When prompted, select the Prometheus data source and click Import.
 
-## Best Practices
+4) Repeat for Windows dashboard if Windows targets are in use.
 
-### Security
+![Grafana Import](/help/docs/images/Picture4.png)
 
-- **Change Default Passwords**: Always change default Grafana credentials
-- **Use HTTPS**: Configure SSL/TLS certificates for production
-- **Network Isolation**: Keep monitoring services on internal networks
-- **Access Control**: Implement proper authentication and authorization
+Figure 4: Import dashboard dialog (placeholder).
 
-### Performance
+## Verification - Dashboard data
 
-- **Query Optimization**: Use efficient PromQL queries
-- **Dashboard Optimization**: Limit the number of panels per dashboard
-- **Retention Policies**: Configure appropriate data retention periods
-- **Resource Monitoring**: Monitor Prometheus and Grafana resource usage
+- Open the imported dashboard and confirm panels show data.
+- If panels show no data, confirm:
+- \- Prometheus targets show UP (Prometheus UI → Status → Targets).
+- \- Node exporter / Windows exporter metrics are reachable and being scraped.
+- \- Grafana data source is configured correctly and queries return results (Explore).
 
-### Maintenance
+# Appendix - Troubleshooting & Notes
 
-- **Regular Backups**: Backup Grafana dashboards and Prometheus data
-- **Update Services**: Keep services updated with security patches
-- **Monitor Logs**: Regularly review service logs for errors
-- **Capacity Planning**: Monitor disk usage and plan for growth
-
-## Additional Resources
-
-- **Prometheus Documentation**: https://prometheus.io/docs/
-- **Grafana Documentation**: https://grafana.com/docs/
-- **PromQL Guide**: https://prometheus.io/docs/prometheus/latest/querying/basics/
-
-## Support
-
-For additional support or questions:
-- Contact your system administrator
-- Review service logs for error details
-- Check the troubleshooting section above
-
----
-
-*Last updated: ${new Date().toLocaleDateString()}*
-
+- Quick checks and useful commands:
+- Verify Grafana container/process: sudo podman ps | grep grafana
+- Verify Prometheus targets: http://IPAddress/prometheus → Status → Targets
+- Test metrics endpoint: curl http://IPAddress:9100/metrics
+- Grafana: Configuration → Data Sources → Save & Test

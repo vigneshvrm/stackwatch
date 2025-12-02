@@ -102,7 +102,7 @@ For additional support or questions, please contact your system administrator.
           </button>
 
           {/* Markdown Content */}
-          <div className="bg-brand-800 border border-brand-700 rounded-xl shadow-lg p-6 sm:p-8 lg:p-10 prose prose-invert prose-headings:text-white prose-p:text-slate-300 prose-a:text-blue-400 prose-a:no-underline hover:prose-a:text-blue-300 prose-strong:text-white prose-code:text-blue-300 prose-code:bg-brand-900 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-pre:bg-brand-900 prose-pre:border prose-pre:border-brand-700 max-w-none">
+          <div className="bg-brand-800 border border-brand-700 rounded-xl shadow-lg p-6 sm:p-8 lg:p-10 prose prose-invert prose-headings:text-white prose-p:text-slate-300 prose-a:text-blue-400 prose-a:no-underline hover:prose-a:text-blue-300 prose-strong:text-white prose-code:text-blue-300 prose-code:bg-brand-900 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-pre:bg-brand-900 prose-pre:border prose-pre:border-brand-700 prose-img:rounded-lg prose-img:shadow-lg prose-img:border prose-img:border-brand-700 prose-img:max-w-full prose-img:h-auto max-w-none">
             {error ? (
               <div className="text-red-400 mb-4 p-4 bg-red-900/20 border border-red-500/30 rounded">
                 <p className="font-semibold">Error loading documentation:</p>
