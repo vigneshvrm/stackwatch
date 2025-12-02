@@ -8,12 +8,14 @@ interface ServiceCardProps {
 }
 
 const ServiceCard: React.FC<ServiceCardProps> = ({ service }) => {
-  return (
-    <Link
-      to={service.path}
-      className="group relative flex flex-col items-center justify-center p-8 bg-brand-800 border border-brand-700 rounded-xl shadow-lg transition-all duration-300 hover:bg-brand-700 hover:scale-105 hover:shadow-blue-500/20 hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-brand-900"
-      aria-label={`Navigate to ${service.name}`}
-    >
+  // Use regular anchor tag for external services (Prometheus, Grafana)
+  // Use React Router Link for internal routes (Help)
+  const isInternalRoute = service.path === '/help';
+  
+  const cardClassName = "group relative flex flex-col items-center justify-center p-8 bg-brand-800 border border-brand-700 rounded-xl shadow-lg transition-all duration-300 hover:bg-brand-700 hover:scale-105 hover:shadow-blue-500/20 hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-brand-900";
+  
+  const cardContent = (
+    <>
       <div className="mb-4 transition-transform duration-300 group-hover:-translate-y-1">
         {ICONS[service.icon]}
       </div>
@@ -33,9 +35,32 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ service }) => {
       </div>
 
       <div className="mt-6 flex items-center text-blue-400 text-sm font-medium opacity-0 transform translate-y-2 transition-all duration-300 group-hover:opacity-100 group-hover:translate-y-0">
-        {service.path === '/help' ? 'View Documentation &rarr;' : 'Access Portal &rarr;'}
+        {isInternalRoute ? 'View Documentation &rarr;' : 'Access Portal &rarr;'}
       </div>
-    </Link>
+    </>
+  );
+
+  if (isInternalRoute) {
+    return (
+      <Link
+        to={service.path}
+        className={cardClassName}
+        aria-label={`Navigate to ${service.name}`}
+      >
+        {cardContent}
+      </Link>
+    );
+  }
+
+  // External services use regular anchor tags for full page navigation
+  return (
+    <a
+      href={service.path}
+      className={cardClassName}
+      aria-label={`Navigate to ${service.name}`}
+    >
+      {cardContent}
+    </a>
   );
 };
 
