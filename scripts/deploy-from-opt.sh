@@ -179,25 +179,15 @@ deploy_grafana() {
 deploy_node_exporter() {
     log_info "Phase 5: Deploying Node Exporter (Linux) via Ansible..."
     
-    if [[ ! -f "${ANSIBLE_INVENTORY}" ]]; then
-        log_warn "Ansible inventory not found: ${ANSIBLE_INVENTORY}"
-        log_warn "Skipping Node Exporter deployment"
-        log_warn "Please configure ansible/inventory/hosts and run manually:"
-        log_warn "  ansible-playbook -i ${ANSIBLE_INVENTORY} ${ANSIBLE_DIR}/playbooks/deploy-node-exporter.yml"
-        return 0
-    fi
-    
-    if ! command -v ansible-playbook &> /dev/null; then
-        log_warn "ansible-playbook not found - skipping Node Exporter deployment"
-        log_warn "Install Ansible and run manually:"
-        log_warn "  ansible-playbook -i ${ANSIBLE_INVENTORY} ${ANSIBLE_DIR}/playbooks/deploy-node-exporter.yml"
-        return 0
-    fi
-    
-    ansible-playbook -i "${ANSIBLE_INVENTORY}" \
-        "${ANSIBLE_DIR}/playbooks/deploy-node-exporter.yml" || {
-        log_warn "Node Exporter deployment failed (continuing anyway)"
-    }
+    # Skip Node Exporter deployment on source node (where StackBill is being deployed)
+    log_info "Skipping Node Exporter deployment on source node"
+    log_info "Node Exporter should be deployed on target monitoring servers, not the StackBill server"
+    log_info ""
+    log_info "To deploy Node Exporter on target servers:"
+    log_info "  1. Configure ansible/inventory/hosts with target server IPs"
+    log_info "  2. Run manually: ansible-playbook -i ${ANSIBLE_INVENTORY} ${ANSIBLE_DIR}/playbooks/deploy-node-exporter.yml"
+    log_info ""
+    return 0
 }
 
 # Health check
