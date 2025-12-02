@@ -37,6 +37,27 @@ log_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
+# Install required packages
+install_packages() {
+    log_info "Installing required packages..."
+    
+    # Update package list
+    log_info "Updating package list..."
+    apt update || {
+        log_error "Failed to update package list"
+        exit 1
+    }
+    
+    # Install required packages
+    log_info "Installing: ansible, podman, nginx, python3, sshpass..."
+    apt install -y ansible podman nginx python3 sshpass || {
+        log_error "Failed to install required packages"
+        exit 1
+    }
+    
+    log_info "Required packages installed successfully"
+}
+
 # Pre-flight checks
 preflight_checks() {
     log_info "Running pre-flight checks..."
@@ -220,11 +241,20 @@ display_summary() {
 
 # Main function
 main() {
+    # Check if running as root or with sudo (required for package installation)
+    if [[ $EUID -ne 0 ]]; then
+        log_error "This script must be run as root or with sudo"
+        exit 1
+    fi
+    
     log_info "=========================================="
     log_info "StackBill Client Deployment"
     log_info "Installation: ${INSTALL_DIR}"
     log_info "=========================================="
     log_info ""
+    
+    # Install required packages first
+    install_packages
     
     # Pre-flight checks
     preflight_checks
