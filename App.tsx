@@ -2,20 +2,9 @@ import React from 'react';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import ServiceCard from './components/ServiceCard';
-import HelpPage from './components/HelpPage';
 import { SERVICES } from './constants';
 
 const App: React.FC = () => {
-  // Basic Static Routing Logic
-  // Since we rely on Nginx to serve index.html for all paths,
-  // we can use window.location.pathname to determine which view to render.
-  const path = window.location.pathname;
-
-  if (path === '/help') {
-    return <HelpPage />;
-  }
-
-  // Default Dashboard View (Home)
   return (
     <div className="min-h-screen flex flex-col bg-brand-900 text-slate-100 font-sans selection:bg-blue-500/30">
       <Header />
