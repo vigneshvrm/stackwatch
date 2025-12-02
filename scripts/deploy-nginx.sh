@@ -136,16 +136,36 @@ NGINX_EOF
 deploy_frontend() {
     log_info "Checking for frontend build..."
     
+    # Priority order for frontend source locations
+    local opt_dist="/opt/stackbill/dist"
     local build_dir="${PROJECT_ROOT}/${FRONTEND_BUILD_DIR}"
+    local prebuilt_dir="${PROJECT_ROOT}/prebuilt/dist"
     
-    if [[ -d "${build_dir}" ]] && [[ -f "${build_dir}/index.html" ]]; then
-        log_info "Frontend build found - deploying to web root..."
+    local frontend_source=""
+    local source_type=""
+    
+    # Priority 1: Client installation in /opt/stackbill
+    if [[ -d "${opt_dist}" ]] && [[ -f "${opt_dist}/index.html" ]]; then
+        frontend_source="${opt_dist}"
+        source_type="client installation (/opt/stackbill/dist)"
+    # Priority 2: Developer build directory
+    elif [[ -d "${build_dir}" ]] && [[ -f "${build_dir}/index.html" ]]; then
+        frontend_source="${build_dir}"
+        source_type="developer build (dist/)"
+    # Priority 3: Prebuilt directory
+    elif [[ -d "${prebuilt_dir}" ]] && [[ -f "${prebuilt_dir}/index.html" ]]; then
+        frontend_source="${prebuilt_dir}"
+        source_type="prebuilt directory (prebuilt/dist/)"
+    fi
+    
+    if [[ -n "${frontend_source}" ]]; then
+        log_info "Frontend build found - deploying from ${source_type}..."
         
         # Create web root directory
         mkdir -p "${WEB_ROOT}"
         
         # Copy frontend build (preserves existing if deployment fails)
-        cp -r "${build_dir}"/* "${WEB_ROOT}/" || {
+        cp -r "${frontend_source}"/* "${WEB_ROOT}/" || {
             log_error "Failed to copy frontend build"
             return 1
         }
@@ -156,9 +176,15 @@ deploy_frontend() {
         
         log_info "Frontend deployed to: ${WEB_ROOT}"
     else
-        log_warn "Frontend build not found at: ${build_dir}"
+        log_warn "Frontend build not found in any of the following locations:"
+        log_warn "  1. ${opt_dist} (client installation)"
+        log_warn "  2. ${build_dir} (developer build)"
+        log_warn "  3. ${prebuilt_dir} (prebuilt directory)"
         log_warn "Skipping frontend deployment - Nginx will serve existing files or 404"
-        log_warn "To deploy frontend: npm run build (in project root)"
+        log_warn ""
+        log_warn "To deploy frontend:"
+        log_warn "  - For clients: Extract package to /opt/stackbill and run deploy-from-opt.sh"
+        log_warn "  - For developers: Run 'npm run build' in project root"
     fi
 }
 
