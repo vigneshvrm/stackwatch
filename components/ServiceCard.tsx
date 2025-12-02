@@ -35,7 +35,9 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ service }) => {
       </div>
 
       <div className="mt-6 flex items-center text-blue-400 text-sm font-medium opacity-0 transform translate-y-2 transition-all duration-300 group-hover:opacity-100 group-hover:translate-y-0">
-        {isInternalRoute ? 'View Documentation →' : 'Access Portal →'}
+        {service.id === 'svc-help' && 'View Documentation'}
+        {service.id === 'svc-prom' && 'Access Prometheus'}
+        {service.id === 'svc-graf' && 'Access Grafana'}
       </div>
     </>
   );
