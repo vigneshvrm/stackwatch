@@ -133,8 +133,8 @@ const HelpPage: React.FC = () => {
             onClick={() => handleMenuClick(item)}
             className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${
               isSelected
-                ? 'bg-blue-600 text-white'
-                : 'text-slate-300 hover:bg-brand-700 hover:text-white'
+                ? 'bg-blue-600 dark:bg-blue-600 text-white'
+                : 'text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-brand-700 hover:text-slate-900 dark:hover:text-white'
             } ${level > 0 ? 'pl-8' : ''}`}
           >
             <div className="flex items-center justify-between">
@@ -152,7 +152,7 @@ const HelpPage: React.FC = () => {
             </div>
           </button>
           {hasChildren && isExpanded && (
-            <div className="mt-1 ml-2 border-l border-brand-600 pl-2">
+            <div className="mt-1 ml-2 border-l border-slate-300 dark:border-brand-600 pl-2">
               {item.children!.map(child => renderMenuItem(child, level + 1))}
             </div>
           )}
@@ -229,12 +229,12 @@ For additional support or questions, please contact your system administrator.
 
   if (loading && !markdownContent) {
     return (
-      <div className="min-h-screen flex flex-col bg-brand-900 text-slate-100">
+      <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-brand-900 text-slate-900 dark:text-slate-100 transition-colors duration-200">
         <Header />
         <main className="flex-grow flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-            <p className="text-slate-400">Loading documentation...</p>
+            <p className="text-slate-600 dark:text-slate-400 transition-colors duration-200">Loading documentation...</p>
           </div>
         </main>
         <Footer />
@@ -243,14 +243,14 @@ For additional support or questions, please contact your system administrator.
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-brand-900 text-slate-100 font-sans">
+    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-brand-900 text-slate-900 dark:text-slate-100 font-sans transition-colors duration-200">
       <Header />
       
       <main className="flex-grow flex flex-col lg:flex-row relative">
         {/* Sidebar Toggle Button */}
         <button
           onClick={toggleSidebar}
-          className="fixed top-20 left-4 z-50 lg:hidden bg-brand-800 border border-brand-700 rounded-lg p-2 text-slate-300 hover:text-white hover:bg-brand-700 transition-colors shadow-lg"
+          className="fixed top-20 left-4 z-50 lg:hidden bg-slate-100 dark:bg-brand-800 border border-slate-200 dark:border-brand-700 rounded-lg p-2 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-brand-700 transition-colors shadow-lg"
           aria-label="Toggle sidebar"
         >
           <svg
@@ -271,13 +271,13 @@ For additional support or questions, please contact your system administrator.
         <aside
           className={`${
             sidebarVisible ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-          } fixed lg:sticky top-0 left-0 h-screen lg:h-auto w-72 bg-brand-800 border-r border-brand-700 z-40 transition-transform duration-300 ease-in-out flex flex-col`}
+          } fixed lg:sticky top-0 left-0 h-screen lg:h-auto w-72 bg-slate-100 dark:bg-brand-800 border-r border-slate-200 dark:border-brand-700 z-40 transition-all duration-300 ease-in-out flex flex-col`}
         >
-          <div className="p-4 border-b border-brand-700 flex items-center justify-between">
-            <h2 className="text-xl font-bold text-white">Documentation</h2>
+          <div className="p-4 border-b border-slate-200 dark:border-brand-700 flex items-center justify-between">
+            <h2 className="text-xl font-bold text-slate-900 dark:text-white transition-colors duration-200">Documentation</h2>
             <button
               onClick={toggleSidebar}
-              className="lg:hidden text-slate-400 hover:text-white transition-colors"
+              className="lg:hidden text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
               aria-label="Close sidebar"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -289,7 +289,7 @@ For additional support or questions, please contact your system administrator.
             {menuItems.length > 0 ? (
               renderSidebar()
             ) : (
-              <p className="text-slate-400 text-sm">No documentation available</p>
+              <p className="text-slate-600 dark:text-slate-400 text-sm transition-colors duration-200">No documentation available</p>
             )}
           </div>
         </aside>
@@ -309,7 +309,7 @@ For additional support or questions, please contact your system administrator.
               {/* Back Button */}
               <button
                 onClick={() => navigate('/')}
-                className="mb-6 flex items-center text-blue-400 hover:text-blue-300 transition-colors"
+                className="mb-6 flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors duration-200"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
@@ -321,13 +321,13 @@ For additional support or questions, please contact your system administrator.
               {docLoading && (
                 <div className="text-center py-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
-                  <p className="text-slate-400">Loading document...</p>
+                  <p className="text-slate-600 dark:text-slate-400 transition-colors duration-200">Loading document...</p>
                 </div>
               )}
 
               {/* Error State */}
               {error && !docLoading && (
-                <div className="text-red-400 mb-4 p-4 bg-red-900/20 border border-red-500/30 rounded">
+                <div className="text-red-600 dark:text-red-400 mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-500/30 rounded transition-colors duration-200">
                   <p className="font-semibold">Error loading documentation:</p>
                   <p>{error}</p>
                 </div>
@@ -335,7 +335,7 @@ For additional support or questions, please contact your system administrator.
 
               {/* Markdown Content */}
               {!docLoading && markdownContent && (
-                <div className="bg-brand-800 border border-brand-700 rounded-xl shadow-lg p-6 sm:p-8 lg:p-10 prose prose-invert prose-headings:text-white prose-h1:text-3xl prose-h1:font-bold prose-h1:mb-6 prose-h1:mt-0 prose-h2:text-2xl prose-h2:font-semibold prose-h2:mt-8 prose-h2:mb-4 prose-h2:border-b prose-h2:border-brand-600 prose-h2:pb-2 prose-h3:text-xl prose-h3:font-semibold prose-h3:mt-6 prose-h3:mb-3 prose-h4:text-lg prose-h4:font-semibold prose-h4:mt-4 prose-h4:mb-2 prose-p:text-slate-300 prose-p:leading-relaxed prose-p:my-4 prose-a:text-blue-400 prose-a:no-underline hover:prose-a:text-blue-300 prose-strong:text-white prose-strong:font-semibold prose-code:text-blue-300 prose-code:bg-brand-900 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-sm prose-code:font-mono prose-pre:bg-brand-900 prose-pre:border prose-pre:border-brand-700 prose-pre:rounded-lg prose-pre:p-4 prose-pre:overflow-x-auto prose-img:rounded-lg prose-img:shadow-lg prose-img:border prose-img:border-brand-700 prose-img:max-w-full prose-img:h-auto prose-img:my-6 prose-ul:list-disc prose-ul:ml-6 prose-ul:my-4 prose-ol:list-decimal prose-ol:ml-6 prose-ol:my-4 prose-li:my-2 prose-li:leading-relaxed prose-li:pl-1 prose-table:w-full prose-table:my-6 prose-th:bg-brand-700 prose-th:text-white prose-th:font-semibold prose-th:p-3 prose-th:border prose-th:border-brand-600 prose-td:p-3 prose-td:border prose-td:border-brand-600 prose-td:text-slate-300 prose-hr:border-brand-600 prose-hr:my-8 prose-blockquote:border-l-4 prose-blockquote:border-blue-500 prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-slate-400 max-w-none">
+                <div className="bg-white dark:bg-brand-800 border border-slate-200 dark:border-brand-700 rounded-xl shadow-lg p-6 sm:p-8 lg:p-10 prose dark:prose-invert prose-headings:text-slate-900 dark:prose-headings:text-white prose-h1:text-3xl prose-h1:font-bold prose-h1:mb-6 prose-h1:mt-0 prose-h2:text-2xl prose-h2:font-semibold prose-h2:mt-8 prose-h2:mb-4 prose-h2:border-b prose-h2:border-slate-300 dark:prose-h2:border-brand-600 prose-h2:pb-2 prose-h3:text-xl prose-h3:font-semibold prose-h3:mt-6 prose-h3:mb-3 prose-h4:text-lg prose-h4:font-semibold prose-h4:mt-4 prose-h4:mb-2 prose-p:text-slate-700 dark:prose-p:text-slate-300 prose-p:leading-relaxed prose-p:my-4 prose-a:text-blue-600 dark:prose-a:text-blue-400 prose-a:no-underline hover:prose-a:text-blue-700 dark:hover:prose-a:text-blue-300 prose-strong:text-slate-900 dark:prose-strong:text-white prose-strong:font-semibold prose-code:text-blue-600 dark:prose-code:text-blue-300 prose-code:bg-slate-100 dark:prose-code:bg-brand-900 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-sm prose-code:font-mono prose-pre:bg-slate-100 dark:prose-pre:bg-brand-900 prose-pre:border prose-pre:border-slate-200 dark:prose-pre:border-brand-700 prose-pre:rounded-lg prose-pre:p-4 prose-pre:overflow-x-auto prose-img:rounded-lg prose-img:shadow-lg prose-img:border prose-img:border-slate-200 dark:prose-img:border-brand-700 prose-img:max-w-full prose-img:h-auto prose-img:my-6 prose-ul:list-disc prose-ul:ml-6 prose-ul:my-4 prose-ol:list-decimal prose-ol:ml-6 prose-ol:my-4 prose-li:my-2 prose-li:leading-relaxed prose-li:pl-1 prose-table:w-full prose-table:my-6 prose-th:bg-slate-100 dark:prose-th:bg-brand-700 prose-th:text-slate-900 dark:prose-th:text-white prose-th:font-semibold prose-th:p-3 prose-th:border prose-th:border-slate-200 dark:prose-th:border-brand-600 prose-td:p-3 prose-td:border prose-td:border-slate-200 dark:prose-td:border-brand-600 prose-td:text-slate-700 dark:prose-td:text-slate-300 prose-hr:border-slate-300 dark:prose-hr:border-brand-600 prose-hr:my-8 prose-blockquote:border-l-4 prose-blockquote:border-blue-500 prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-slate-600 dark:prose-blockquote:text-slate-400 max-w-none transition-colors duration-200">
                   <ReactMarkdown remarkPlugins={[remarkGfm]}>
                     {markdownContent}
                   </ReactMarkdown>

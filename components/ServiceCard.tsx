@@ -12,7 +12,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ service }) => {
   // Use React Router Link for internal routes (Help)
   const isInternalRoute = service.path === '/help';
   
-  const cardClassName = "group relative flex flex-col items-center justify-center p-8 bg-brand-800 border border-brand-700 rounded-xl shadow-lg transition-all duration-300 hover:bg-brand-700 hover:scale-105 hover:shadow-blue-500/20 hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-brand-900";
+  const cardClassName = "group relative flex flex-col items-center justify-center p-8 bg-slate-100 dark:bg-brand-800 border border-slate-200 dark:border-brand-700 rounded-xl shadow-lg transition-all duration-300 hover:bg-slate-200 dark:hover:bg-brand-700 hover:scale-105 hover:shadow-blue-500/20 dark:hover:shadow-blue-500/20 hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:focus:ring-offset-brand-900";
   
   const cardContent = (
     <>
@@ -20,11 +20,11 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ service }) => {
         {ICONS[service.icon]}
       </div>
       
-      <h2 className="text-xl font-bold text-white mb-2 tracking-tight">
+      <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2 tracking-tight transition-colors duration-200">
         {service.name}
       </h2>
       
-      <p className="text-sm text-slate-400 text-center max-w-[200px]">
+      <p className="text-sm text-slate-600 dark:text-slate-400 text-center max-w-[200px] transition-colors duration-200">
         {service.description}
       </p>
 
@@ -34,7 +34,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({ service }) => {
         </span>
       </div>
 
-      <div className="mt-6 flex items-center text-blue-400 text-sm font-medium opacity-0 transform translate-y-2 transition-all duration-300 group-hover:opacity-100 group-hover:translate-y-0">
+      <div className="mt-6 flex items-center text-blue-600 dark:text-blue-400 text-sm font-medium opacity-0 transform translate-y-2 transition-all duration-300 group-hover:opacity-100 group-hover:translate-y-0">
         {service.id === 'svc-help' && 'View Documentation'}
         {service.id === 'svc-prom' && 'Access Prometheus'}
         {service.id === 'svc-graf' && 'Access Grafana'}
