@@ -250,11 +250,11 @@ For additional support or questions, please contact your system administrator.
       <Header />
       
       <main className="flex-grow flex flex-col lg:flex-row relative">
-        {/* Sidebar Toggle Button - Always visible */}
+        {/* Sidebar Toggle Button - Hamburger Menu (Three Lines) */}
         <button
           onClick={toggleSidebar}
-          className={`fixed top-20 left-4 z-50 bg-slate-100 dark:bg-brand-800 border border-slate-200 dark:border-brand-700 rounded-lg p-2 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-brand-700 transition-all duration-200 shadow-lg ${
-            !sidebarVisible ? 'lg:left-4' : 'lg:left-[19rem]'
+          className={`fixed top-20 z-50 bg-slate-100 dark:bg-brand-800 border border-slate-200 dark:border-brand-700 rounded-lg p-2.5 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-brand-700 transition-all duration-200 shadow-lg ${
+            sidebarVisible ? 'left-[19rem]' : 'left-4'
           }`}
           aria-label="Toggle sidebar"
           title={sidebarVisible ? "Hide sidebar" : "Show sidebar"}
@@ -265,11 +265,8 @@ For additional support or questions, please contact your system administrator.
             stroke="currentColor"
             viewBox="0 0 24 24"
           >
-            {sidebarVisible ? (
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
-            ) : (
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
-            )}
+            {/* Hamburger menu icon - three horizontal lines */}
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
           </svg>
         </button>
 
@@ -309,12 +306,14 @@ For additional support or questions, please contact your system administrator.
           />
         )}
 
-        {/* Content Area */}
+        {/* Content Area - No overlap with sidebar */}
         <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${
           sidebarVisible ? 'lg:ml-72' : 'lg:ml-0'
         }`}>
-          <div className="p-4 sm:p-6 lg:p-8 xl:p-12 flex-1">
-            <div className="max-w-5xl mx-auto">
+          <div className={`p-4 sm:p-6 lg:p-8 xl:p-12 flex-1 transition-all duration-300 ${
+            sidebarVisible ? 'lg:pl-8' : 'lg:pl-20'
+          }`}>
+            <div className="max-w-4xl mx-auto">
               {/* Back Button */}
               <button
                 onClick={() => navigate('/')}
@@ -342,34 +341,46 @@ For additional support or questions, please contact your system administrator.
                 </div>
               )}
 
-              {/* Markdown Content - Professional Styling */}
+              {/* Markdown Content - Professional Industry Standard Formatting */}
               {!docLoading && markdownContent && (
-                <article className="bg-white dark:bg-brand-800 border border-slate-200 dark:border-brand-700 rounded-2xl shadow-2xl overflow-hidden transition-colors duration-200">
-                  {/* Content Container with Professional Padding */}
-                  <div className="p-8 sm:p-10 lg:p-12 xl:p-16 prose dark:prose-invert max-w-none
-                    prose-headings:text-slate-900 dark:prose-headings:text-white prose-headings:font-bold
-                    prose-h1:text-5xl prose-h1:font-extrabold prose-h1:mb-10 prose-h1:mt-0 prose-h1:text-center prose-h1:border-b-2 prose-h1:border-slate-300 dark:prose-h1:border-brand-600 prose-h1:pb-6 prose-h1:bg-gradient-to-r prose-h1:from-blue-600 prose-h1:to-indigo-600 prose-h1:bg-clip-text prose-h1:text-transparent dark:prose-h1:from-blue-400 dark:prose-h1:to-indigo-400
-                    prose-h2:text-3xl prose-h2:font-bold prose-h2:mt-12 prose-h2:mb-8 prose-h2:border-b prose-h2:border-slate-300 dark:prose-h2:border-brand-600 prose-h2:pb-4 prose-h2:text-left prose-h2:text-slate-800 dark:prose-h2:text-slate-100
-                    prose-h3:text-2xl prose-h3:font-semibold prose-h3:mt-10 prose-h3:mb-6 prose-h3:text-left prose-h3:text-slate-800 dark:prose-h3:text-slate-200
-                    prose-h4:text-xl prose-h4:font-semibold prose-h4:mt-8 prose-h4:mb-4 prose-h4:text-left prose-h4:text-slate-700 dark:prose-h4:text-slate-300
-                    prose-p:text-slate-700 dark:prose-p:text-slate-300 prose-p:leading-relaxed prose-p:my-5 prose-p:text-left prose-p:text-base
-                    prose-a:text-blue-600 dark:prose-a:text-blue-400 prose-a:no-underline hover:prose-a:text-blue-700 dark:hover:prose-a:text-blue-300 prose-a:font-semibold prose-a:border-b-2 prose-a:border-blue-300 dark:prose-a:border-blue-600 hover:prose-a:border-blue-500
-                    prose-strong:text-slate-900 dark:prose-strong:text-white prose-strong:font-bold prose-strong:text-lg
-                    prose-code:text-blue-700 dark:prose-code:text-blue-300 prose-code:bg-slate-100 dark:prose-code:bg-brand-900 prose-code:px-2 prose-code:py-1 prose-code:rounded-md prose-code:text-sm prose-code:font-mono prose-code:border prose-code:border-slate-200 dark:prose-code:border-brand-700
-                    prose-pre:bg-gradient-to-br prose-pre:from-slate-900 prose-pre:to-slate-800 dark:prose-pre:from-brand-950 dark:prose-pre:to-brand-900 prose-pre:border prose-pre:border-slate-700 dark:prose-pre:border-brand-600 prose-pre:rounded-xl prose-pre:p-6 prose-pre:overflow-x-auto prose-pre:shadow-inner
-                    prose-img:rounded-xl prose-img:shadow-2xl prose-img:border-2 prose-img:border-slate-200 dark:prose-img:border-brand-700 prose-img:max-w-full prose-img:h-auto prose-img:my-8 prose-img:mx-auto prose-img:ring-4 prose-img:ring-slate-100 dark:prose-img:ring-brand-800
-                    prose-ul:list-disc prose-ul:ml-8 prose-ul:my-6 prose-ul:text-left prose-ul:space-y-2
-                    prose-ol:list-decimal prose-ol:ml-8 prose-ol:my-6 prose-ol:text-left prose-ol:space-y-2
-                    prose-li:my-3 prose-li:leading-relaxed prose-li:pl-2 prose-li:text-left prose-li:text-base
-                    prose-table:w-full prose-table:my-10 prose-table:border-collapse prose-table:shadow-xl prose-table:rounded-xl prose-table:overflow-hidden prose-table:ring-1 prose-table:ring-slate-200 dark:prose-table:ring-brand-700
-                    prose-th:bg-gradient-to-r prose-th:from-blue-600 prose-th:to-indigo-600 dark:prose-th:from-blue-700 dark:prose-th:to-indigo-700 prose-th:text-white prose-th:font-bold prose-th:p-5 prose-th:border prose-th:border-blue-500 dark:prose-th:border-blue-600 prose-th:text-left prose-th:align-top prose-th:text-base prose-th:uppercase prose-th:tracking-wide
-                    prose-td:p-5 prose-td:border prose-td:border-slate-200 dark:prose-td:border-brand-600 prose-td:text-slate-700 dark:prose-td:text-slate-300 prose-td:align-top prose-td:text-left prose-td:text-base prose-td:bg-slate-50 dark:prose-td:bg-brand-800/50
-                    prose-tr:hover:bg-blue-50 dark:prose-tr:hover:bg-blue-900/20 prose-tr:transition-colors prose-tr:duration-200
-                    prose-hr:border-slate-300 dark:prose-hr:border-brand-600 prose-hr:my-12 prose-hr:border-t-2 prose-hr:border-dashed
-                    prose-blockquote:border-l-4 prose-blockquote:border-blue-500 prose-blockquote:pl-6 prose-blockquote:pr-6 prose-blockquote:py-4 prose-blockquote:italic prose-blockquote:bg-gradient-to-r prose-blockquote:from-blue-50 prose-blockquote:to-indigo-50 dark:prose-blockquote:from-blue-900/20 dark:prose-blockquote:to-indigo-900/20 prose-blockquote:text-slate-700 dark:prose-blockquote:text-slate-300 prose-blockquote:rounded-r-xl prose-blockquote:my-8 prose-blockquote:shadow-sm prose-blockquote:text-lg">
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                      {markdownContent}
-                    </ReactMarkdown>
+                <article className="bg-white dark:bg-brand-800 border border-slate-200 dark:border-brand-700 rounded-lg shadow-lg overflow-hidden transition-colors duration-200">
+                  <div className="prose prose-slate dark:prose-invert max-w-none
+                    prose-headings:font-semibold prose-headings:text-slate-900 dark:prose-headings:text-slate-100
+                    prose-h1:text-4xl prose-h1:font-bold prose-h1:mb-6 prose-h1:mt-0 prose-h1:pb-4 prose-h1:border-b prose-h1:border-slate-200 dark:prose-h1:border-brand-700
+                    prose-h2:text-2xl prose-h2:font-semibold prose-h2:mt-10 prose-h2:mb-4 prose-h2:pb-2 prose-h2:border-b prose-h2:border-slate-200 dark:prose-h2:border-brand-700 prose-h2:text-slate-800 dark:prose-h2:text-slate-100
+                    prose-h3:text-xl prose-h3:font-semibold prose-h3:mt-8 prose-h3:mb-3 prose-h3:text-slate-800 dark:prose-h3:text-slate-200
+                    prose-h4:text-lg prose-h4:font-semibold prose-h4:mt-6 prose-h4:mb-2 prose-h4:text-slate-700 dark:prose-h4:text-slate-300
+                    prose-p:text-slate-700 dark:prose-p:text-slate-300 prose-p:leading-7 prose-p:my-4
+                    prose-a:text-blue-600 dark:prose-a:text-blue-400 prose-a:no-underline hover:prose-a:underline prose-a:font-medium
+                    prose-strong:text-slate-900 dark:prose-strong:text-white prose-strong:font-semibold
+                    prose-code:text-blue-700 dark:prose-code:text-blue-300 prose-code:bg-slate-100 dark:prose-code:bg-brand-900 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-sm prose-code:font-mono prose-code:before:content-[''] prose-code:after:content-['']
+                    prose-pre:bg-slate-900 dark:prose-pre:bg-brand-950 prose-pre:border prose-pre:border-slate-700 dark:prose-pre:border-brand-600 prose-pre:rounded-lg prose-pre:p-4 prose-pre:overflow-x-auto
+                    prose-img:rounded-lg prose-img:shadow-md prose-img:border prose-img:border-slate-200 dark:prose-img:border-brand-700 prose-img:max-w-full prose-img:h-auto prose-img:my-6
+                    prose-ul:my-4 prose-ul:pl-6 prose-ul:list-disc
+                    prose-ol:my-4 prose-ol:pl-6 prose-ol:list-decimal
+                    prose-li:my-2 prose-li:leading-7
+                    prose-table:w-full prose-table:my-6 prose-table:border-collapse prose-table:border prose-table:border-slate-300 dark:prose-table:border-brand-600 prose-table:rounded-lg prose-table:overflow-hidden
+                    prose-th:bg-slate-100 dark:prose-th:bg-brand-700 prose-th:text-slate-900 dark:prose-th:text-slate-100 prose-th:font-semibold prose-th:p-3 prose-th:border prose-th:border-slate-300 dark:prose-th:border-brand-600 prose-th:text-left prose-th:align-top
+                    prose-td:p-3 prose-td:border prose-td:border-slate-300 dark:prose-td:border-brand-600 prose-td:text-slate-700 dark:prose-td:text-slate-300 prose-td:align-top prose-td:text-left
+                    prose-tr:border-b prose-tr:border-slate-200 dark:prose-tr:border-brand-700 prose-tr:hover:bg-slate-50 dark:prose-tr:hover:bg-brand-800/50
+                    prose-hr:border-slate-300 dark:prose-hr:border-brand-600 prose-hr:my-8
+                    prose-blockquote:border-l-4 prose-blockquote:border-blue-500 prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-slate-600 dark:prose-blockquote:text-slate-400 prose-blockquote:my-6
+                    [&_table]:w-full [&_table]:border-collapse [&_table]:border [&_table]:border-slate-300 [&_table]:dark:border-brand-600 [&_table]:rounded-lg [&_table]:overflow-hidden [&_table]:my-6
+                    [&_th]:bg-slate-100 [&_th]:dark:bg-brand-700 [&_th]:text-slate-900 [&_th]:dark:text-slate-100 [&_th]:font-semibold [&_th]:p-3 [&_th]:border [&_th]:border-slate-300 [&_th]:dark:border-brand-600 [&_th]:text-left [&_th]:align-top
+                    [&_td]:p-3 [&_td]:border [&_td]:border-slate-300 [&_td]:dark:border-brand-600 [&_td]:text-slate-700 [&_td]:dark:text-slate-300 [&_td]:align-top [&_td]:text-left
+                    [&_tr]:border-b [&_tr]:border-slate-200 [&_tr]:dark:border-brand-700 [&_tr:hover]:bg-slate-50 [&_tr:hover]:dark:bg-brand-800/50
+                    [&_p]:text-slate-700 [&_p]:dark:text-slate-300 [&_p]:leading-7 [&_p]:my-4
+                    [&_strong]:text-slate-900 [&_strong]:dark:text-white [&_strong]:font-semibold
+                    [&_code]:text-blue-700 [&_code]:dark:text-blue-300 [&_code]:bg-slate-100 [&_code]:dark:bg-brand-900 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-sm [&_code]:font-mono
+                    [&_pre]:bg-slate-900 [&_pre]:dark:bg-brand-950 [&_pre]:border [&_pre]:border-slate-700 [&_pre]:dark:border-brand-600 [&_pre]:rounded-lg [&_pre]:p-4 [&_pre]:overflow-x-auto
+                    [&_ul]:my-4 [&_ul]:pl-6 [&_ul]:list-disc
+                    [&_ol]:my-4 [&_ol]:pl-6 [&_ol]:list-decimal
+                    [&_li]:my-2 [&_li]:leading-7">
+                    <div className="px-6 py-8 sm:px-8 sm:py-10 lg:px-12 lg:py-12">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                        {markdownContent}
+                      </ReactMarkdown>
+                    </div>
                   </div>
                 </article>
               )}
