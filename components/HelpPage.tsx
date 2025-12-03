@@ -250,19 +250,34 @@ For additional support or questions, please contact your system administrator.
       <Header />
       
       <main className="flex-grow flex flex-col lg:flex-row relative">
-        {/* Sidebar - Seamlessly aligned below header (header py-8 = 4rem padding + ~2.5rem content = 6.5rem total) */}
+        {/* Floating button to show sidebar when hidden */}
+        {!sidebarVisible && (
+          <button
+            onClick={toggleSidebar}
+            className="fixed top-[6.5rem] left-4 z-50 bg-slate-100 dark:bg-brand-800 border border-slate-200 dark:border-brand-700 rounded-lg p-2.5 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-brand-700 transition-all duration-200 shadow-lg"
+            aria-label="Show sidebar"
+            title="Show sidebar"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              {/* Hamburger menu icon - three horizontal lines */}
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+        )}
+
+        {/* Sidebar - Seamlessly aligned below header (header py-8 = 4rem padding + ~2.5rem content = 6.5rem total, +1px for border) */}
         <aside
           className={`${
             sidebarVisible ? 'translate-x-0' : '-translate-x-full'
-          } fixed lg:fixed top-[6.5rem] left-0 h-[calc(100vh-6.5rem)] w-72 bg-slate-100 dark:bg-brand-800 border-r border-slate-200 dark:border-brand-700 z-40 transition-all duration-300 ease-in-out flex flex-col shadow-xl`}
+          } fixed lg:fixed top-[calc(6.5rem+1px)] left-0 h-[calc(100vh-6.5rem-1px)] w-72 bg-slate-100 dark:bg-brand-800 border-r border-slate-200 dark:border-brand-700 z-40 transition-all duration-300 ease-in-out flex flex-col shadow-xl`}
         >
           <div className="p-4 border-b border-slate-200 dark:border-brand-700 flex items-center justify-between bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20">
             <h2 className="text-xl font-bold text-slate-900 dark:text-white transition-colors duration-200">Documentation</h2>
             <button
               onClick={toggleSidebar}
               className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors p-1.5 rounded hover:bg-slate-200 dark:hover:bg-brand-700"
-              aria-label="Toggle sidebar"
-              title={sidebarVisible ? "Hide sidebar" : "Show sidebar"}
+              aria-label="Hide sidebar"
+              title="Hide sidebar"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 {/* Hamburger menu icon - three horizontal lines */}
