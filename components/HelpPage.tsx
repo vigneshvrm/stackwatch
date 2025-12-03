@@ -211,18 +211,21 @@ For additional support or questions, please contact your system administrator.
     fetchManifest();
   }, []);
 
-  // Auto-hide sidebar on mobile
+  // Auto-hide sidebar on mobile, but allow manual toggle on desktop
   useEffect(() => {
     const handleResize = (): void => {
+      // On mobile/tablet, auto-hide sidebar
       if (window.innerWidth < 1024) {
         setSidebarVisible(false);
-      } else {
-        setSidebarVisible(true);
       }
+      // On desktop, keep current state (user preference)
     };
 
     window.addEventListener('resize', handleResize);
-    handleResize(); // Initial check
+    // Initial check: hide on mobile, show on desktop
+    if (window.innerWidth < 1024) {
+      setSidebarVisible(false);
+    }
 
     return () => window.removeEventListener('resize', handleResize);
   }, []);
@@ -247,11 +250,14 @@ For additional support or questions, please contact your system administrator.
       <Header />
       
       <main className="flex-grow flex flex-col lg:flex-row relative">
-        {/* Sidebar Toggle Button */}
+        {/* Sidebar Toggle Button - Always visible */}
         <button
           onClick={toggleSidebar}
-          className="fixed top-20 left-4 z-50 lg:hidden bg-slate-100 dark:bg-brand-800 border border-slate-200 dark:border-brand-700 rounded-lg p-2 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-brand-700 transition-colors shadow-lg"
+          className={`fixed top-20 left-4 z-50 bg-slate-100 dark:bg-brand-800 border border-slate-200 dark:border-brand-700 rounded-lg p-2 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-brand-700 transition-all duration-200 shadow-lg ${
+            !sidebarVisible ? 'lg:left-4' : 'lg:left-[19rem]'
+          }`}
           aria-label="Toggle sidebar"
+          title={sidebarVisible ? "Hide sidebar" : "Show sidebar"}
         >
           <svg
             className="w-6 h-6"
@@ -260,9 +266,9 @@ For additional support or questions, please contact your system administrator.
             viewBox="0 0 24 24"
           >
             {sidebarVisible ? (
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
             ) : (
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
             )}
           </svg>
         </button>
@@ -270,15 +276,16 @@ For additional support or questions, please contact your system administrator.
         {/* Sidebar */}
         <aside
           className={`${
-            sidebarVisible ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-          } fixed lg:sticky top-0 left-0 h-screen lg:h-auto w-72 bg-slate-100 dark:bg-brand-800 border-r border-slate-200 dark:border-brand-700 z-40 transition-all duration-300 ease-in-out flex flex-col`}
+            sidebarVisible ? 'translate-x-0' : '-translate-x-full'
+          } fixed lg:fixed top-0 left-0 h-screen w-72 bg-slate-100 dark:bg-brand-800 border-r border-slate-200 dark:border-brand-700 z-40 transition-all duration-300 ease-in-out flex flex-col shadow-xl`}
         >
-          <div className="p-4 border-b border-slate-200 dark:border-brand-700 flex items-center justify-between">
+          <div className="p-4 border-b border-slate-200 dark:border-brand-700 flex items-center justify-between bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20">
             <h2 className="text-xl font-bold text-slate-900 dark:text-white transition-colors duration-200">Documentation</h2>
             <button
               onClick={toggleSidebar}
-              className="lg:hidden text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
+              className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors p-1 rounded hover:bg-slate-200 dark:hover:bg-brand-700"
               aria-label="Close sidebar"
+              title="Hide sidebar"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -294,18 +301,20 @@ For additional support or questions, please contact your system administrator.
           </div>
         </aside>
 
-        {/* Overlay for mobile */}
+        {/* Overlay for mobile/tablet */}
         {sidebarVisible && (
           <div
-            className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-30"
+            className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-30 transition-opacity duration-300"
             onClick={() => setSidebarVisible(false)}
           />
         )}
 
         {/* Content Area */}
-        <div className="flex-1 flex flex-col min-w-0">
-          <div className="p-4 sm:p-8 lg:p-12 flex-1">
-            <div className="max-w-4xl mx-auto">
+        <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${
+          sidebarVisible ? 'lg:ml-72' : 'lg:ml-0'
+        }`}>
+          <div className="p-4 sm:p-6 lg:p-8 xl:p-12 flex-1">
+            <div className="max-w-5xl mx-auto">
               {/* Back Button */}
               <button
                 onClick={() => navigate('/')}
@@ -333,33 +342,36 @@ For additional support or questions, please contact your system administrator.
                 </div>
               )}
 
-              {/* Markdown Content */}
+              {/* Markdown Content - Professional Styling */}
               {!docLoading && markdownContent && (
-                <div className="bg-white dark:bg-brand-800 border border-slate-200 dark:border-brand-700 rounded-xl shadow-lg p-6 sm:p-8 lg:p-10 prose dark:prose-invert max-w-none transition-colors duration-200
-                  prose-headings:text-slate-900 dark:prose-headings:text-white
-                  prose-h1:text-4xl prose-h1:font-bold prose-h1:mb-8 prose-h1:mt-0 prose-h1:text-center prose-h1:border-b prose-h1:border-slate-300 dark:prose-h1:border-brand-600 prose-h1:pb-4
-                  prose-h2:text-2xl prose-h2:font-semibold prose-h2:mt-10 prose-h2:mb-6 prose-h2:border-b prose-h2:border-slate-300 dark:prose-h2:border-brand-600 prose-h2:pb-3 prose-h2:text-left
-                  prose-h3:text-xl prose-h3:font-semibold prose-h3:mt-8 prose-h3:mb-4 prose-h3:text-left
-                  prose-h4:text-lg prose-h4:font-semibold prose-h4:mt-6 prose-h4:mb-3 prose-h4:text-left
-                  prose-p:text-slate-700 dark:prose-p:text-slate-300 prose-p:leading-relaxed prose-p:my-4 prose-p:text-left
-                  prose-a:text-blue-600 dark:prose-a:text-blue-400 prose-a:no-underline hover:prose-a:text-blue-700 dark:hover:prose-a:text-blue-300 prose-a:font-medium
-                  prose-strong:text-slate-900 dark:prose-strong:text-white prose-strong:font-semibold
-                  prose-code:text-blue-600 dark:prose-code:text-blue-300 prose-code:bg-slate-100 dark:prose-code:bg-brand-900 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-sm prose-code:font-mono
-                  prose-pre:bg-slate-100 dark:prose-pre:bg-brand-900 prose-pre:border prose-pre:border-slate-200 dark:prose-pre:border-brand-700 prose-pre:rounded-lg prose-pre:p-4 prose-pre:overflow-x-auto
-                  prose-img:rounded-lg prose-img:shadow-lg prose-img:border prose-img:border-slate-200 dark:prose-img:border-brand-700 prose-img:max-w-full prose-img:h-auto prose-img:my-6 prose-img:mx-auto
-                  prose-ul:list-disc prose-ul:ml-6 prose-ul:my-4 prose-ul:text-left
-                  prose-ol:list-decimal prose-ol:ml-6 prose-ol:my-4 prose-ol:text-left
-                  prose-li:my-2 prose-li:leading-relaxed prose-li:pl-1 prose-li:text-left
-                  prose-table:w-full prose-table:my-8 prose-table:border-collapse prose-table:shadow-md prose-table:rounded-lg prose-table:overflow-hidden
-                  prose-th:bg-gradient-to-r prose-th:from-blue-50 prose-th:to-blue-100 dark:prose-th:from-blue-900/30 dark:prose-th:to-blue-800/30 prose-th:text-slate-900 dark:prose-th:text-white prose-th:font-bold prose-th:p-4 prose-th:border prose-th:border-slate-300 dark:prose-th:border-brand-600 prose-th:text-left prose-th:align-top
-                  prose-td:p-4 prose-td:border prose-td:border-slate-200 dark:prose-td:border-brand-600 prose-td:text-slate-700 dark:prose-td:text-slate-300 prose-td:align-top prose-td:text-left
-                  prose-tr:hover:bg-slate-50 dark:prose-tr:hover:bg-brand-700/20 prose-tr:transition-colors
-                  prose-hr:border-slate-300 dark:prose-hr:border-brand-600 prose-hr:my-10 prose-hr:border-t-2
-                  prose-blockquote:border-l-4 prose-blockquote:border-blue-500 prose-blockquote:pl-6 prose-blockquote:pr-4 prose-blockquote:py-2 prose-blockquote:italic prose-blockquote:bg-blue-50 dark:prose-blockquote:bg-blue-900/10 prose-blockquote:text-slate-700 dark:prose-blockquote:text-slate-300 prose-blockquote:rounded-r-lg prose-blockquote:my-6">
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                    {markdownContent}
-                  </ReactMarkdown>
-                </div>
+                <article className="bg-white dark:bg-brand-800 border border-slate-200 dark:border-brand-700 rounded-2xl shadow-2xl overflow-hidden transition-colors duration-200">
+                  {/* Content Container with Professional Padding */}
+                  <div className="p-8 sm:p-10 lg:p-12 xl:p-16 prose dark:prose-invert max-w-none
+                    prose-headings:text-slate-900 dark:prose-headings:text-white prose-headings:font-bold
+                    prose-h1:text-5xl prose-h1:font-extrabold prose-h1:mb-10 prose-h1:mt-0 prose-h1:text-center prose-h1:border-b-2 prose-h1:border-slate-300 dark:prose-h1:border-brand-600 prose-h1:pb-6 prose-h1:bg-gradient-to-r prose-h1:from-blue-600 prose-h1:to-indigo-600 prose-h1:bg-clip-text prose-h1:text-transparent dark:prose-h1:from-blue-400 dark:prose-h1:to-indigo-400
+                    prose-h2:text-3xl prose-h2:font-bold prose-h2:mt-12 prose-h2:mb-8 prose-h2:border-b prose-h2:border-slate-300 dark:prose-h2:border-brand-600 prose-h2:pb-4 prose-h2:text-left prose-h2:text-slate-800 dark:prose-h2:text-slate-100
+                    prose-h3:text-2xl prose-h3:font-semibold prose-h3:mt-10 prose-h3:mb-6 prose-h3:text-left prose-h3:text-slate-800 dark:prose-h3:text-slate-200
+                    prose-h4:text-xl prose-h4:font-semibold prose-h4:mt-8 prose-h4:mb-4 prose-h4:text-left prose-h4:text-slate-700 dark:prose-h4:text-slate-300
+                    prose-p:text-slate-700 dark:prose-p:text-slate-300 prose-p:leading-relaxed prose-p:my-5 prose-p:text-left prose-p:text-base
+                    prose-a:text-blue-600 dark:prose-a:text-blue-400 prose-a:no-underline hover:prose-a:text-blue-700 dark:hover:prose-a:text-blue-300 prose-a:font-semibold prose-a:border-b-2 prose-a:border-blue-300 dark:prose-a:border-blue-600 hover:prose-a:border-blue-500
+                    prose-strong:text-slate-900 dark:prose-strong:text-white prose-strong:font-bold prose-strong:text-lg
+                    prose-code:text-blue-700 dark:prose-code:text-blue-300 prose-code:bg-slate-100 dark:prose-code:bg-brand-900 prose-code:px-2 prose-code:py-1 prose-code:rounded-md prose-code:text-sm prose-code:font-mono prose-code:border prose-code:border-slate-200 dark:prose-code:border-brand-700
+                    prose-pre:bg-gradient-to-br prose-pre:from-slate-900 prose-pre:to-slate-800 dark:prose-pre:from-brand-950 dark:prose-pre:to-brand-900 prose-pre:border prose-pre:border-slate-700 dark:prose-pre:border-brand-600 prose-pre:rounded-xl prose-pre:p-6 prose-pre:overflow-x-auto prose-pre:shadow-inner
+                    prose-img:rounded-xl prose-img:shadow-2xl prose-img:border-2 prose-img:border-slate-200 dark:prose-img:border-brand-700 prose-img:max-w-full prose-img:h-auto prose-img:my-8 prose-img:mx-auto prose-img:ring-4 prose-img:ring-slate-100 dark:prose-img:ring-brand-800
+                    prose-ul:list-disc prose-ul:ml-8 prose-ul:my-6 prose-ul:text-left prose-ul:space-y-2
+                    prose-ol:list-decimal prose-ol:ml-8 prose-ol:my-6 prose-ol:text-left prose-ol:space-y-2
+                    prose-li:my-3 prose-li:leading-relaxed prose-li:pl-2 prose-li:text-left prose-li:text-base
+                    prose-table:w-full prose-table:my-10 prose-table:border-collapse prose-table:shadow-xl prose-table:rounded-xl prose-table:overflow-hidden prose-table:ring-1 prose-table:ring-slate-200 dark:prose-table:ring-brand-700
+                    prose-th:bg-gradient-to-r prose-th:from-blue-600 prose-th:to-indigo-600 dark:prose-th:from-blue-700 dark:prose-th:to-indigo-700 prose-th:text-white prose-th:font-bold prose-th:p-5 prose-th:border prose-th:border-blue-500 dark:prose-th:border-blue-600 prose-th:text-left prose-th:align-top prose-th:text-base prose-th:uppercase prose-th:tracking-wide
+                    prose-td:p-5 prose-td:border prose-td:border-slate-200 dark:prose-td:border-brand-600 prose-td:text-slate-700 dark:prose-td:text-slate-300 prose-td:align-top prose-td:text-left prose-td:text-base prose-td:bg-slate-50 dark:prose-td:bg-brand-800/50
+                    prose-tr:hover:bg-blue-50 dark:prose-tr:hover:bg-blue-900/20 prose-tr:transition-colors prose-tr:duration-200
+                    prose-hr:border-slate-300 dark:prose-hr:border-brand-600 prose-hr:my-12 prose-hr:border-t-2 prose-hr:border-dashed
+                    prose-blockquote:border-l-4 prose-blockquote:border-blue-500 prose-blockquote:pl-6 prose-blockquote:pr-6 prose-blockquote:py-4 prose-blockquote:italic prose-blockquote:bg-gradient-to-r prose-blockquote:from-blue-50 prose-blockquote:to-indigo-50 dark:prose-blockquote:from-blue-900/20 dark:prose-blockquote:to-indigo-900/20 prose-blockquote:text-slate-700 dark:prose-blockquote:text-slate-300 prose-blockquote:rounded-r-xl prose-blockquote:my-8 prose-blockquote:shadow-sm prose-blockquote:text-lg">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {markdownContent}
+                    </ReactMarkdown>
+                  </div>
+                </article>
               )}
             </div>
           </div>
