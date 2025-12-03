@@ -1,0 +1,64 @@
+---
+# STACKWATCH: Package Installation Playbook
+# Backend System Architect and Automation Engineer
+#
+# Purpose: Install required packages for StackWatch deployment
+# Target: Ubuntu (localhost)
+# Run: ansible-playbook -i ../inventory/hosts install-packages.yml --connection=local
+
+- name: Install StackWatch Required Packages
+  hosts: localhost
+  become: yes
+  gather_facts: yes
+
+  vars:
+    required_packages:
+      - ansible
+      - podman
+      - nginx
+      - python3
+      - sshpass
+
+  tasks:
+    - name: Update apt package cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+      register: apt_update_result
+
+    - name: Display update status
+      debug:
+        msg: "Package cache updated successfully"
+      when: apt_update_result.changed
+
+    - name: Install required packages
+      apt:
+        name: "{{ required_packages }}"
+        state: present
+        install_recommends: no
+      register: package_install_result
+
+    - name: Verify package installations
+      command: "{{ item }} --version"
+      loop:
+        - ansible
+        - podman
+        - nginx
+        - python3
+      register: version_checks
+      changed_when: false
+      failed_when: false
+
+    - name: Display installed package versions
+      debug:
+        msg: "{{ item.stdout }}"
+      loop: "{{ version_checks.results }}"
+      when: item.rc == 0
+
+    - name: Verify all packages are installed
+      assert:
+        that:
+          - package_install_result is succeeded
+        fail_msg: "Failed to install one or more required packages"
+        success_msg: "All required packages installed successfully"
+

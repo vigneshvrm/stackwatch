@@ -1,4 +1,4 @@
-# STACKBILL: Implementation Summary - Fixes and Documentation Updates
+# STACKWATCH: Implementation Summary - Fixes and Documentation Updates
 
 **Date:** 2024  
 **Engineer:** Backend Engineer and Technical Writer
@@ -47,7 +47,7 @@ chmod +x ./scripts/deploy-nginx.sh
 chmod +x ./scripts/deploy-prometheus.sh
 chmod +x ./scripts/deploy-grafana.sh
 chmod +x ./scripts/configure-firewall.sh
-chmod +x ./scripts/deploy-stackbill.sh
+chmod +x ./scripts/deploy-stackwatch.sh
 chmod +x ./scripts/health-check.sh
 ```
 
@@ -61,11 +61,11 @@ chmod +x ./scripts/health-check.sh
 - Complete troubleshooting guide for "Welcome to nginx!" issue
 - 6-step verification and fix procedure:
   1. Verify Nginx root directory
-  2. Confirm StackBill files are present
+  2. Confirm StackWatch files are present
   3. Check which config Nginx loaded
-  4. Disable default site and enable StackBill
+  4. Disable default site and enable StackWatch
   5. Reload Nginx properly
-  6. Verify StackBill UI is served
+  6. Verify StackWatch UI is served
 - All commands with expected results
 - Validation steps for each check
 
@@ -77,11 +77,11 @@ sudo nginx -T | grep "root"
 # Disable default site
 sudo rm -f /etc/nginx/sites-enabled/default
 
-# Enable StackBill site
-sudo ln -sf /etc/nginx/sites-available/stackbill /etc/nginx/sites-enabled/stackbill
+# Enable StackWatch site
+sudo ln -sf /etc/nginx/sites-available/stackwatch /etc/nginx/sites-enabled/stackwatch
 
-# Verify StackBill content
-curl http://localhost/ | grep -i "stackbill"
+# Verify StackWatch content
+curl http://localhost/ | grep -i "stackwatch"
 ```
 
 ---

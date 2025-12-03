@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# STACKBILL: Prometheus Deployment Script (Podman)
+# STACKWATCH: Prometheus Deployment Script (Podman)
 # Backend System Architect and Automation Engineer
 #
 # CRITICAL RULES:
@@ -71,7 +71,7 @@ create_prometheus_config() {
     
     # Create Prometheus configuration
     cat > "${PROMETHEUS_CONFIG_FILE}" << 'PROMETHEUS_EOF'
-# STACKBILL: Prometheus Configuration
+# STACKWATCH: Prometheus Configuration
 # Backend System Architect and Automation Engineer
 
 global:
@@ -210,7 +210,7 @@ verify_deployment() {
 # Main function
 main() {
     log_info "=========================================="
-    log_info "StackBill Prometheus Deployment"
+    log_info "StackWatch Prometheus Deployment"
     log_info "=========================================="
     
     if [[ $EUID -ne 0 ]]; then

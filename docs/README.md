@@ -1,4 +1,4 @@
-# STACKBILL: Documentation Index
+# STACKWATCH: Documentation Index
 
 **Document Version:** 1.0.0  
 **Last Updated:** 2024  
@@ -8,7 +8,7 @@
 
 ## Documentation Overview
 
-This directory contains comprehensive enterprise-grade documentation for the StackBill observability infrastructure. All documents follow enterprise documentation standards and provide detailed technical specifications, operational procedures, and architectural guidance.
+This directory contains comprehensive enterprise-grade documentation for the StackWatch observability infrastructure. All documents follow enterprise documentation standards and provide detailed technical specifications, operational procedures, and architectural guidance.
 
 ---
 
@@ -55,7 +55,7 @@ This directory contains comprehensive enterprise-grade documentation for the Sta
 
 **Contents:**
 - Endpoint mapping matrix
-- StackBill frontend endpoints
+- StackWatch frontend endpoints
 - Prometheus HTTP API documentation
 - Grafana HTTP API documentation
 - Exporter endpoints (Node Exporter, Windows Exporter)

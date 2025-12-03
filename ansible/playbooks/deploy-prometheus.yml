@@ -1,0 +1,183 @@
+---
+# STACKWATCH: Prometheus Deployment Playbook
+# Backend System Architect and Automation Engineer
+#
+# Purpose: Deploy Prometheus container via Podman
+# Target: Ubuntu (localhost)
+# Run: ansible-playbook -i ../inventory/hosts deploy-prometheus.yml --connection=local
+
+- name: Deploy StackWatch Prometheus
+  hosts: localhost
+  become: yes
+  gather_facts: yes
+
+  vars:
+    prometheus_container_name: "prometheus"
+    prometheus_image: "docker.io/prom/prometheus:latest"
+    prometheus_port: "9090"
+    prometheus_config_dir: "/etc/prometheus"
+    prometheus_data_dir: "/var/lib/prometheus/data"
+    prometheus_config_file: "{{ prometheus_config_dir }}/prometheus.yml"
+
+  tasks:
+    - name: Check if Podman is installed
+      command: which podman
+      register: podman_check
+      changed_when: false
+      failed_when: false
+
+    - name: Fail if Podman is not installed
+      fail:
+        msg: "Podman is not installed. Run install-packages.yml first."
+      when: podman_check.rc != 0
+
+    - name: Create Prometheus configuration directory
+      file:
+        path: "{{ prometheus_config_dir }}"
+        state: directory
+        mode: '0755'
+
+    - name: Create Prometheus data directory
+      file:
+        path: "{{ prometheus_data_dir }}"
+        state: directory
+        mode: '0755'
+
+    - name: Backup existing Prometheus configuration
+      copy:
+        src: "{{ prometheus_config_file }}"
+        dest: "{{ prometheus_config_file }}.backup.{{ ansible_date_time.epoch }}"
+        remote_src: yes
+      when: prometheus_config_file | exists
+      ignore_errors: yes
+
+    - name: Create Prometheus configuration file
+      copy:
+        dest: "{{ prometheus_config_file }}"
+        content: |
+          # STACKWATCH: Prometheus Configuration
+          # Backend System Architect and Automation Engineer
+
+          global:
+            scrape_interval: 15s
+            evaluation_interval: 15s
+
+          # Alertmanager configuration (if needed)
+          # alerting:
+          #   alertmanagers:
+          #     - static_configs:
+          #         - targets: []
+
+          # Load rules (if needed)
+          # rule_files:
+          #   - "alerts/*.yml"
+
+          scrape_configs:
+            # Prometheus self-monitoring
+            - job_name: 'prometheus'
+              static_configs:
+                - targets: ['localhost:9090']
+
+            # Node Exporter (Linux) - targets added via Ansible
+            - job_name: 'node-exporter'
+              static_configs:
+                - targets: []
+                  # Example: ['server1:9100', 'server2:9100']
+                  # Configure via Ansible or manually
+
+            # Windows Exporter - targets added manually or via service discovery
+            - job_name: 'windows-exporter'
+              static_configs:
+                - targets: []
+                  # Example: ['win-server1:9182', 'win-server2:9182']
+        mode: '0644'
+
+    - name: Check if Prometheus container exists
+      command: podman ps -a --format "{{{{.Names}}}}"
+      register: existing_containers
+      changed_when: false
+      failed_when: false
+
+    - name: Stop existing Prometheus container
+      command: podman stop {{ prometheus_container_name }}
+      when: prometheus_container_name in existing_containers.stdout
+      ignore_errors: yes
+
+    - name: Remove existing Prometheus container
+      command: podman rm {{ prometheus_container_name }}
+      when: prometheus_container_name in existing_containers.stdout
+      ignore_errors: yes
+
+    - name: Pull Prometheus image
+      command: podman pull {{ prometheus_image }}
+      register: pull_result
+      changed_when: "'Pulling' in pull_result.stdout or 'Downloading' in pull_result.stdout"
+
+    - name: Start Prometheus container
+      command: >
+        podman run -d
+        --name {{ prometheus_container_name }}
+        -v /etc/hosts:/etc/hosts:Z
+        -v {{ prometheus_config_dir }}:/etc/prometheus:Z
+        -p {{ prometheus_port }}:9090
+        {{ prometheus_image }}
+        --config.file=/etc/prometheus/prometheus.yml
+        --web.external-url=/prometheus/
+        --web.route-prefix=/
+      register: container_start
+
+    - name: Wait for Prometheus to start
+      wait_for:
+        port: "{{ prometheus_port }}"
+        host: localhost
+        delay: 3
+        timeout: 30
+
+    - name: Generate systemd service for Prometheus
+      command: podman generate systemd --name {{ prometheus_container_name }} --new
+      register: systemd_service
+      changed_when: false
+
+    - name: Create systemd service file
+      copy:
+        dest: "/etc/systemd/system/container-{{ prometheus_container_name }}.service"
+        content: "{{ systemd_service.stdout }}"
+        mode: '0644'
+      when: systemd_service.rc == 0
+      ignore_errors: yes
+
+    - name: Reload systemd daemon
+      systemd:
+        daemon_reload: yes
+      when: systemd_service.rc == 0
+      ignore_errors: yes
+
+    - name: Enable Prometheus systemd service
+      systemd:
+        name: "container-{{ prometheus_container_name }}.service"
+        enabled: yes
+      when: systemd_service.rc == 0
+      ignore_errors: yes
+
+    - name: Verify Prometheus container is running
+      command: podman ps --format "{{{{.Names}}}}"
+      register: running_containers
+      changed_when: false
+
+    - name: Check Prometheus health endpoint
+      uri:
+        url: "http://localhost:{{ prometheus_port }}/-/healthy"
+        method: GET
+        status_code: [200]
+      register: health_check
+      ignore_errors: yes
+
+    - name: Display deployment status
+      debug:
+        msg:
+          - "Prometheus container: {{ prometheus_container_name }}"
+          - "Container running: {{ prometheus_container_name in running_containers.stdout }}"
+          - "Health check: {{ 'OK' if health_check.status == 200 else 'Failed' }}"
+          - "Access Prometheus: http://localhost:{{ prometheus_port }}"
+          - "Access via Nginx: http://$(hostname -I | awk '{print $1}')/prometheus"
+

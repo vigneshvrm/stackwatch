@@ -1,39 +1,254 @@
-# STACKBILL - Installation, Setup & Grafana Walkthrough
+# StackWatch - Installation, Setup & Grafana Walkthrough
 
-**Version:** 1.0.0
+<div align="center">
 
-**Prepared from:** Uploaded STACKBILL operations guide and provided endpoints
+**Version:** 1.0.0  
+**Last Updated:** 2024
+
+</div>
 
 ---
 
 ## Document Overview
 
-This document provides a complete walkthrough for the Frontend-to-Grafana workflow, covering:
+This comprehensive guide provides step-by-step instructions for the complete StackWatch observability platform setup, covering:
 
-- Grafana initial login
-- Adding Prometheus data source
-- Importing dashboards for Linux and Windows
+| Topic | Description |
+|:------|:------------|
+| **Frontend Access** | Accessing the StackWatch dashboard interface |
+| **Grafana Configuration** | Initial login and authentication setup |
+| **Data Source Setup** | Configuring Prometheus as a data source |
+| **Dashboard Import** | Importing pre-configured monitoring dashboards |
 
 ---
 
-## Frontend to Grafana: GUI Walkthrough
+## Quick Reference: Service Endpoints
 
-This guide walks you through the steps from accessing the frontend URL through Grafana initial login, configuring the Prometheus data source, and importing dashboards.
+Before beginning the setup process, familiarize yourself with the following service endpoints and credentials:
 
-### Endpoints and Credentials
+| Service | Endpoint URL | Authentication | Purpose |
+|:--------|:-------------|:--------------|:--------|
+| **StackWatch Dashboard** | `http://<ServerIP>/` | None required | Main observability gateway interface |
+| **Prometheus** | `http://<ServerIP>/prometheus` | None required | Metrics collection and query interface |
+| **Grafana** | `http://<ServerIP>/grafana` | Username: `admin`<br>Password: `admin` | Data visualization and dashboards |
+| **Help Documentation** | `http://<ServerIP>/help` | None required | This documentation portal |
 
-Before you begin, note the following endpoints and credentials:
+> **Security Note:** Default Grafana credentials should be changed immediately after first login.
 
-| Service | URL | Credentials |
-|---------|-----|-------------|
-| **Frontend** | `http://IPAddress/` | - |
-| **Prometheus** | `http://IPAddress/prometheus` | - |
-| **Help** | `http://IPAddress/help` | - |
-| **Grafana** | `http://IPAddress/grafana` | Username: `admin`<br>Password: `admin` |
+### Recommended Dashboard IDs
 
-**Recommended Dashboard IDs:**
-- **Linux:** Dashboard ID `1860` (Node Exporter Full)
-- **Windows:** Dashboard ID `19269` (Windows Exporter)
+| Platform | Dashboard ID | Dashboard Name | Description |
+|:---------|:-------------|:---------------|:------------|
+| **Linux** | `1860` | Node Exporter Full | Comprehensive Linux system metrics including CPU, memory, disk, and network |
+| **Windows** | `19269` | Windows Exporter | Complete Windows system monitoring including services, performance counters, and hardware metrics |
+
+---
+
+## Step-by-Step Configuration Guide
+
+### Step A: Access the StackWatch Dashboard
+
+**Objective:** Verify frontend accessibility and interface functionality.
+
+1. **Open your web browser** and navigate to the StackWatch frontend URL:
+   ```
+   http://<ServerIP>/
+   ```
+
+2. **Verify the dashboard** renders correctly with the following elements visible:
+   - StackWatch branding and header
+   - Service cards for Prometheus and Grafana
+   - Help & Documentation link
+   - System status indicator
+
+3. **Confirm service links** are functional and properly displayed.
+
+![StackWatch Dashboard](/help/docs/images/Picture1.png)
+
+---
+
+### Step B: Grafana Initial Login
+
+**Objective:** Access Grafana and complete initial authentication setup.
+
+#### Procedure
+
+1. **Navigate to Grafana** using one of the following methods:
+   - Click the **Grafana** service card on the StackWatch dashboard
+   - Direct URL access: `http://<ServerIP>/grafana`
+
+2. **Enter default credentials:**
+   | Field | Value |
+   |:------|:------|
+   | **Username** | `admin` |
+   | **Password** | `admin` |
+
+3. **Change default password** (mandatory on first login):
+   - You will be prompted to change the password immediately
+   - **Security Requirement:** Set a strong password following your organization's password policy
+   - Minimum recommended: 12 characters with mixed case, numbers, and special characters
+
+![Grafana Login Page](/help/docs/images/Picture2.png)
+
+---
+
+### Step C: Configure Prometheus Data Source
+
+**Objective:** Establish connection between Grafana and Prometheus for metrics collection.
+
+#### Configuration Steps
+
+##### 1. Navigate to Data Sources
+
+| Action | Location |
+|:-------|:---------|
+| Click **Configuration** icon | Left sidebar (gear icon) |
+| Select **Data Sources** | Configuration menu |
+| Click **Add data source** | Top right button |
+| Select **Prometheus** | Data source type list |
+
+##### 2. Configure Prometheus Connection
+
+Enter the following configuration parameters:
+
+| Parameter | Value | Notes |
+|:----------|:------|:------|
+| **Name** | `Prometheus` | Display name for the data source |
+| **URL** | `http://localhost:9090` | Internal Prometheus endpoint |
+| **Access** | `Server (default)` | Recommended for security |
+
+> **Note:** The URL `http://localhost:9090` works because Grafana runs on the same host as Prometheus. For distributed deployments, use the actual Prometheus server IP address.
+
+##### 3. Save and Test Connection
+
+1. Click **Save & Test** button at the bottom of the configuration page
+2. **Expected Result:** Green success message displaying **"Data source is working"**
+3. If connection fails, verify:
+   - Prometheus container is running: `sudo podman ps | grep prometheus`
+   - Prometheus is accessible: `curl http://localhost:9090/-/healthy`
+
+![Prometheus Data Source Configuration](/help/docs/images/Picture3.png)
+
+---
+
+### Step D: Import Monitoring Dashboards
+
+**Objective:** Import pre-configured Grafana dashboards for Linux and Windows system monitoring.
+
+#### Dashboard Overview
+
+Grafana community dashboards provide production-ready visualizations that require minimal configuration.
+
+| Dashboard | Platform | ID | Features |
+|:----------|:---------|:---|:---------|
+| **Node Exporter Full** | Linux | `1860` | CPU, memory, disk I/O, network, system load, process monitoring |
+| **Windows Exporter** | Windows | `19269` | CPU, memory, disk usage, network interfaces, Windows services, performance counters |
+
+#### Import Procedure
+
+Follow these steps for each dashboard:
+
+| Step | Action | Details |
+|:-----|:------|:--------|
+| **1** | Open Import Dialog | Click **+** icon → Select **Import** |
+| **2** | Enter Dashboard ID | Type dashboard ID (e.g., `1860` for Linux) |
+| **3** | Load Dashboard | Click **Load** button |
+| **4** | Select Data Source | Choose **Prometheus** from dropdown |
+| **5** | Import Dashboard | Click **Import** to complete |
+
+**Repeat Steps 1-5** for the Windows dashboard (`19269`) if you have Windows monitoring targets.
+
+![Import Dashboard Dialog](/help/docs/images/Picture4.png)
+
+---
+
+## Verification and Troubleshooting
+
+### Dashboard Data Verification
+
+After importing dashboards, perform the following verification steps:
+
+#### 1. Visual Verification
+
+- **Open the imported dashboard** and confirm panels display data
+- **Check time range** is set appropriately (default: Last 6 hours)
+- **Verify metric names** appear in panel titles and legends
+
+#### 2. Data Availability Checklist
+
+If panels show **"No data"**, verify the following:
+
+| Check | Command / Location | Expected Result |
+|:------|:-------------------|:----------------|
+| **Prometheus Targets** | Prometheus UI → Status → Targets | All targets show status: **UP** |
+| **Exporter Reachability** | `curl http://<TargetIP>:9100/metrics` | Returns metrics in Prometheus format |
+| **Grafana Data Source** | Configuration → Data Sources → Prometheus → **Save & Test** | Green success message |
+| **Query Testing** | Grafana → Explore → Enter query: `up` | Returns time series data |
+
+#### 3. Common Issues and Solutions
+
+| Issue | Symptom | Solution |
+|:------|:--------|:---------|
+| **No data in dashboards** | Panels show "No data" message | Verify Prometheus targets are UP and exporters are running |
+| **Data source connection failed** | Red error message in Grafana | Check Prometheus URL and network connectivity |
+| **Dashboard not loading** | Import fails or dashboard blank | Verify correct dashboard ID and Prometheus data source selection |
+| **Incorrect time range** | Data appears outdated | Adjust time range selector in dashboard |
+
+---
+
+## Quick Reference Commands
+
+### Service Verification
+
+```bash
+# Check Grafana container status
+sudo podman ps | grep grafana
+
+# Check Prometheus container status
+sudo podman ps | grep prometheus
+
+# Test Prometheus health endpoint
+curl http://localhost:9090/-/healthy
+
+# Test Node Exporter metrics endpoint
+curl http://<TargetIP>:9100/metrics
+
+# Test Grafana health endpoint
+curl http://localhost:3000/api/health
+```
+
+### Useful Links
+
+| Resource | URL | Purpose |
+|:---------|:-----|:--------|
+| **Prometheus Targets** | `http://<ServerIP>/prometheus` → Status → Targets | View all monitoring targets and their health status |
+| **Grafana Data Sources** | `http://<ServerIP>/grafana` → Configuration → Data Sources | Manage and test data source connections |
+| **Grafana Explore** | `http://<ServerIP>/grafana` → Explore | Test PromQL queries and verify data collection |
+
+---
+
+## Additional Resources
+
+### Documentation
+
+- **StackWatch Operations Guide:** Available in `/docs` directory
+- **Prometheus Documentation:** https://prometheus.io/docs/
+- **Grafana Documentation:** https://grafana.com/docs/
+
+### Support
+
+For additional support or questions:
+- Review the troubleshooting section above
+- Check service logs: `sudo journalctl -u container-<service-name>`
+- Contact your system administrator
+
+---
+
+<div align="center">
+
+**StackWatch v1.0.0** | Infrastructure Observability Platform
+
+</div>
 
 ---
 

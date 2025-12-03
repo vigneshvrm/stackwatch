@@ -1,4 +1,4 @@
-# STACKBILL: Security Design and Firewall Documentation
+# STACKWATCH: Security Design and Firewall Documentation
 
 **Document Version:** 1.0.0  
 **Classification:** Internal Technical Documentation - Security Sensitive  
@@ -9,7 +9,7 @@
 
 ## Executive Summary
 
-This document defines the security architecture, firewall rules, TLS/SSL configuration, and exposure justification for the StackBill observability infrastructure. All security controls are designed to minimize attack surface while maintaining operational functionality.
+This document defines the security architecture, firewall rules, TLS/SSL configuration, and exposure justification for the StackWatch observability infrastructure. All security controls are designed to minimize attack surface while maintaining operational functionality.
 
 ---
 
@@ -17,7 +17,7 @@ This document defines the security architecture, firewall rules, TLS/SSL configu
 
 ### 1.1 Defense in Depth Strategy
 
-StackBill implements a multi-layered security approach:
+StackWatch implements a multi-layered security approach:
 
 ```
 Layer 1: Network Perimeter (Firewall)
@@ -147,7 +147,7 @@ iptables -P INPUT DROP
 
 | Port | Service | External Access | Justification | Risk Level |
 |------|---------|-----------------|---------------|------------|
-| **80** | Nginx (HTTP) | ✅ Yes | Public web access required for StackBill gateway | **Medium** (mitigated by TLS) |
+| **80** | Nginx (HTTP) | ✅ Yes | Public web access required for StackWatch gateway | **Medium** (mitigated by TLS) |
 | **443** | Nginx (HTTPS) | ✅ Yes | Secure web access, TLS encryption | **Low** (with proper TLS config) |
 | **9090** | Prometheus | ❌ No | Internal metrics service, proxied via Nginx | **N/A** (blocked) |
 | **3000** | Grafana | ❌ No | Internal visualization service, proxied via Nginx | **N/A** (blocked) |
@@ -182,10 +182,10 @@ iptables -P INPUT DROP
 # Nginx SSL configuration
 server {
     listen 443 ssl http2;
-    server_name stackbill.example.com;
+    server_name stackwatch.example.com;
     
-    ssl_certificate /etc/letsencrypt/live/stackbill.example.com/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/stackbill.example.com/privkey.pem;
+    ssl_certificate /etc/letsencrypt/live/stackwatch.example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/stackwatch.example.com/privkey.pem;
     
     # SSL Configuration
     ssl_protocols TLSv1.2 TLSv1.3;
@@ -205,8 +205,8 @@ server {
 ```bash
 # Generate self-signed certificate
 openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-  -keyout /etc/nginx/ssl/stackbill.key \
-  -out /etc/nginx/ssl/stackbill.crt
+  -keyout /etc/nginx/ssl/stackwatch.key \
+  -out /etc/nginx/ssl/stackwatch.crt
 ```
 
 **Option 3: Enterprise CA Certificate (Enterprise)**
@@ -219,7 +219,7 @@ openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
 # Redirect HTTP to HTTPS
 server {
     listen 80;
-    server_name stackbill.example.com;
+    server_name stackwatch.example.com;
     return 301 https://$server_name$request_uri;
 }
 ```
@@ -253,7 +253,7 @@ add_header Referrer-Policy "strict-origin-when-cross-origin" always;
 
 | Service | Authentication Method | Status | Risk Level |
 |--------|----------------------|--------|------------|
-| **StackBill Frontend** | None | ⚠️ Gap | **High** (public access) |
+| **StackWatch Frontend** | None | ⚠️ Gap | **High** (public access) |
 | **Prometheus** | TBD | ⚠️ Gap | **High** (via Nginx, but no auth) |
 | **Grafana** | User/Password (expected) | ✅ Expected | **Medium** (if configured) |
 | **Node Exporter** | None | ✅ Acceptable | **Low** (internal only) |
@@ -310,7 +310,7 @@ config_file = /etc/grafana/ldap.toml
 
 ### 4.3 Access Control Matrix
 
-| User Role | StackBill Frontend | Prometheus | Grafana | Exporters |
+| User Role | StackWatch Frontend | Prometheus | Grafana | Exporters |
 |-----------|-------------------|------------|---------|-----------|
 | **Public User** | ✅ Read | ❌ No Access | ❌ No Access | ❌ No Access |
 | **Authenticated User** | ✅ Read | ⚠️ TBD | ✅ Read (dashboards) | ❌ No Access |
@@ -523,7 +523,7 @@ podman run ... prom/prometheus:latest
    - Recommendation: Implement TLS with Let's Encrypt or enterprise CA
    - Priority: **High**
 
-2. **No Authentication on StackBill Frontend**
+2. **No Authentication on StackWatch Frontend**
    - Risk: Public access to gateway
    - Recommendation: Implement Nginx basic auth or OAuth2 proxy
    - Priority: **Medium**

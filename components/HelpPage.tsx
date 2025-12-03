@@ -171,9 +171,9 @@ const HelpPage: React.FC = () => {
 
   // Get default help content
   const getDefaultHelpContent = (): string => {
-    return `# StackBill Help & Documentation
+    return `# StackWatch Help & Documentation
 
-Welcome to the StackBill Observability Platform help documentation.
+Welcome to the StackWatch Observability Platform help documentation.
 
 ## Getting Started
 
@@ -335,7 +335,27 @@ For additional support or questions, please contact your system administrator.
 
               {/* Markdown Content */}
               {!docLoading && markdownContent && (
-                <div className="bg-white dark:bg-brand-800 border border-slate-200 dark:border-brand-700 rounded-xl shadow-lg p-6 sm:p-8 lg:p-10 prose dark:prose-invert prose-headings:text-slate-900 dark:prose-headings:text-white prose-h1:text-3xl prose-h1:font-bold prose-h1:mb-6 prose-h1:mt-0 prose-h2:text-2xl prose-h2:font-semibold prose-h2:mt-8 prose-h2:mb-4 prose-h2:border-b prose-h2:border-slate-300 dark:prose-h2:border-brand-600 prose-h2:pb-2 prose-h3:text-xl prose-h3:font-semibold prose-h3:mt-6 prose-h3:mb-3 prose-h4:text-lg prose-h4:font-semibold prose-h4:mt-4 prose-h4:mb-2 prose-p:text-slate-700 dark:prose-p:text-slate-300 prose-p:leading-relaxed prose-p:my-4 prose-a:text-blue-600 dark:prose-a:text-blue-400 prose-a:no-underline hover:prose-a:text-blue-700 dark:hover:prose-a:text-blue-300 prose-strong:text-slate-900 dark:prose-strong:text-white prose-strong:font-semibold prose-code:text-blue-600 dark:prose-code:text-blue-300 prose-code:bg-slate-100 dark:prose-code:bg-brand-900 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-sm prose-code:font-mono prose-pre:bg-slate-100 dark:prose-pre:bg-brand-900 prose-pre:border prose-pre:border-slate-200 dark:prose-pre:border-brand-700 prose-pre:rounded-lg prose-pre:p-4 prose-pre:overflow-x-auto prose-img:rounded-lg prose-img:shadow-lg prose-img:border prose-img:border-slate-200 dark:prose-img:border-brand-700 prose-img:max-w-full prose-img:h-auto prose-img:my-6 prose-ul:list-disc prose-ul:ml-6 prose-ul:my-4 prose-ol:list-decimal prose-ol:ml-6 prose-ol:my-4 prose-li:my-2 prose-li:leading-relaxed prose-li:pl-1 prose-table:w-full prose-table:my-6 prose-th:bg-slate-100 dark:prose-th:bg-brand-700 prose-th:text-slate-900 dark:prose-th:text-white prose-th:font-semibold prose-th:p-3 prose-th:border prose-th:border-slate-200 dark:prose-th:border-brand-600 prose-td:p-3 prose-td:border prose-td:border-slate-200 dark:prose-td:border-brand-600 prose-td:text-slate-700 dark:prose-td:text-slate-300 prose-hr:border-slate-300 dark:prose-hr:border-brand-600 prose-hr:my-8 prose-blockquote:border-l-4 prose-blockquote:border-blue-500 prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-slate-600 dark:prose-blockquote:text-slate-400 max-w-none transition-colors duration-200">
+                <div className="bg-white dark:bg-brand-800 border border-slate-200 dark:border-brand-700 rounded-xl shadow-lg p-6 sm:p-8 lg:p-10 prose dark:prose-invert max-w-none transition-colors duration-200
+                  prose-headings:text-slate-900 dark:prose-headings:text-white
+                  prose-h1:text-4xl prose-h1:font-bold prose-h1:mb-8 prose-h1:mt-0 prose-h1:text-center prose-h1:border-b prose-h1:border-slate-300 dark:prose-h1:border-brand-600 prose-h1:pb-4
+                  prose-h2:text-2xl prose-h2:font-semibold prose-h2:mt-10 prose-h2:mb-6 prose-h2:border-b prose-h2:border-slate-300 dark:prose-h2:border-brand-600 prose-h2:pb-3 prose-h2:text-left
+                  prose-h3:text-xl prose-h3:font-semibold prose-h3:mt-8 prose-h3:mb-4 prose-h3:text-left
+                  prose-h4:text-lg prose-h4:font-semibold prose-h4:mt-6 prose-h4:mb-3 prose-h4:text-left
+                  prose-p:text-slate-700 dark:prose-p:text-slate-300 prose-p:leading-relaxed prose-p:my-4 prose-p:text-left
+                  prose-a:text-blue-600 dark:prose-a:text-blue-400 prose-a:no-underline hover:prose-a:text-blue-700 dark:hover:prose-a:text-blue-300 prose-a:font-medium
+                  prose-strong:text-slate-900 dark:prose-strong:text-white prose-strong:font-semibold
+                  prose-code:text-blue-600 dark:prose-code:text-blue-300 prose-code:bg-slate-100 dark:prose-code:bg-brand-900 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-sm prose-code:font-mono
+                  prose-pre:bg-slate-100 dark:prose-pre:bg-brand-900 prose-pre:border prose-pre:border-slate-200 dark:prose-pre:border-brand-700 prose-pre:rounded-lg prose-pre:p-4 prose-pre:overflow-x-auto
+                  prose-img:rounded-lg prose-img:shadow-lg prose-img:border prose-img:border-slate-200 dark:prose-img:border-brand-700 prose-img:max-w-full prose-img:h-auto prose-img:my-6 prose-img:mx-auto
+                  prose-ul:list-disc prose-ul:ml-6 prose-ul:my-4 prose-ul:text-left
+                  prose-ol:list-decimal prose-ol:ml-6 prose-ol:my-4 prose-ol:text-left
+                  prose-li:my-2 prose-li:leading-relaxed prose-li:pl-1 prose-li:text-left
+                  prose-table:w-full prose-table:my-8 prose-table:border-collapse prose-table:shadow-md prose-table:rounded-lg prose-table:overflow-hidden
+                  prose-th:bg-gradient-to-r prose-th:from-blue-50 prose-th:to-blue-100 dark:prose-th:from-blue-900/30 dark:prose-th:to-blue-800/30 prose-th:text-slate-900 dark:prose-th:text-white prose-th:font-bold prose-th:p-4 prose-th:border prose-th:border-slate-300 dark:prose-th:border-brand-600 prose-th:text-left prose-th:align-top
+                  prose-td:p-4 prose-td:border prose-td:border-slate-200 dark:prose-td:border-brand-600 prose-td:text-slate-700 dark:prose-td:text-slate-300 prose-td:align-top prose-td:text-left
+                  prose-tr:hover:bg-slate-50 dark:prose-tr:hover:bg-brand-700/20 prose-tr:transition-colors
+                  prose-hr:border-slate-300 dark:prose-hr:border-brand-600 prose-hr:my-10 prose-hr:border-t-2
+                  prose-blockquote:border-l-4 prose-blockquote:border-blue-500 prose-blockquote:pl-6 prose-blockquote:pr-4 prose-blockquote:py-2 prose-blockquote:italic prose-blockquote:bg-blue-50 dark:prose-blockquote:bg-blue-900/10 prose-blockquote:text-slate-700 dark:prose-blockquote:text-slate-300 prose-blockquote:rounded-r-lg prose-blockquote:my-6">
                   <ReactMarkdown remarkPlugins={[remarkGfm]}>
                     {markdownContent}
                   </ReactMarkdown>

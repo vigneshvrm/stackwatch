@@ -1,8 +1,8 @@
-# STACKBILL - Installation, Setup & Grafana Walkthrough
+# STACKWATCH - Installation, Setup & Grafana Walkthrough
 
 **Version:** 1.0.0
 
-**Prepared from:** Uploaded STACKBILL operations guide and provided endpoints
+**Prepared from:** Uploaded STACKWATCH operations guide and provided endpoints
 
 ---
 

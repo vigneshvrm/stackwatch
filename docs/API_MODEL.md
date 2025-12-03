@@ -1,4 +1,4 @@
-# STACKBILL: API Model and Endpoint Documentation
+# STACKWATCH: API Model and Endpoint Documentation
 
 **Document Version:** 1.0.0  
 **Classification:** Internal Technical Documentation  
@@ -15,7 +15,7 @@
 |---------|---------------|---------------|----------|------------------|---------------|----------------|
 | **Nginx** | 80 | 80 | HTTP | `/*` | Direct | Public |
 | **Nginx** | 443 | 443 | HTTPS | `/*` | Direct | Public (TLS-ready) |
-| **StackBill Frontend** | N/A | Via Nginx | HTTP/HTTPS | `/` | Via Nginx | None (static) |
+| **StackWatch Frontend** | N/A | Via Nginx | HTTP/HTTPS | `/` | Via Nginx | None (static) |
 | **Prometheus** | 9090 | Blocked | HTTP | `/prometheus/*` | Via Nginx proxy | TBD |
 | **Grafana** | 3000 | Blocked | HTTP | `/grafana/*` | Via Nginx proxy | Required |
 | **Node Exporter** | 9100 | Blocked | HTTP | `/metrics` | Prometheus scrape | None (internal) |
@@ -27,7 +27,7 @@
 External Request: http://server-ip/<path>
 │
 ├─ Path: /
-│  └─→ Serves: /var/www/stackbill/dist/index.html
+│  └─→ Serves: /var/www/stackwatch/dist/index.html
 │      └─→ Static React Application
 │
 ├─ Path: /prometheus/*
@@ -41,7 +41,7 @@ External Request: http://server-ip/<path>
 
 ---
 
-## 2. StackBill Frontend Endpoints
+## 2. StackWatch Frontend Endpoints
 
 ### 2.1 Frontend Routes
 
@@ -537,7 +537,7 @@ windows_cpu_time_total{core="0",mode="idle"} 12345.67
 #### Nginx Health Check
 
 **Endpoint:** `GET /`
-**Expected:** HTTP 200 OK with StackBill frontend HTML
+**Expected:** HTTP 200 OK with StackWatch frontend HTML
 **Validation:**
 ```bash
 curl -I http://server-ip/
@@ -609,7 +609,7 @@ curl -I http://windows-server:9182/metrics
 
 **Check Sequence:**
 1. Nginx responding on port 80/443
-2. StackBill frontend loads successfully
+2. StackWatch frontend loads successfully
 3. Prometheus accessible via `/prometheus/-/healthy`
 4. Grafana accessible via `/grafana/api/health`
 5. Node Exporter responding on target servers
@@ -654,7 +654,7 @@ curl -I http://windows-server:9182/metrics
 
 | Service | Authentication | Status | Recommendation |
 |---------|----------------|--------|----------------|
-| **StackBill Frontend** | None | ✅ Current | Add Nginx basic auth or OAuth proxy |
+| **StackWatch Frontend** | None | ✅ Current | Add Nginx basic auth or OAuth proxy |
 | **Prometheus** | TBD | ⚠️ Gap | Implement basic auth or OAuth |
 | **Grafana** | Required | ✅ Expected | User/password or LDAP/OAuth |
 | **Node Exporter** | None | ✅ Acceptable | Internal network only |

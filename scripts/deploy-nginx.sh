@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# STACKBILL: Nginx Deployment Script
+# STACKWATCH: Nginx Deployment Script
 # Backend System Architect and Automation Engineer
 #
 # CRITICAL RULES:
@@ -29,9 +29,9 @@ log_error() {
 }
 
 # Configuration
-NGINX_CONFIG="/etc/nginx/sites-available/stackbill"
-NGINX_ENABLED="/etc/nginx/sites-enabled/stackbill"
-WEB_ROOT="/var/www/stackbill/dist"
+NGINX_CONFIG="/etc/nginx/sites-available/stackwatch"
+NGINX_ENABLED="/etc/nginx/sites-enabled/stackwatch"
+WEB_ROOT="/var/www/stackwatch/dist"
 FRONTEND_BUILD_DIR="dist"
 
 # Script directory
@@ -50,7 +50,7 @@ create_nginx_config() {
     
     # Create Nginx configuration
     cat > "${NGINX_CONFIG}" << 'NGINX_EOF'
-# STACKBILL: Nginx Configuration
+# STACKWATCH: Nginx Configuration
 # Backend System Architect and Automation Engineer
 # 
 # CRITICAL: Serves frontend UI - does NOT modify frontend code
@@ -59,10 +59,10 @@ create_nginx_config() {
 server {
     listen 80;
     server_name _;
-    root /var/www/stackbill/dist;
+    root /var/www/stackwatch/dist;
     index index.html;
 
-    # Serve StackBill Frontend (SPA routing support)
+    # Serve StackWatch Frontend (SPA routing support)
     location / {
         try_files $uri $uri/ /index.html;
     }
@@ -116,14 +116,14 @@ server {
 
     # Serve Help Documentation Manifest (JSON)
     location ~ ^/help/docs/manifest\.json$ {
-        alias /var/www/stackbill/dist/help/docs/manifest.json;
+        alias /var/www/stackwatch/dist/help/docs/manifest.json;
         add_header Content-Type "application/json; charset=utf-8";
         add_header Access-Control-Allow-Origin "*";
     }
 
     # Serve Help Documentation (Markdown files)
     location /help/docs/ {
-        alias /var/www/stackbill/dist/help/docs/;
+        alias /var/www/stackwatch/dist/help/docs/;
         default_type text/plain;
         add_header Content-Type "text/markdown; charset=utf-8";
         add_header Access-Control-Allow-Origin "*";
@@ -133,7 +133,7 @@ server {
 
     # Serve Help Documentation Images
     location /help/docs/images/ {
-        alias /var/www/stackbill/dist/help/docs/images/;
+        alias /var/www/stackwatch/dist/help/docs/images/;
         add_header Access-Control-Allow-Origin "*";
         expires 30d;
         add_header Cache-Control "public, immutable";
@@ -154,17 +154,17 @@ deploy_frontend() {
     log_info "Checking for frontend build..."
     
     # Priority order for frontend source locations
-    local opt_dist="/opt/stackbill/dist"
+    local opt_dist="/opt/stackwatch/dist"
     local build_dir="${PROJECT_ROOT}/${FRONTEND_BUILD_DIR}"
     local prebuilt_dir="${PROJECT_ROOT}/prebuilt/dist"
     
     local frontend_source=""
     local source_type=""
     
-    # Priority 1: Client installation in /opt/stackbill
+    # Priority 1: Client installation in /opt/stackwatch
     if [[ -d "${opt_dist}" ]] && [[ -f "${opt_dist}/index.html" ]]; then
         frontend_source="${opt_dist}"
-        source_type="client installation (/opt/stackbill/dist)"
+        source_type="client installation (/opt/stackwatch/dist)"
     # Priority 2: Developer build directory
     elif [[ -d "${build_dir}" ]] && [[ -f "${build_dir}/index.html" ]]; then
         frontend_source="${build_dir}"
@@ -200,7 +200,7 @@ deploy_frontend() {
         log_warn "Skipping frontend deployment - Nginx will serve existing files or 404"
         log_warn ""
         log_warn "To deploy frontend:"
-        log_warn "  - For clients: Extract package to /opt/stackbill and run deploy-from-opt.sh"
+        log_warn "  - For clients: Extract package to /opt/stackwatch and run deploy-from-opt.sh"
         log_warn "  - For developers: Run 'npm run build' in project root"
     fi
 }
@@ -256,7 +256,7 @@ test_and_reload_nginx() {
 # Main function
 main() {
     log_info "=========================================="
-    log_info "StackBill Nginx Deployment"
+    log_info "StackWatch Nginx Deployment"
     log_info "=========================================="
     
     if [[ $EUID -ne 0 ]]; then
@@ -298,9 +298,9 @@ main() {
     fi
     
     if [[ -L "${NGINX_ENABLED}" ]]; then
-        log_info "✓ StackBill Nginx site is enabled"
+        log_info "✓ StackWatch Nginx site is enabled"
     else
-        log_warn "✗ StackBill Nginx site is NOT enabled"
+        log_warn "✗ StackWatch Nginx site is NOT enabled"
     fi
     
     if [[ -L "/etc/nginx/sites-enabled/default" ]] || [[ -f "/etc/nginx/sites-enabled/default" ]]; then
@@ -314,7 +314,7 @@ main() {
     log_info "Frontend served from: ${WEB_ROOT}"
     log_info "Backend routes: /prometheus, /grafana"
     log_info ""
-    log_info "If you see 'Welcome to nginx!' instead of StackBill UI:"
+    log_info "If you see 'Welcome to nginx!' instead of StackWatch UI:"
     log_info "  1. Verify frontend files exist: ls -la ${WEB_ROOT}/"
     log_info "  2. Check enabled sites: ls -la /etc/nginx/sites-enabled/"
     log_info "  3. Ensure default site is disabled: rm -f /etc/nginx/sites-enabled/default"

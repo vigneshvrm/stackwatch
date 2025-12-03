@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# STACKBILL: Health Check Script
+# STACKWATCH: Health Check Script
 # Backend System Architect and Automation Engineer
 #
 # CRITICAL RULES:
@@ -71,7 +71,7 @@ check_container() {
 # Main health check
 main() {
     echo "=========================================="
-    echo "StackBill Health Check Report"
+    echo "StackWatch Health Check Report"
     echo "Date: $(date)"
     echo "=========================================="
     echo ""
@@ -84,9 +84,9 @@ main() {
         log_error "Nginx service: Not running"
     fi
     
-    # Check StackBill Frontend
-    log_info "Checking StackBill Frontend..."
-    check_service "StackBill Frontend" "http://localhost/" "200" || true
+    # Check StackWatch Frontend
+    log_info "Checking StackWatch Frontend..."
+    check_service "StackWatch Frontend" "http://localhost/" "200" || true
     
     # Check Prometheus
     log_info "Checking Prometheus..."

@@ -26,7 +26,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   // Initialize theme immediately to prevent flash
   const getInitialTheme = (): Theme => {
     // Check localStorage first
-    const savedTheme = localStorage.getItem('stackbill-theme') as Theme | null;
+    const savedTheme = localStorage.getItem('stackwatch-theme') as Theme | null;
     if (savedTheme === 'light' || savedTheme === 'dark') {
       return savedTheme;
     }
@@ -93,7 +93,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   const toggleTheme = () => {
     const newTheme: Theme = theme === 'dark' ? 'light' : 'dark';
     setTheme(newTheme);
-    localStorage.setItem('stackbill-theme', newTheme);
+    localStorage.setItem('stackwatch-theme', newTheme);
   };
 
   return (

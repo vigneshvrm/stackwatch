@@ -1,7 +1,7 @@
-# StackBill Client Deployment Guide
+# StackWatch Client Deployment Guide
 
 **Version:** 1.0.0  
-**Purpose:** Step-by-step instructions for deploying StackBill from prebuilt package
+**Purpose:** Step-by-step instructions for deploying StackWatch from prebuilt package
 
 ---
 
@@ -19,9 +19,9 @@
 
 ### Step 1: Download the Package
 
-Download the StackBill prebuilt package file:
+Download the StackWatch prebuilt package file:
 ```
-stackbill-prebuilt-<version>-<date>.tar.gz
+stackwatch-prebuilt-<version>-<date>.tar.gz
 ```
 
 ### Step 2: Extract to /opt
@@ -29,27 +29,27 @@ stackbill-prebuilt-<version>-<date>.tar.gz
 Extract the package to `/opt`:
 
 ```bash
-sudo tar -xzf stackbill-prebuilt-*.tar.gz -C /opt
+sudo tar -xzf stackwatch-prebuilt-*.tar.gz -C /opt
 ```
 
-This will create `/opt/stackbill-prebuilt/` directory.
+This will create `/opt/stackwatch-prebuilt/` directory.
 
 ### Step 3: Rename Directory (if needed)
 
-If the extracted directory is not named `stackbill`, rename it:
+If the extracted directory is not named `stackwatch`, rename it:
 
 ```bash
-sudo mv /opt/stackbill-prebuilt /opt/stackbill
+sudo mv /opt/stackwatch-prebuilt /opt/stackwatch
 ```
 
-**Note:** The deployment script expects the installation to be at `/opt/stackbill`.
+**Note:** The deployment script expects the installation to be at `/opt/stackwatch`.
 
 ### Step 4: Verify Package Contents
 
 Verify the package structure:
 
 ```bash
-ls -la /opt/stackbill/
+ls -la /opt/stackwatch/
 ```
 
 You should see:
@@ -63,11 +63,11 @@ You should see:
 Execute the deployment script:
 
 ```bash
-sudo /opt/stackbill/scripts/deploy-from-opt.sh
+sudo /opt/stackwatch/scripts/deploy-from-opt.sh
 ```
 
 This script will:
-1. Copy frontend files to `/var/www/stackbill/dist/`
+1. Copy frontend files to `/var/www/stackwatch/dist/`
 2. Configure firewall rules
 3. Deploy and configure Nginx
 4. Deploy Prometheus container
@@ -82,7 +82,7 @@ After deployment completes, verify services:
 
 ```bash
 # Check service status
-sudo /opt/stackbill/scripts/health-check.sh
+sudo /opt/stackwatch/scripts/health-check.sh
 
 # Check Nginx
 sudo systemctl status nginx
@@ -100,7 +100,7 @@ sudo podman ps | grep grafana
 
 After successful deployment, access services using your server's IP address:
 
-### StackBill Dashboard
+### StackWatch Dashboard
 ```
 http://<server-ip>/
 ```
@@ -145,7 +145,7 @@ To deploy Node Exporter on Linux servers:
 
 1. Edit the inventory file:
    ```bash
-   sudo nano /opt/stackbill/ansible/inventory/hosts
+   sudo nano /opt/stackwatch/ansible/inventory/hosts
    ```
 
 2. Add your target servers:
@@ -157,8 +157,8 @@ To deploy Node Exporter on Linux servers:
 
 3. Deploy Node Exporter:
    ```bash
-   sudo ansible-playbook -i /opt/stackbill/ansible/inventory/hosts \
-       /opt/stackbill/ansible/playbooks/deploy-node-exporter.yml
+   sudo ansible-playbook -i /opt/stackwatch/ansible/inventory/hosts \
+       /opt/stackwatch/ansible/playbooks/deploy-node-exporter.yml
    ```
 
 ### 3. Deploy Windows Exporter
@@ -167,7 +167,7 @@ For Windows servers, use the PowerShell script:
 
 1. Copy the script to Windows server:
    ```bash
-   scp /opt/stackbill/scripts/deploy-windows-exporter.ps1 administrator@windows-server:/tmp/
+   scp /opt/stackwatch/scripts/deploy-windows-exporter.ps1 administrator@windows-server:/tmp/
    ```
 
 2. Run on Windows server (as Administrator):
@@ -186,7 +186,7 @@ For Windows servers, use the PowerShell script:
 **Solutions:**
 1. Check if frontend files exist:
    ```bash
-   ls -la /var/www/stackbill/dist/
+   ls -la /var/www/stackwatch/dist/
    ```
 
 2. Check Nginx status:
@@ -202,7 +202,7 @@ For Windows servers, use the PowerShell script:
 
 4. Redeploy frontend:
    ```bash
-   sudo cp -r /opt/stackbill/dist/* /var/www/stackbill/dist/
+   sudo cp -r /opt/stackwatch/dist/* /var/www/stackwatch/dist/
    sudo systemctl reload nginx
    ```
 
@@ -243,7 +243,7 @@ For Windows servers, use the PowerShell script:
    hostname -I | awk '{print $1}'
    
    # Update Grafana domain (if needed)
-   sudo GRAFANA_DOMAIN="<server-ip>" /opt/stackbill/scripts/deploy-grafana.sh
+   sudo GRAFANA_DOMAIN="<server-ip>" /opt/stackwatch/scripts/deploy-grafana.sh
    ```
 
 ### Services Not Starting
@@ -314,7 +314,7 @@ sudo tail -f /var/log/nginx/access.log
 
 ## Uninstallation
 
-To remove StackBill:
+To remove StackWatch:
 
 ```bash
 # Stop services
@@ -326,15 +326,15 @@ sudo systemctl stop nginx
 sudo podman rm -f container-prometheus container-grafana
 
 # Remove Nginx configuration
-sudo rm -f /etc/nginx/sites-enabled/stackbill
-sudo rm -f /etc/nginx/sites-available/stackbill
+sudo rm -f /etc/nginx/sites-enabled/stackwatch
+sudo rm -f /etc/nginx/sites-available/stackwatch
 sudo systemctl reload nginx
 
 # Remove web files
-sudo rm -rf /var/www/stackbill
+sudo rm -rf /var/www/stackwatch
 
 # Remove installation (optional)
-sudo rm -rf /opt/stackbill
+sudo rm -rf /opt/stackwatch
 ```
 
 ---
@@ -343,7 +343,7 @@ sudo rm -rf /opt/stackbill
 
 For additional support:
 - Review service logs for error details
-- Check health check output: `sudo /opt/stackbill/scripts/health-check.sh`
+- Check health check output: `sudo /opt/stackwatch/scripts/health-check.sh`
 - Contact your system administrator
 
 ---

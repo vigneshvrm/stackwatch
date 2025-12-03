@@ -3,7 +3,7 @@
 **Version:** 1.0.0  
 **Last Updated:** 2024
 
-This document outlines the system requirements, infrastructure setup, and configuration prerequisites for deploying the StackBill Infrastructure Gateway.
+This document outlines the system requirements, infrastructure setup, and configuration prerequisites for deploying the StackWatch Infrastructure Gateway.
 
 ---
 
@@ -11,7 +11,7 @@ This document outlines the system requirements, infrastructure setup, and config
 
 ### Supported Linux Distribution
 
-StackBill supports **Ubuntu LTS** distributions only:
+StackWatch supports **Ubuntu LTS** distributions only:
 
 | Distribution | Minimum Version | Recommended Version | Package Manager |
 |-------------|----------------|---------------------|----------------|
@@ -60,7 +60,7 @@ To protect critical monitoring data in case of primary disk corruption, use sepa
 /dev/sda3  /var          10 GB    (Logs, temporary files)
 /dev/sda4  /opt/prometheus/data  50 GB+  (Prometheus time-series data)
 /dev/sda5  /opt/grafana/data     20 GB+  (Grafana database, dashboards, plugins)
-/dev/sda6  /var/www/stackbill    5 GB    (Frontend static files)
+/dev/sda6  /var/www/stackwatch    5 GB    (Frontend static files)
 /dev/sda7  swap          4 GB     (Swap space - 2x RAM for <8GB systems)
 ```
 
@@ -117,8 +117,8 @@ sudo useradd --no-create-home --shell /bin/false prometheus
 # Create Grafana user (if not using containers)
 sudo useradd --no-create-home --shell /bin/false grafana
 
-# Create StackBill service account
-sudo useradd -r -s /bin/false -d /opt/stackbill stackbill
+# Create StackWatch service account
+sudo useradd -r -s /bin/false -d /opt/stackwatch stackwatch
 ```
 
 ### Directory Ownership
@@ -132,9 +132,9 @@ sudo chown -R prometheus:prometheus /opt/prometheus/config
 sudo chown -R grafana:grafana /opt/grafana/data
 sudo chown -R grafana:grafana /opt/grafana/config
 
-# Set ownership for StackBill installation
-sudo chown -R stackbill:stackbill /opt/stackbill
-sudo chown -R www-data:www-data /var/www/stackbill
+# Set ownership for StackWatch installation
+sudo chown -R stackwatch:stackwatch /opt/stackwatch
+sudo chown -R www-data:www-data /var/www/stackwatch
 ```
 
 ### Sudo Access Requirements
@@ -149,15 +149,15 @@ The deployment user needs sudo access for:
 
 ```bash
 # Create deployment user
-sudo useradd -m -s /bin/bash stackbill-deploy
+sudo useradd -m -s /bin/bash stackwatch-deploy
 
 # Grant sudo access
-sudo usermod -aG sudo stackbill-deploy
+sudo usermod -aG sudo stackwatch-deploy
 
 # Optional: Limit sudo to specific commands
 sudo visudo
 # Add:
-# stackbill-deploy ALL=(ALL) NOPASSWD: /usr/bin/apt, /usr/bin/systemctl, /usr/sbin/ufw
+# stackwatch-deploy ALL=(ALL) NOPASSWD: /usr/bin/apt, /usr/bin/systemctl, /usr/sbin/ufw
 ```
 
 ---
@@ -258,12 +258,12 @@ sudo ufw enable
 
 **Generate SSH key pair (if not exists):**
 ```bash
-ssh-keygen -t ed25519 -C "stackbill-deployment" -f ~/.ssh/stackbill_key
+ssh-keygen -t ed25519 -C "stackwatch-deployment" -f ~/.ssh/stackwatch_key
 ```
 
 **Copy public key to target servers:**
 ```bash
-ssh-copy-id -i ~/.ssh/stackbill_key.pub user@target-server
+ssh-copy-id -i ~/.ssh/stackwatch_key.pub user@target-server
 ```
 
 ### AppArmor Configuration
@@ -299,7 +299,7 @@ sudo systemctl status apparmor
 
 ## 9. Pre-Deployment Checklist
 
-Before deploying StackBill, verify:
+Before deploying StackWatch, verify:
 
 - [ ] Ubuntu 22.04 LTS or 24.04 LTS installed and up-to-date
 - [ ] Minimum hardware requirements met (4 CPU, 8 GB RAM, 50 GB disk)
@@ -309,7 +309,7 @@ Before deploying StackBill, verify:
 - [ ] Podman installed and socket enabled
 - [ ] Firewall configured (ports 80, 443, 22)
 - [ ] SSH key-based authentication configured for target servers
-- [ ] Dedicated service users created (prometheus, grafana, stackbill)
+- [ ] Dedicated service users created (prometheus, grafana, stackwatch)
 - [ ] Directory ownership set correctly
 - [ ] Network connectivity verified (internet, DNS, target servers)
 - [ ] Sudo access configured for deployment user

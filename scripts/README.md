@@ -1,4 +1,4 @@
-# STACKBILL: Deployment Scripts
+# STACKWATCH: Deployment Scripts
 
 **Version:** 1.0.0  
 **Architect:** Backend System Architect and Automation Engineer
@@ -21,14 +21,14 @@
 ```
 scripts/
 ├── README.md                    # This file
-├── deploy-stackbill.sh          # Main deployment orchestrator
+├── deploy-stackwatch.sh          # Main deployment orchestrator
 ├── deploy-nginx.sh               # Nginx configuration and deployment
 ├── deploy-prometheus.sh          # Prometheus Podman deployment
 ├── deploy-grafana.sh             # Grafana Podman deployment
 ├── configure-firewall.sh         # Firewall rules configuration
 ├── health-check.sh               # Health validation script
 ├── deploy-windows-exporter.ps1   # Windows Exporter (PowerShell ONLY)
-├── backup-stackbill.sh           # Backup procedures
+├── backup-stackwatch.sh           # Backup procedures
 └── recovery.sh                   # Recovery procedures
 ```
 
@@ -62,7 +62,7 @@ scripts/
 
 ```bash
 # Deploy all backend services
-./scripts/deploy-stackbill.sh
+./scripts/deploy-stackwatch.sh
 
 # Or step by step:
 ./scripts/configure-firewall.sh

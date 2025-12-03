@@ -1,0 +1,237 @@
+---
+# STACKWATCH: Nginx Deployment Playbook
+# Backend System Architect and Automation Engineer
+#
+# Purpose: Deploy and configure Nginx for StackWatch
+# Target: Ubuntu (localhost)
+# Run: ansible-playbook -i ../inventory/hosts deploy-nginx.yml --connection=local
+
+- name: Deploy StackWatch Nginx Configuration
+  hosts: localhost
+  become: yes
+  gather_facts: yes
+
+  vars:
+    nginx_config: "/etc/nginx/sites-available/stackwatch"
+    nginx_enabled: "/etc/nginx/sites-enabled/stackwatch"
+    web_root: "/var/www/stackwatch/dist"
+    frontend_sources:
+      - "/opt/stackwatch/dist"
+      - "{{ playbook_dir }}/../../dist"
+      - "{{ playbook_dir }}/../../prebuilt/dist"
+
+  tasks:
+    - name: Check if Nginx is installed
+      command: which nginx
+      register: nginx_check
+      changed_when: false
+      failed_when: false
+
+    - name: Fail if Nginx is not installed
+      fail:
+        msg: "Nginx is not installed. Run install-packages.yml first."
+      when: nginx_check.rc != 0
+
+    - name: Backup existing Nginx configuration
+      copy:
+        src: "{{ nginx_config }}"
+        dest: "{{ nginx_config }}.backup.{{ ansible_date_time.epoch }}"
+        remote_src: yes
+      when: nginx_config | exists
+      ignore_errors: yes
+
+    - name: Create Nginx configuration directory
+      file:
+        path: "/etc/nginx/sites-available"
+        state: directory
+        mode: '0755'
+
+    - name: Create Nginx configuration file
+      copy:
+        dest: "{{ nginx_config }}"
+        content: |
+          # STACKWATCH: Nginx Configuration
+          # Backend System Architect and Automation Engineer
+          # 
+          # CRITICAL: Serves frontend UI - does NOT modify frontend code
+          # Backward compatible routing
+
+          server {
+              listen 80;
+              server_name _;
+              root {{ web_root }};
+              index index.html;
+
+              # Serve StackWatch Frontend (SPA routing support)
+              location / {
+                  try_files $uri $uri/ /index.html;
+              }
+
+              # Health API endpoint (proxy to health-api.sh service)
+              location /api/health {
+                  proxy_pass http://127.0.0.1:8888/api/health;
+                  proxy_set_header Host $host;
+                  proxy_set_header X-Real-IP $remote_addr;
+                  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                  proxy_set_header X-Forwarded-Proto $scheme;
+                  proxy_connect_timeout 5s;
+                  proxy_read_timeout 10s;
+              }
+
+              # Route to Prometheus (backend service)
+              location /prometheus/ {
+                  proxy_pass http://localhost:9090/;
+                  proxy_set_header Host $host;
+                  proxy_set_header X-Real-IP $remote_addr;
+                  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                  proxy_set_header X-Forwarded-Proto $scheme;
+                  proxy_set_header X-Forwarded-Host $host;
+                  proxy_set_header X-Forwarded-Port $server_port;
+                  
+                  # WebSocket support (if needed)
+                  proxy_http_version 1.1;
+                  proxy_set_header Upgrade $http_upgrade;
+                  proxy_set_header Connection "upgrade";
+                  
+                  # Rewrite redirects to include /prometheus prefix
+                  proxy_redirect http://localhost:9090/ /prometheus/;
+                  proxy_redirect http://$host:9090/ /prometheus/;
+                  proxy_redirect default;
+              }
+              
+              # Handle Prometheus API endpoints without trailing slash
+              location /prometheus {
+                  return 301 /prometheus/;
+              }
+
+              # Route to Grafana (backend service)
+              # CRITICAL: Use 127.0.0.1 (not localhost) and NO trailing slash in proxy_pass
+              # root_url in Grafana must be hardcoded with NO trailing slash
+              location /grafana/ {
+                  proxy_pass http://127.0.0.1:3000;
+                  proxy_set_header Host $host;
+                  proxy_set_header X-Real-IP $remote_addr;
+                  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                  proxy_set_header X-Forwarded-Proto $scheme;
+                  
+                  # WebSocket support (if needed)
+                  proxy_http_version 1.1;
+                  proxy_set_header Upgrade $http_upgrade;
+                  proxy_set_header Connection "upgrade";
+              }
+              
+              # Handle Grafana without trailing slash
+              location /grafana {
+                  return 301 /grafana/;
+              }
+
+              # Serve Help Documentation Manifest (JSON)
+              location ~ ^/help/docs/manifest\.json$ {
+                  alias {{ web_root }}/help/docs/manifest.json;
+                  add_header Content-Type "application/json; charset=utf-8";
+                  add_header Access-Control-Allow-Origin "*";
+              }
+
+              # Serve Help Documentation (Markdown files)
+              location /help/docs/ {
+                  alias {{ web_root }}/help/docs/;
+                  default_type text/plain;
+                  add_header Content-Type "text/markdown; charset=utf-8";
+                  add_header Access-Control-Allow-Origin "*";
+                  # Disable directory listing for security
+                  autoindex off;
+              }
+
+              # Serve Help Documentation Images
+              location /help/docs/images/ {
+                  alias {{ web_root }}/help/docs/images/;
+                  add_header Access-Control-Allow-Origin "*";
+                  expires 30d;
+                  add_header Cache-Control "public, immutable";
+              }
+
+              # Security headers
+              add_header X-Frame-Options "SAMEORIGIN" always;
+              add_header X-Content-Type-Options "nosniff" always;
+              add_header X-XSS-Protection "1; mode=block" always;
+          }
+        mode: '0644'
+
+    - name: Find frontend build source
+      find:
+        paths: "{{ item }}"
+        patterns: "index.html"
+        file_type: file
+      register: frontend_found
+      loop: "{{ frontend_sources }}"
+      failed_when: false
+
+    - name: Determine frontend source
+      set_fact:
+        frontend_source: "{{ frontend_found.results | selectattr('files', 'defined') | selectattr('files', 'length', '>', 0) | map(attribute='files') | map('first') | map(attribute='path') | first | dirname }}"
+      when: frontend_found.results | selectattr('files', 'defined') | selectattr('files', 'length', '>', 0) | list | length > 0
+
+    - name: Create web root directory
+      file:
+        path: "{{ web_root }}"
+        state: directory
+        mode: '0755'
+
+    - name: Deploy frontend files
+      copy:
+        src: "{{ frontend_source }}/"
+        dest: "{{ web_root }}/"
+        mode: preserve
+      when: frontend_source is defined
+      ignore_errors: yes
+
+    - name: Set web root ownership
+      file:
+        path: "{{ web_root }}"
+        owner: www-data
+        group: www-data
+        recurse: yes
+      ignore_errors: yes
+
+    - name: Disable default Nginx site
+      file:
+        path: "/etc/nginx/sites-enabled/default"
+        state: absent
+      ignore_errors: yes
+
+    - name: Enable StackWatch Nginx site
+      file:
+        src: "{{ nginx_config }}"
+        dest: "{{ nginx_enabled }}"
+        state: link
+      notify: reload nginx
+
+    - name: Test Nginx configuration
+      command: nginx -t
+      register: nginx_test
+      changed_when: false
+
+    - name: Display Nginx test results
+      debug:
+        msg: "{{ nginx_test.stderr_lines + nginx_test.stdout_lines }}"
+
+    handlers:
+      - name: reload nginx
+        systemd:
+          name: nginx
+          state: reloaded
+        listen: reload nginx
+
+    - name: Verify frontend deployment
+      stat:
+        path: "{{ web_root }}/index.html"
+      register: frontend_index
+
+    - name: Display deployment status
+      debug:
+        msg:
+          - "Nginx configuration: {{ nginx_config }}"
+          - "Web root: {{ web_root }}"
+          - "Frontend deployed: {{ frontend_index.stat.exists | default(false) }}"
+          - "Site enabled: {{ nginx_enabled | exists }}"
+

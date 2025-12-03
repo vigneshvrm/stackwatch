@@ -1,5 +1,5 @@
 
-# STACKBILL: Windows Exporter Deployment Script (PowerShell)
+# STACKWATCH: Windows Exporter Deployment Script (PowerShell)
 # Backend System Architect and Automation Engineer
 #
 # CRITICAL RULES:
@@ -47,7 +47,7 @@ function Write-Error {
 # Main deployment function
 function Deploy-WindowsExporter {
     Write-Info "=========================================="
-    Write-Info "StackBill Windows Exporter Deployment"
+    Write-Info "StackWatch Windows Exporter Deployment"
     Write-Info "=========================================="
     Write-Info ""
     Write-Info "CRITICAL: PowerShell script only - NO Ansible"

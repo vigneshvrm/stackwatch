@@ -1,4 +1,4 @@
-# STACKBILL: Backend Deployment Flow
+# STACKWATCH: Backend Deployment Flow
 
 **Document Version:** 1.0.0  
 **Architect:** Backend System Architect and Automation Engineer  
@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-This document describes the complete backend deployment flow for StackBill infrastructure. The deployment follows strict separation between frontend and backend, with backend services deployed via shell scripts and Ansible (Linux Node Exporter only).
+This document describes the complete backend deployment flow for StackWatch infrastructure. The deployment follows strict separation between frontend and backend, with backend services deployed via shell scripts and Ansible (Linux Node Exporter only).
 
 ---
 
@@ -40,7 +40,7 @@ This document describes the complete backend deployment flow for StackBill infra
                             ▼
 ┌─────────────────────────────────────────────────────────────┐
 │  STEP 2: Backend Deployment Orchestrator                     │
-│  Script: scripts/deploy-stackbill.sh                         │
+│  Script: scripts/deploy-stackwatch.sh                         │
 │  - Coordinates all backend services                          │
 │  - Does NOT touch frontend code                              │
 └───────────────────────────┬───────────────────────────────────┘
@@ -199,7 +199,7 @@ This document describes the complete backend deployment flow for StackBill infra
 
 **Actions:**
 1. Check Nginx service status
-2. Check StackBill frontend accessibility
+2. Check StackWatch frontend accessibility
 3. Check Prometheus container and health
 4. Check Grafana container and health
 5. Verify services via Nginx proxy
@@ -220,7 +220,7 @@ This document describes the complete backend deployment flow for StackBill infra
    - Backend does NOT modify frontend source code
 
 2. **Backend Serves Frontend**
-   - Nginx serves static files from `/var/www/stackbill/dist/`
+   - Nginx serves static files from `/var/www/stackwatch/dist/`
    - Backend adapts to frontend routes without breaking
    - If frontend adds new routes, backend Nginx config may need update
    - Backend changes are backward compatible
@@ -239,7 +239,7 @@ This document describes the complete backend deployment flow for StackBill infra
 
 ```bash
 # Run complete backend deployment
-sudo ./scripts/deploy-stackbill.sh
+sudo ./scripts/deploy-stackwatch.sh
 ```
 
 This executes all phases in sequence.
@@ -313,7 +313,7 @@ Each script supports rollback via backups:
 ### Common Issues
 
 1. **Frontend Not Loading**
-   - Check: `ls -la /var/www/stackbill/dist/`
+   - Check: `ls -la /var/www/stackwatch/dist/`
    - Fix: Run `npm run build` in project root, then re-run `deploy-nginx.sh`
 
 2. **Services Not Accessible via Nginx**

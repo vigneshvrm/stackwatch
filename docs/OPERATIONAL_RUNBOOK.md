@@ -1,4 +1,4 @@
-# STACKBILL: Operational Runbook
+# STACKWATCH: Operational Runbook
 
 **Document Version:** 1.0.0  
 **Classification:** Internal Technical Documentation  
@@ -9,7 +9,7 @@
 
 ## Executive Summary
 
-This operational runbook provides step-by-step procedures for installing, validating, operating, and recovering the StackBill observability infrastructure. All procedures are designed to be executed by operations personnel with appropriate system access.
+This operational runbook provides step-by-step procedures for installing, validating, operating, and recovering the StackWatch observability infrastructure. All procedures are designed to be executed by operations personnel with appropriate system access.
 
 ---
 
@@ -45,8 +45,8 @@ This operational runbook provides step-by-step procedures for installing, valida
 **Step 1.1: Clone Repository**
 ```bash
 cd /opt
-git clone <repository-url> stackbill
-cd stackbill
+git clone <repository-url> stackwatch
+cd stackwatch
 ```
 
 **Step 1.2: Install Frontend Dependencies**
@@ -69,16 +69,16 @@ ls -la dist/
 **Step 1.4: Deploy to Web Root**
 ```bash
 # Create web root directory
-sudo mkdir -p /var/www/stackbill
-sudo cp -r dist/* /var/www/stackbill/dist/
-sudo chown -R nginx:nginx /var/www/stackbill
-sudo chmod -R 755 /var/www/stackbill
+sudo mkdir -p /var/www/stackwatch
+sudo cp -r dist/* /var/www/stackwatch/dist/
+sudo chown -R nginx:nginx /var/www/stackwatch
+sudo chmod -R 755 /var/www/stackwatch
 ```
 
 **Step 1.5: Configure Nginx (Frontend)**
 ```bash
 # Create Nginx configuration
-sudo nano /etc/nginx/sites-available/stackbill
+sudo nano /etc/nginx/sites-available/stackwatch
 ```
 
 **Nginx Configuration:**
@@ -86,10 +86,10 @@ sudo nano /etc/nginx/sites-available/stackbill
 server {
     listen 80;
     server_name _;
-    root /var/www/stackbill/dist;
+    root /var/www/stackwatch/dist;
     index index.html;
 
-    # Serve StackBill Frontend
+    # Serve StackWatch Frontend
     location / {
         try_files $uri $uri/ /index.html;
     }
@@ -117,7 +117,7 @@ server {
 **Step 1.6: Enable Nginx Site**
 ```bash
 # Create symlink
-sudo ln -s /etc/nginx/sites-available/stackbill /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/stackwatch /etc/nginx/sites-enabled/
 
 # Test Nginx configuration
 sudo nginx -t
@@ -133,7 +133,7 @@ sudo systemctl status nginx
 
 # Test frontend access
 curl http://localhost/
-# Expected: HTML content from StackBill
+# Expected: HTML content from StackWatch
 ```
 
 #### Phase 2: Prometheus Deployment (Podman)
@@ -348,7 +348,7 @@ sudo firewall-cmd --reload
 ```bash
 # Test external access to port 80
 curl http://server-ip/
-# Expected: StackBill frontend
+# Expected: StackWatch frontend
 
 # Test direct access to port 9090 (should be blocked)
 curl http://server-ip:9090
@@ -366,7 +366,7 @@ curl http://server-ip:9090
 #!/bin/bash
 # health-check.sh
 
-echo "StackBill Health Check Report"
+echo "StackWatch Health Check Report"
 echo "============================="
 echo "Date: $(date)"
 echo ""
@@ -379,9 +379,9 @@ else
     echo "✗ FAILED"
 fi
 
-# Check StackBill Frontend
-echo -n "[ ] StackBill Frontend: "
-if curl -s http://localhost/ | grep -q "StackBill"; then
+# Check StackWatch Frontend
+echo -n "[ ] StackWatch Frontend: "
+if curl -s http://localhost/ | grep -q "StackWatch"; then
     echo "✓ OK"
 else
     echo "✗ FAILED"
@@ -513,7 +513,7 @@ sudo systemctl status nginx
 sudo nginx -t
 
 # If configuration error, fix and reload
-sudo nano /etc/nginx/sites-available/stackbill
+sudo nano /etc/nginx/sites-available/stackwatch
 sudo nginx -t
 sudo systemctl reload nginx
 
@@ -628,12 +628,12 @@ curl http://localhost:3000/api/health
 
 #### Nginx Configuration Recovery
 
-**Backup Location:** `/etc/nginx/sites-available/stackbill.backup`
+**Backup Location:** `/etc/nginx/sites-available/stackwatch.backup`
 
 **Recovery Steps:**
 ```bash
 # Restore configuration
-sudo cp /etc/nginx/sites-available/stackbill.backup /etc/nginx/sites-available/stackbill
+sudo cp /etc/nginx/sites-available/stackwatch.backup /etc/nginx/sites-available/stackwatch
 
 # Test configuration
 sudo nginx -t
@@ -715,7 +715,7 @@ curl http://localhost:9090/api/v1/status/config
 
 ```bash
 # Pull latest code
-cd /opt/stackbill
+cd /opt/stackwatch
 git pull
 
 # Rebuild
@@ -723,7 +723,7 @@ npm install
 npm run build
 
 # Deploy
-sudo cp -r dist/* /var/www/stackbill/dist/
+sudo cp -r dist/* /var/www/stackwatch/dist/
 sudo systemctl reload nginx
 ```
 
@@ -798,14 +798,14 @@ curl http://localhost:3000/api/health
 sudo systemctl status nginx
 
 # Check file permissions
-ls -la /var/www/stackbill/dist/
+ls -la /var/www/stackwatch/dist/
 
 # Check Nginx configuration
 sudo nginx -t
 ```
 
 **Resolution:**
-- Fix file permissions: `sudo chown -R nginx:nginx /var/www/stackbill`
+- Fix file permissions: `sudo chown -R nginx:nginx /var/www/stackwatch`
 - Verify Nginx configuration
 - Check Nginx error logs
 
@@ -877,7 +877,7 @@ sudo podman start grafana
 ```bash
 # Backup all configurations
 sudo tar -czf /backup/config-$(date +%Y%m%d).tar.gz \
-  /etc/nginx/sites-available/stackbill \
+  /etc/nginx/sites-available/stackwatch \
   /etc/prometheus/prometheus.yml \
   /etc/grafana/grafana.ini
 ```

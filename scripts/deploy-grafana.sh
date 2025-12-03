@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# STACKBILL: Grafana Deployment Script (Podman)
+# STACKWATCH: Grafana Deployment Script (Podman)
 # Backend System Architect and Automation Engineer
 #
 # CRITICAL RULES:
@@ -176,7 +176,7 @@ create_grafana_config() {
     
     # Create Grafana configuration
     cat > "${GRAFANA_CONFIG_FILE}" << EOF
-# STACKBILL: Grafana Configuration
+# STACKWATCH: Grafana Configuration
 # Backend System Architect and Automation Engineer
 
 [server]
@@ -316,7 +316,7 @@ verify_deployment() {
 # Main function
 main() {
     log_info "=========================================="
-    log_info "StackBill Grafana Deployment"
+    log_info "StackWatch Grafana Deployment"
     log_info "=========================================="
     
     if [[ $EUID -ne 0 ]]; then

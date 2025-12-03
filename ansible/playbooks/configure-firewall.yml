@@ -1,0 +1,179 @@
+---
+# STACKWATCH: Firewall Configuration Playbook
+# Backend System Architect and Automation Engineer
+#
+# Purpose: Configure firewall with industry-standard rules
+# Target: Ubuntu (localhost)
+# Supports: firewalld, UFW, iptables
+# Run: ansible-playbook -i ../inventory/hosts configure-firewall.yml --connection=local
+
+- name: Configure StackWatch Firewall Rules
+  hosts: localhost
+  become: yes
+  gather_facts: yes
+
+  vars:
+    allowed_ports:
+      - port: 80
+        protocol: tcp
+        service: http
+        description: HTTP web traffic
+      - port: 443
+        protocol: tcp
+        service: https
+        description: HTTPS web traffic
+    
+    blocked_ports:
+      - port: 9090
+        description: Prometheus direct access (use /prometheus/ via Nginx)
+      - port: 3000
+        description: Grafana direct access (use /grafana/ via Nginx)
+      - port: 9100
+        description: Node Exporter direct access (internal only)
+      - port: 9182
+        description: Windows Exporter direct access (internal only)
+
+  tasks:
+    - name: Detect firewall system
+      shell: |
+        if command -v firewall-cmd &> /dev/null; then
+          echo "firewalld"
+        elif command -v ufw &> /dev/null; then
+          echo "ufw"
+        elif command -v iptables &> /dev/null; then
+          echo "iptables"
+        else
+          echo "unknown"
+        fi
+      register: firewall_system
+      changed_when: false
+
+    - name: Display detected firewall system
+      debug:
+        msg: "Detected firewall system: {{ firewall_system.stdout }}"
+
+    # Firewalld Configuration
+    - name: Configure firewalld - Allow HTTP
+      firewalld:
+        service: http
+        permanent: yes
+        immediate: yes
+        state: enabled
+      when: firewall_system.stdout == "firewalld"
+      ignore_errors: yes
+
+    - name: Configure firewalld - Allow HTTPS
+      firewalld:
+        service: https
+        permanent: yes
+        immediate: yes
+        state: enabled
+      when: firewall_system.stdout == "firewalld"
+      ignore_errors: yes
+
+    - name: Configure firewalld - Block Prometheus direct access
+      shell: |
+        firewall-cmd --permanent --add-rich-rule='rule family="ipv4" port port="9090" protocol="tcp" reject' || true
+        firewall-cmd --reload
+      when: firewall_system.stdout == "firewalld"
+      ignore_errors: yes
+
+    - name: Configure firewalld - Block Grafana direct access
+      shell: |
+        firewall-cmd --permanent --add-rich-rule='rule family="ipv4" port port="3000" protocol="tcp" reject' || true
+        firewall-cmd --reload
+      when: firewall_system.stdout == "firewalld"
+      ignore_errors: yes
+
+    - name: Configure firewalld - Block Node Exporter direct access
+      shell: |
+        firewall-cmd --permanent --add-rich-rule='rule family="ipv4" port port="9100" protocol="tcp" reject' || true
+        firewall-cmd --reload
+      when: firewall_system.stdout == "firewalld"
+      ignore_errors: yes
+
+    - name: Configure firewalld - Block Windows Exporter direct access
+      shell: |
+        firewall-cmd --permanent --add-rich-rule='rule family="ipv4" port port="9182" protocol="tcp" reject' || true
+        firewall-cmd --reload
+      when: firewall_system.stdout == "firewalld"
+      ignore_errors: yes
+
+    - name: Reload firewalld
+      command: firewall-cmd --reload
+      when: firewall_system.stdout == "firewalld"
+      ignore_errors: yes
+
+    # UFW Configuration
+    - name: Configure UFW - Allow HTTP
+      ufw:
+        rule: allow
+        port: "80"
+        proto: tcp
+      when: firewall_system.stdout == "ufw"
+      ignore_errors: yes
+
+    - name: Configure UFW - Allow HTTPS
+      ufw:
+        rule: allow
+        port: "443"
+        proto: tcp
+      when: firewall_system.stdout == "ufw"
+      ignore_errors: yes
+
+    - name: Configure UFW - Block Prometheus direct access
+      ufw:
+        rule: deny
+        port: "9090"
+        proto: tcp
+      when: firewall_system.stdout == "ufw"
+      ignore_errors: yes
+
+    - name: Configure UFW - Block Grafana direct access
+      ufw:
+        rule: deny
+        port: "3000"
+        proto: tcp
+      when: firewall_system.stdout == "ufw"
+      ignore_errors: yes
+
+    - name: Configure UFW - Block Node Exporter direct access
+      ufw:
+        rule: deny
+        port: "9100"
+        proto: tcp
+      when: firewall_system.stdout == "ufw"
+      ignore_errors: yes
+
+    - name: Configure UFW - Block Windows Exporter direct access
+      ufw:
+        rule: deny
+        port: "9182"
+        proto: tcp
+      when: firewall_system.stdout == "ufw"
+      ignore_errors: yes
+
+    # iptables Configuration (manual instructions)
+    - name: Display iptables configuration instructions
+      debug:
+        msg:
+          - "iptables detected. Manual configuration required."
+          - "Recommended rules:"
+          - "  iptables -A INPUT -p tcp --dport 80 -j ACCEPT"
+          - "  iptables -A INPUT -p tcp --dport 443 -j ACCEPT"
+          - "  iptables -A INPUT -p tcp --dport 9090 -j REJECT"
+          - "  iptables -A INPUT -p tcp --dport 3000 -j REJECT"
+          - "  iptables -A INPUT -p tcp --dport 9100 -j REJECT"
+          - "  iptables -A INPUT -p tcp --dport 9182 -j REJECT"
+      when: firewall_system.stdout == "iptables"
+
+    - name: Verify firewall configuration
+      debug:
+        msg: "Firewall configuration completed for {{ firewall_system.stdout }}"
+      when: firewall_system.stdout != "unknown"
+
+    - name: Fail if firewall system is unknown
+      fail:
+        msg: "Unknown firewall system detected. Manual configuration required."
+      when: firewall_system.stdout == "unknown"
+

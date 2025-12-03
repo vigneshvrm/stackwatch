@@ -1,4 +1,4 @@
-# STACKBILL: Backend Implementation Summary
+# STACKWATCH: Backend Implementation Summary
 
 **Version:** 1.0.0  
 **Architect:** Backend System Architect and Automation Engineer  
@@ -33,7 +33,7 @@ stackwatch/
 │
 ├── scripts/                           # Shell Scripts (All other services)
 │   ├── README.md                     # Scripts documentation
-│   ├── deploy-stackbill.sh           # Main orchestrator
+│   ├── deploy-stackwatch.sh           # Main orchestrator
 │   ├── configure-firewall.sh         # Firewall rules
 │   ├── deploy-nginx.sh               # Nginx deployment
 │   ├── deploy-prometheus.sh          # Prometheus (Podman)
@@ -53,7 +53,7 @@ stackwatch/
 ### Single Command Deployment
 
 ```bash
-sudo ./scripts/deploy-stackbill.sh
+sudo ./scripts/deploy-stackwatch.sh
 ```
 
 This orchestrates:
@@ -121,7 +121,7 @@ powershell -ExecutionPolicy Bypass -File scripts/deploy-windows-exporter.ps1
 ## 📋 Script Details
 
 ### Main Orchestrator
-- **File:** `scripts/deploy-stackbill.sh`
+- **File:** `scripts/deploy-stackwatch.sh`
 - **Purpose:** Coordinates all backend services
 - **Executes:** All deployment phases in sequence
 
@@ -202,15 +202,15 @@ sudo apt install podman nginx ansible  # Debian/Ubuntu
 
 ```bash
 # 1. Clone repository
-git clone <repo-url> stackbill
-cd stackbill
+git clone <repo-url> stackwatch
+cd stackwatch
 
 # 2. Build frontend (Frontend team)
 npm install
 npm run build
 
 # 3. Deploy backend (Backend team)
-sudo ./scripts/deploy-stackbill.sh
+sudo ./scripts/deploy-stackwatch.sh
 
 # 4. Verify
 ./scripts/health-check.sh
@@ -255,7 +255,7 @@ sudo systemctl status node_exporter
 ### Access Services
 
 ```bash
-# StackBill Frontend
+# StackWatch Frontend
 curl http://localhost/
 
 # Prometheus

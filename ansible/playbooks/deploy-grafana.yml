@@ -1,0 +1,245 @@
+---
+# STACKWATCH: Grafana Deployment Playbook
+# Backend System Architect and Automation Engineer
+#
+# Purpose: Deploy Grafana container via Podman
+# Target: Ubuntu (localhost)
+# Run: ansible-playbook -i ../inventory/hosts deploy-grafana.yml --connection=local
+
+- name: Deploy StackWatch Grafana
+  hosts: localhost
+  become: yes
+  gather_facts: yes
+
+  vars:
+    grafana_container_name: "grafana"
+    grafana_image: "docker.io/grafana/grafana:latest"
+    grafana_port: "3000"
+    grafana_data_dir: "/var/lib/grafana"
+    grafana_config_dir: "/etc/grafana/config"
+    grafana_config_file: "{{ grafana_config_dir }}/grafana.ini"
+    grafana_provisioning_dir: "/etc/grafana/provisioning"
+    grafana_provisioning_dashboards: "{{ grafana_provisioning_dir }}/dashboards"
+    grafana_provisioning_datasources: "{{ grafana_provisioning_dir }}/datasources"
+    grafana_provisioning_alerting: "{{ grafana_provisioning_dir }}/alerting"
+
+  tasks:
+    - name: Check if Podman is installed
+      command: which podman
+      register: podman_check
+      changed_when: false
+      failed_when: false
+
+    - name: Fail if Podman is not installed
+      fail:
+        msg: "Podman is not installed. Run install-packages.yml first."
+      when: podman_check.rc != 0
+
+    - name: Detect server IP address
+      shell: |
+        # Get all IPs, prefer public over private
+        ALL_IPS=$(hostname -I 2>/dev/null | tr ' ' '\n' | grep -v '^127\.' || true)
+        if command -v ip &> /dev/null; then
+          INTERFACE_IPS=$(ip addr show 2>/dev/null | grep 'inet ' | awk '{print $2}' | cut -d'/' -f1 | grep -v '^127\.' || true)
+          if [[ -n "${INTERFACE_IPS}" ]]; then
+            ALL_IPS="${ALL_IPS}"$'\n'"${INTERFACE_IPS}"
+          fi
+        fi
+        
+        # Filter and prioritize: public IPs first
+        PUBLIC_IP=""
+        PRIVATE_IP=""
+        
+        while IFS= read -r ip; do
+          [[ -z "$ip" ]] && continue
+          if [[ "$ip" =~ ^10\. ]] || \
+             [[ "$ip" =~ ^172\.(1[6-9]|2[0-9]|3[0-1])\. ]] || \
+             [[ "$ip" =~ ^192\.168\. ]] || \
+             [[ "$ip" =~ ^127\. ]] || \
+             [[ "$ip" =~ ^169\.254\. ]]; then
+            [[ -z "$PRIVATE_IP" ]] && PRIVATE_IP="$ip"
+          else
+            [[ -z "$PUBLIC_IP" ]] && PUBLIC_IP="$ip"
+          fi
+        done <<< "$ALL_IPS"
+        
+        # Prefer public IP, fallback to private IP
+        if [[ -n "$PUBLIC_IP" ]]; then
+          echo "$PUBLIC_IP"
+        elif [[ -n "$PRIVATE_IP" ]]; then
+          echo "$PRIVATE_IP"
+        else
+          echo ""
+        fi
+      register: server_ip_detection
+      changed_when: false
+
+    - name: Set server domain variable
+      set_fact:
+        server_domain: "{{ server_ip_detection.stdout | default('') }}"
+
+    - name: Allow GRAFANA_DOMAIN environment variable override
+      set_fact:
+        server_domain: "{{ lookup('env', 'GRAFANA_DOMAIN') | default(server_domain) }}"
+      when: lookup('env', 'GRAFANA_DOMAIN') is defined
+
+    - name: Create Grafana directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        mode: '0755'
+      loop:
+        - "{{ grafana_data_dir }}"
+        - "{{ grafana_config_dir }}"
+        - "{{ grafana_provisioning_dashboards }}"
+        - "{{ grafana_provisioning_datasources }}"
+        - "{{ grafana_provisioning_alerting }}"
+
+    - name: Set Grafana directory ownership (UID 472)
+      file:
+        path: "{{ item }}"
+        owner: "472"
+        group: "472"
+        recurse: yes
+      loop:
+        - "{{ grafana_config_dir }}"
+        - "{{ grafana_data_dir }}"
+        - "{{ grafana_provisioning_dir }}"
+      ignore_errors: yes
+
+    - name: Backup existing Grafana configuration
+      copy:
+        src: "{{ grafana_config_file }}"
+        dest: "{{ grafana_config_file }}.backup.{{ ansible_date_time.epoch }}"
+        remote_src: yes
+      when: grafana_config_file | exists
+      ignore_errors: yes
+
+    - name: Create Grafana configuration file
+      copy:
+        dest: "{{ grafana_config_file }}"
+        content: |
+          # STACKWATCH: Grafana Configuration
+          # Backend System Architect and Automation Engineer
+
+          [server]
+          http_port = 3000
+          domain = {{ server_domain }}
+          protocol = http
+          serve_from_sub_path = true
+          # CRITICAL: root_url must be hardcoded (no variables) and NO trailing slash
+          root_url = http://{{ server_domain }}/grafana
+          enforce_domain = false
+
+          [database]
+          type = sqlite3
+          path = /var/lib/grafana/data/grafana.db
+
+          [security]
+          admin_user = admin
+          cookie_samesite = lax
+          admin_password = admin
+          secret_key = CHANGE_THIS_SECRET_KEY_IN_PRODUCTION
+
+          [users]
+          allow_sign_up = false
+
+          [log]
+          mode = console
+          level = info
+        mode: '0644'
+
+    - name: Check if Grafana container exists
+      command: podman ps -a --format "{{{{.Names}}}}"
+      register: existing_containers
+      changed_when: false
+      failed_when: false
+
+    - name: Stop existing Grafana container
+      command: podman stop {{ grafana_container_name }}
+      when: grafana_container_name in existing_containers.stdout
+      ignore_errors: yes
+
+    - name: Remove existing Grafana container
+      command: podman rm {{ grafana_container_name }}
+      when: grafana_container_name in existing_containers.stdout
+      ignore_errors: yes
+
+    - name: Pull Grafana image
+      command: podman pull {{ grafana_image }}
+      register: pull_result
+      changed_when: "'Pulling' in pull_result.stdout or 'Downloading' in pull_result.stdout"
+
+    - name: Start Grafana container
+      command: >
+        podman run -d
+        --name {{ grafana_container_name }}
+        --dns 8.8.8.8
+        --dns 1.1.1.1
+        -p {{ grafana_port }}:3000
+        -v /etc/hosts:/etc/hosts:Z
+        -v {{ grafana_data_dir }}:/var/lib/grafana:Z
+        -v {{ grafana_config_file }}:/etc/grafana/grafana.ini:Z
+        -v {{ grafana_provisioning_alerting }}:/etc/grafana/provisioning/alerting:Z
+        -v {{ grafana_provisioning_datasources }}:/etc/grafana/provisioning/datasources:Z
+        -v {{ grafana_provisioning_dashboards }}:/etc/grafana/provisioning/dashboards:Z
+        {{ grafana_image }}
+      register: container_start
+
+    - name: Wait for Grafana to start
+      wait_for:
+        port: "{{ grafana_port }}"
+        host: localhost
+        delay: 5
+        timeout: 60
+
+    - name: Generate systemd service for Grafana
+      command: podman generate systemd --name {{ grafana_container_name }} --new
+      register: systemd_service
+      changed_when: false
+
+    - name: Create systemd service file
+      copy:
+        dest: "/etc/systemd/system/container-{{ grafana_container_name }}.service"
+        content: "{{ systemd_service.stdout }}"
+        mode: '0644'
+      when: systemd_service.rc == 0
+      ignore_errors: yes
+
+    - name: Reload systemd daemon
+      systemd:
+        daemon_reload: yes
+      when: systemd_service.rc == 0
+      ignore_errors: yes
+
+    - name: Enable Grafana systemd service
+      systemd:
+        name: "container-{{ grafana_container_name }}.service"
+        enabled: yes
+      when: systemd_service.rc == 0
+      ignore_errors: yes
+
+    - name: Verify Grafana container is running
+      command: podman ps --format "{{{{.Names}}}}"
+      register: running_containers
+      changed_when: false
+
+    - name: Check Grafana health endpoint
+      uri:
+        url: "http://localhost:{{ grafana_port }}/api/health"
+        method: GET
+        status_code: [200]
+      register: health_check
+      ignore_errors: yes
+
+    - name: Display deployment status
+      debug:
+        msg:
+          - "Grafana container: {{ grafana_container_name }}"
+          - "Container running: {{ grafana_container_name in running_containers.stdout }}"
+          - "Health check: {{ 'OK' if health_check.status == 200 else 'Failed' }}"
+          - "Grafana domain: {{ server_domain }}"
+          - "Access Grafana: http://localhost:{{ grafana_port }}"
+          - "Access via Nginx: http://{{ server_domain }}/grafana"
+          - "Default credentials: admin/admin - CHANGE IN PRODUCTION!"
+

@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# STACKBILL: Prebuilt Package Creator
+# STACKWATCH: Prebuilt Package Creator
 # Backend System Architect and Automation Engineer
 #
 # Purpose: Creates a tar.gz package containing frontend, scripts, and ansible
@@ -22,7 +22,7 @@ PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
 # Configuration
 FRONTEND_BUILD_DIR="dist"
-PACKAGE_NAME="stackbill-prebuilt"
+PACKAGE_NAME="stackwatch-prebuilt"
 VERSION="${VERSION:-$(grep -oP '"version":\s*"\K[^"]+' "${PROJECT_ROOT}/package.json" 2>/dev/null || echo "1.0.0")}"
 DATE=$(date +%Y%m%d)
 PACKAGE_FILE="${PACKAGE_NAME}-${VERSION}-${DATE}.tar.gz"
@@ -205,15 +205,15 @@ display_package_info() {
     log_info "Client Deployment Instructions:"
     log_info "  1. Download the package file"
     log_info "  2. Extract to /opt: tar -xzf ${PACKAGE_FILE} -C /opt"
-    log_info "  3. Rename if needed: mv /opt/${PACKAGE_NAME} /opt/stackbill"
-    log_info "  4. Deploy: sudo /opt/stackbill/scripts/deploy-from-opt.sh"
+    log_info "  3. Rename if needed: mv /opt/${PACKAGE_NAME} /opt/stackwatch"
+    log_info "  4. Deploy: sudo /opt/stackwatch/scripts/deploy-from-opt.sh"
     log_info ""
 }
 
 # Main function
 main() {
     log_info "=========================================="
-    log_info "StackBill Prebuilt Package Creator"
+    log_info "StackWatch Prebuilt Package Creator"
     log_info "=========================================="
     log_info ""
     

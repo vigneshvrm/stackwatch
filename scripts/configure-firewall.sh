@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# STACKBILL: Firewall Configuration Script
+# STACKWATCH: Firewall Configuration Script
 # Backend System Architect and Automation Engineer
 #
 # CRITICAL RULES:
@@ -111,7 +111,7 @@ configure_iptables() {
 # Main function
 main() {
     log_info "=========================================="
-    log_info "StackBill Firewall Configuration"
+    log_info "StackWatch Firewall Configuration"
     log_info "=========================================="
     
     if [[ $EUID -ne 0 ]]; then

@@ -1,6 +1,6 @@
 # Help Documentation Images
 
-This directory contains images used in the StackBill help documentation.
+This directory contains images used in the StackWatch help documentation.
 
 ## Image Guidelines
 

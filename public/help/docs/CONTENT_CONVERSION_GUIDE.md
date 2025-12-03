@@ -103,7 +103,7 @@ After updating `help.md`:
 
 **Word Document:**
 ```
-StackBill Documentation
+StackWatch Documentation
 
 This is a screenshot:
 [Image: dashboard.png]
@@ -115,7 +115,7 @@ Features:
 
 **Markdown Equivalent:**
 ```markdown
-# StackBill Documentation
+# StackWatch Documentation
 
 This is a screenshot:
 

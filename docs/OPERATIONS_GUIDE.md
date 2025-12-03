@@ -1,4 +1,4 @@
-# STACKBILL: Operations Guide
+# STACKWATCH: Operations Guide
 
 **Document Version:** 1.0.0  
 **Audience:** System Administrators  
@@ -8,9 +8,9 @@
 
 ## 1. Overview
 
-STACKBILL is a unified monitoring stack that provides centralized access to Prometheus metrics collection and Grafana visualization through a single web interface. The stack consists of:
+STACKWATCH is a unified monitoring stack that provides centralized access to Prometheus metrics collection and Grafana visualization through a single web interface. The stack consists of:
 
-- **Nginx** (port 80): Entry point and reverse proxy serving the StackBill frontend and routing to backend services
+- **Nginx** (port 80): Entry point and reverse proxy serving the StackWatch frontend and routing to backend services
 - **Prometheus** (port 9090): Time-series metrics database and collection engine
 - **Grafana** (port 3000): Visualization and dashboard platform
 - **Linux Node Exporter** (port 9100): System metrics exporter for Linux servers, deployed via Ansible
@@ -38,7 +38,7 @@ All services are accessible through Nginx at the root path (`/`), with Prometheu
 
 | Port | Service | Direction | Purpose |
 |------|---------|-----------|---------|
-| 80 | Nginx | Inbound | Web access to StackBill frontend |
+| 80 | Nginx | Inbound | Web access to StackWatch frontend |
 | 443 | Nginx (HTTPS) | Inbound | Secure web access (optional) |
 | 9090 | Prometheus | Localhost only | Metrics collection (proxied via Nginx) |
 | 3000 | Grafana | Localhost only | Dashboard access (proxied via Nginx) |
@@ -89,7 +89,7 @@ sudo yum install -y nodejs
 ```
 
 **Why Node.js is Required:**
-Node.js is required to build the StackBill frontend application. The frontend uses npm (Node Package Manager) to install dependencies and build the production-ready static files that Nginx serves. Node.js must be installed BEFORE building the frontend (Section 3.2).
+Node.js is required to build the StackWatch frontend application. The frontend uses npm (Node Package Manager) to install dependencies and build the production-ready static files that Nginx serves. Node.js must be installed BEFORE building the frontend (Section 3.2).
 
 **Verify Node.js Installation:**
 ```bash
@@ -107,11 +107,11 @@ npm --version
 
 ```bash
 cd /opt
-git clone <repository-url> stackbill
-cd stackbill
+git clone <repository-url> stackwatch
+cd stackwatch
 ```
 
-**Expected Result:** Repository cloned to `/opt/stackbill`
+**Expected Result:** Repository cloned to `/opt/stackwatch`
 
 ### 3.2 Build Frontend (if needed)
 
@@ -145,7 +145,7 @@ chmod +x ./scripts/deploy-nginx.sh
 chmod +x ./scripts/deploy-prometheus.sh
 chmod +x ./scripts/deploy-grafana.sh
 chmod +x ./scripts/configure-firewall.sh
-chmod +x ./scripts/deploy-stackbill.sh
+chmod +x ./scripts/deploy-stackwatch.sh
 chmod +x ./scripts/health-check.sh
 ```
 
@@ -169,10 +169,10 @@ sudo ./scripts/deploy-nginx.sh
 ```
 
 **What the script does:**
-1. Creates Nginx configuration at `/etc/nginx/sites-available/stackbill`
+1. Creates Nginx configuration at `/etc/nginx/sites-available/stackwatch`
 2. Configures reverse proxy for `/prometheus` → `http://localhost:9090`
 3. Configures reverse proxy for `/grafana` → `http://localhost:3000`
-4. Serves frontend static files from `/var/www/stackbill/dist`
+4. Serves frontend static files from `/var/www/stackwatch/dist`
 5. Enables the Nginx site
 6. Tests and reloads Nginx configuration
 
@@ -193,7 +193,7 @@ sudo ss -tlnp | grep :80
 
 **Expected Result:** Nginx service is active and listening on port 80
 
-### 3.4 Test StackBill Home Page
+### 3.4 Test StackWatch Home Page
 
 ```bash
 # Test from localhost
@@ -203,9 +203,9 @@ curl http://localhost/
 curl http://<server-ip>/
 ```
 
-**Expected Result:** HTML content from StackBill frontend is returned
+**Expected Result:** HTML content from StackWatch frontend is returned
 
-**Browser Access:** Open `http://<server-ip>/` in a web browser. You should see the StackBill dashboard with links to Prometheus and Grafana.
+**Browser Access:** Open `http://<server-ip>/` in a web browser. You should see the StackWatch dashboard with links to Prometheus and Grafana.
 
 ---
 
@@ -483,8 +483,8 @@ curl http://192.168.1.11:9100/metrics
 **Option 2: Clone repository on Windows (if Git is available)**
 ```powershell
 cd C:\
-git clone <repository-url> stackbill
-cd stackbill
+git clone <repository-url> stackwatch
+cd stackwatch
 ```
 
 ### 6.2 Run PowerShell Script
@@ -493,7 +493,7 @@ cd stackbill
 
 ```powershell
 # Navigate to script location
-cd C:\stackbill\scripts
+cd C:\stackwatch\scripts
 
 # Run the deployment script
 powershell -ExecutionPolicy Bypass -File deploy-windows-exporter.ps1
@@ -769,7 +769,7 @@ Use this checklist to verify the complete installation:
   ```
   Expected: `active (running)`
 
-- [ ] **StackBill home page is accessible**
+- [ ] **StackWatch home page is accessible**
   ```bash
   curl http://localhost/
   ```
@@ -847,9 +847,9 @@ Use this checklist to verify the complete installation:
 
 ### 10.1 Nginx Issues
 
-**Problem: Nginx shows "Welcome to nginx!" instead of StackBill UI**
+**Problem: Nginx shows "Welcome to nginx!" instead of StackWatch UI**
 
-This occurs when Nginx is serving the default site instead of the StackBill configuration.
+This occurs when Nginx is serving the default site instead of the StackWatch configuration.
 
 **Step 1: Verify Nginx root directory**
 
@@ -857,20 +857,20 @@ This occurs when Nginx is serving the default site instead of the StackBill conf
 # Check which configuration Nginx is using
 sudo nginx -T | grep "root"
 
-# Check if StackBill config is loaded
-sudo nginx -T | grep "stackbill"
+# Check if StackWatch config is loaded
+sudo nginx -T | grep "stackwatch"
 ```
 
-**Expected Result:** Should show `root /var/www/stackbill/dist;` in the active configuration
+**Expected Result:** Should show `root /var/www/stackwatch/dist;` in the active configuration
 
-**Step 2: Confirm StackBill files are present**
+**Step 2: Confirm StackWatch files are present**
 
 ```bash
 # Check if frontend files exist
-ls -la /var/www/stackbill/dist/
+ls -la /var/www/stackwatch/dist/
 
 # Verify index.html exists
-test -f /var/www/stackbill/dist/index.html && echo "File exists" || echo "File missing"
+test -f /var/www/stackwatch/dist/index.html && echo "File exists" || echo "File missing"
 ```
 
 **Expected Result:** `index.html` and `assets/` directory should exist
@@ -881,31 +881,31 @@ test -f /var/www/stackbill/dist/index.html && echo "File exists" || echo "File m
 # List enabled sites
 ls -la /etc/nginx/sites-enabled/
 
-# Check if StackBill config is enabled
-test -L /etc/nginx/sites-enabled/stackbill && echo "Enabled" || echo "Not enabled"
+# Check if StackWatch config is enabled
+test -L /etc/nginx/sites-enabled/stackwatch && echo "Enabled" || echo "Not enabled"
 
 # Check if default site is still enabled (this is the problem)
 test -L /etc/nginx/sites-enabled/default && echo "Default site enabled - DISABLE THIS" || echo "Default site disabled"
 ```
 
 **Expected Result:** 
-- `/etc/nginx/sites-enabled/stackbill` should exist (symlink)
+- `/etc/nginx/sites-enabled/stackwatch` should exist (symlink)
 - `/etc/nginx/sites-enabled/default` should NOT exist (or be disabled)
 
-**Step 4: Disable default site and enable StackBill**
+**Step 4: Disable default site and enable StackWatch**
 
 ```bash
 # Disable default Nginx site (if it exists)
 sudo rm -f /etc/nginx/sites-enabled/default
 
-# Ensure StackBill site is enabled
-sudo ln -sf /etc/nginx/sites-available/stackbill /etc/nginx/sites-enabled/stackbill
+# Ensure StackWatch site is enabled
+sudo ln -sf /etc/nginx/sites-available/stackwatch /etc/nginx/sites-enabled/stackwatch
 
 # Verify symlink
-ls -la /etc/nginx/sites-enabled/stackbill
+ls -la /etc/nginx/sites-enabled/stackwatch
 ```
 
-**Expected Result:** Symlink points to `/etc/nginx/sites-available/stackbill`
+**Expected Result:** Symlink points to `/etc/nginx/sites-available/stackwatch`
 
 **Step 5: Reload Nginx properly**
 
@@ -923,30 +923,30 @@ sudo service nginx reload
 sudo nginx -T 2>&1 | grep -A 5 "server_name _"
 ```
 
-**Expected Result:** Configuration shows `root /var/www/stackbill/dist;`
+**Expected Result:** Configuration shows `root /var/www/stackwatch/dist;`
 
-**Step 6: Verify StackBill UI is served**
+**Step 6: Verify StackWatch UI is served**
 
 ```bash
 # Test from command line
 curl http://localhost/ | head -20
 
-# Check for StackBill content
-curl http://localhost/ | grep -i "stackbill"
+# Check for StackWatch content
+curl http://localhost/ | grep -i "stackwatch"
 ```
 
-**Expected Result:** HTML content contains "StackBill" text, not "Welcome to nginx!"
+**Expected Result:** HTML content contains "StackWatch" text, not "Welcome to nginx!"
 
 **If files are missing, rebuild frontend:**
 ```bash
-cd /opt/stackbill
+cd /opt/stackwatch
 npm run build
 sudo ./scripts/deploy-nginx.sh
 ```
 
 ---
 
-**Problem: Nginx not serving StackBill frontend**
+**Problem: Nginx not serving StackWatch frontend**
 
 **Check:**
 ```bash
@@ -960,13 +960,13 @@ sudo nginx -t
 sudo tail -f /var/log/nginx/error.log
 
 # Verify frontend files exist
-ls -la /var/www/stackbill/dist/
+ls -la /var/www/stackwatch/dist/
 ```
 
 **Solution:**
 - If frontend files missing: Run `npm run build` in project root, then re-run `sudo ./scripts/deploy-nginx.sh`
 - If configuration error: Fix syntax errors shown by `nginx -t`
-- If permission denied: `sudo chown -R nginx:nginx /var/www/stackbill/dist`
+- If permission denied: `sudo chown -R nginx:nginx /var/www/stackwatch/dist`
 
 **Problem: Cannot access /prometheus or /grafana via Nginx**
 
@@ -982,7 +982,7 @@ curl http://localhost:3000/api/health
 
 **Solution:**
 - If containers not running: Restart containers with deployment scripts
-- If 502 Bad Gateway: Check Nginx proxy configuration in `/etc/nginx/sites-available/stackbill`
+- If 502 Bad Gateway: Check Nginx proxy configuration in `/etc/nginx/sites-available/stackwatch`
 
 ### 10.2 Prometheus Issues
 
@@ -1240,7 +1240,7 @@ Restart-Service windows_exporter
 ### Health Checks
 
 ```bash
-# StackBill frontend
+# StackWatch frontend
 curl http://localhost/
 
 # Prometheus
@@ -1260,7 +1260,7 @@ curl http://<windows-server-ip>:9100/metrics
 
 ### Configuration Files
 
-- Nginx: `/etc/nginx/sites-available/stackbill`
+- Nginx: `/etc/nginx/sites-available/stackwatch`
 - Prometheus: `/etc/prometheus/prometheus.yml`
 - Grafana: `/etc/grafana/grafana.ini`
 - Ansible Inventory: `ansible/inventory/hosts`

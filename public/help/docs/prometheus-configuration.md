@@ -2,7 +2,7 @@
 
 **Status:** Content to be provided
 
-This document will contain comprehensive information about configuring and using Prometheus in the StackBill Infrastructure Gateway.
+This document will contain comprehensive information about configuring and using Prometheus in the StackWatch Infrastructure Gateway.
 
 ---
 

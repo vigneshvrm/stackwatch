@@ -1,4 +1,4 @@
-# StackBill: Architectural & Operational Documentation
+# StackWatch: Architectural & Operational Documentation
 
 **Version:** 1.0.0  
 **Classification:** Internal Technical Documentation  
@@ -8,7 +8,7 @@
 
 ## 1. Architectural Overview
 
-StackBill is a **Static Frontend Gateway** designed to provide a unified entry point for the organization's observability stack. It adheres to the *Micro-Frontend* conceptual model, serving as a lightweight shell that delegates actual functionality to backend services (Prometheus, Grafana) via Nginx reverse proxying.
+StackWatch is a **Static Frontend Gateway** designed to provide a unified entry point for the organization's observability stack. It adheres to the *Micro-Frontend* conceptual model, serving as a lightweight shell that delegates actual functionality to backend services (Prometheus, Grafana) via Nginx reverse proxying.
 
 ### Feature to Characteristic Mapping
 
@@ -34,7 +34,7 @@ StackBill is a **Static Frontend Gateway** designed to provide a unified entry p
 
 ```text
 +---------------------------------------------------------------+
-|  [Header]  StackBill | Infrastructure Gateway      [Status]   |
+|  [Header]  StackWatch | Infrastructure Gateway      [Status]   |
 +---------------------------------------------------------------+
 |                                                               |
 |          [ Title: Observability Stack Selection ]             |
@@ -54,7 +54,7 @@ StackBill is a **Static Frontend Gateway** designed to provide a unified entry p
 |    [Info Box: Traffic routed via Secure Gateway / nginx]      |
 |                                                               |
 +---------------------------------------------------------------+
-|  [Footer] v1.0.0 | Env: Production | © 2024 StackBill         |
+|  [Footer] v1.0.0 | Env: Production | © 2024 StackWatch         |
 +---------------------------------------------------------------+
 ```
 
@@ -65,7 +65,7 @@ graph TD
     User((Visitor))
     Browser[Browser / Client]
     Nginx[Nginx Reverse Proxy]
-    SB[StackBill Static Files]
+    SB[StackWatch Static Files]
     Prom[Prometheus Service :9090]
     Graf[Grafana Service :3000]
 
@@ -92,7 +92,7 @@ graph TD
 
 ## 3. API Interaction Contract
 
-Although StackBill is a static frontend, it relies on an implicit "Infrastructure Contract".
+Although StackWatch is a static frontend, it relies on an implicit "Infrastructure Contract".
 
 **1. Data Assumptions:**
 *   The frontend assumes that the backend services are alive. It does not actively poll health endpoints (to keep the artifact static and simple).
@@ -108,16 +108,16 @@ Although StackBill is a static frontend, it relies on an implicit "Infrastructur
 
 ### Nginx Deployment Configuration
 
-To deploy StackBill, use the following Nginx block. This handles the static file serving AND the reverse proxying required by the architecture.
+To deploy StackWatch, use the following Nginx block. This handles the static file serving AND the reverse proxying required by the architecture.
 
 ```nginx
 server {
     listen 80;
     server_name _;
-    root /var/www/stackbill/dist; # Location of the React build output
+    root /var/www/stackwatch/dist; # Location of the React build output
     index index.html;
 
-    # 1. Serve StackBill Frontend
+    # 1. Serve StackWatch Frontend
     location / {
         try_files $uri $uri/ /index.html;
     }

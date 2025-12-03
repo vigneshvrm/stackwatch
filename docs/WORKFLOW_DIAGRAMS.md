@@ -1,4 +1,4 @@
-# STACKBILL: Workflow Diagrams and Data Flow Documentation
+# STACKWATCH: Workflow Diagrams and Data Flow Documentation
 
 **Document Version:** 1.0.0  
 **Classification:** Internal Technical Documentation  
@@ -43,7 +43,7 @@
 │              │   │               │   │              │
 │ Location:    │   │ Location:     │   │ Location:    │
 │ /var/www/    │   │ /prometheus/  │   │ /grafana/    │
-│ stackbill/   │   │               │   │              │
+│ stackwatch/   │   │               │   │              │
 │ dist/        │   │ Proxy:        │   │ Proxy:       │
 │              │   │ http://       │   │ http://      │
 │ try_files:   │   │ localhost:    │   │ localhost:   │
@@ -101,7 +101,7 @@ graph TD
 3. **Regex Match (`~`, `~*`)**: Case-sensitive, case-insensitive
 4. **Longest Prefix Match**: Default behavior
 
-**StackBill Routing Logic:**
+**StackWatch Routing Logic:**
 ```
 Location: /prometheus/
   ├─ Priority: Prefix Match
@@ -118,7 +118,7 @@ Location: /grafana/
 Location: /
   ├─ Priority: Default Prefix Match
   ├─ Action: try_files $uri $uri/ /index.html
-  ├─ Root: /var/www/stackbill/dist
+  ├─ Root: /var/www/stackwatch/dist
   └─ Result: SPA routing support
 ```
 
@@ -574,19 +574,19 @@ graph TD
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│  STEP 1: User Accesses StackBill Gateway                     │
+│  STEP 1: User Accesses StackWatch Gateway                     │
 │  GET http://server-ip/                                        │
 └───────────────────────────┬─────────────────────────────────┘
                             │
                             ▼
 ┌─────────────────────────────────────────────────────────────┐
 │  Nginx: Serves Static Frontend                               │
-│  File: /var/www/stackbill/dist/index.html                   │
+│  File: /var/www/stackwatch/dist/index.html                   │
 └───────────────────────────┬─────────────────────────────────┘
                             │
                             ▼
 ┌─────────────────────────────────────────────────────────────┐
-│  Browser: Renders StackBill UI                              │
+│  Browser: Renders StackWatch UI                              │
 │  Displays: Prometheus and Grafana service cards              │
 └───────────────────────────┬─────────────────────────────────┘
                             │

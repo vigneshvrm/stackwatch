@@ -1,4 +1,4 @@
-# STACKBILL: Enterprise Architecture Document
+# STACKWATCH: Enterprise Architecture Document
 
 **Document Version:** 1.0.0  
 **Classification:** Internal Technical Documentation  
@@ -9,7 +9,7 @@
 
 ## Executive Summary
 
-StackBill is an enterprise-grade observability gateway infrastructure designed to provide centralized access to monitoring and visualization services. The system implements a microservices architecture pattern with strict separation of concerns, security-first design principles, and comprehensive observability capabilities.
+StackWatch is an enterprise-grade observability gateway infrastructure designed to provide centralized access to monitoring and visualization services. The system implements a microservices architecture pattern with strict separation of concerns, security-first design principles, and comprehensive observability capabilities.
 
 ### Architectural Characteristics Compliance
 
@@ -44,7 +44,7 @@ StackBill is an enterprise-grade observability gateway infrastructure designed t
 │                         NGINX REVERSE PROXY                              │
 │                         (Port 80/443)                                    │
 │  ┌──────────────────────────────────────────────────────────────────┐   │
-│  │  Location: /          → Static Frontend (StackBill React App)   │   │
+│  │  Location: /          → Static Frontend (StackWatch React App)   │   │
 │  │  Location: /prometheus → Proxy to Prometheus :9090              │   │
 │  │  Location: /grafana    → Proxy to Grafana :3000                 │   │
 │  └──────────────────────────────────────────────────────────────────┘   │
@@ -52,8 +52,8 @@ StackBill is an enterprise-grade observability gateway infrastructure designed t
                      │                       │
         ┌────────────▼──────────┐  ┌─────────▼──────────┐
         │   STATIC FRONTEND     │  │  BACKEND SERVICES  │
-        │   (StackBill UI)      │  │                    │
-        │   /var/www/stackbill/ │  │                    │
+        │   (StackWatch UI)      │  │                    │
+        │   /var/www/stackwatch/ │  │                    │
         │   dist/               │  │                    │
         └───────────────────────┘  │                    │
                                    │                    │
@@ -89,10 +89,10 @@ StackBill is an enterprise-grade observability gateway infrastructure designed t
 ### 1.2 Component Inventory
 
 #### Frontend Layer
-- **Component:** StackBill React Application
+- **Component:** StackWatch React Application
 - **Technology:** React 19.2.0, TypeScript, Vite 6.2.0
 - **Deployment:** Static files served via Nginx
-- **Location:** `/var/www/stackbill/dist/`
+- **Location:** `/var/www/stackwatch/dist/`
 - **Port:** N/A (served via Nginx on port 80/443)
 - **Purpose:** Unified gateway UI for service access
 
@@ -241,7 +241,7 @@ Prometheus Scraper Engine
 - Benefits: Native integration, system-level access, minimal overhead
 
 **Static Frontend (Nginx-served)**
-- StackBill: Pre-built static files
+- StackWatch: Pre-built static files
 - Benefits: Zero runtime dependencies, CDN-ready, infinite scalability
 
 ### 3.2 Network Architecture
@@ -266,7 +266,7 @@ Prometheus Scraper Engine
 
 ### 4.1 Horizontal Scaling Capabilities
 
-**Frontend (StackBill)**
+**Frontend (StackWatch)**
 - Stateless design enables CDN deployment
 - No session state or server-side logic
 - Can be replicated across multiple Nginx instances
@@ -363,7 +363,7 @@ Prometheus Scraper Engine
 - `tsconfig.json`: TypeScript compiler options
 
 **Infrastructure Configuration (Expected):**
-- Nginx: `/etc/nginx/sites-available/stackbill` (not in repo)
+- Nginx: `/etc/nginx/sites-available/stackwatch` (not in repo)
 - Prometheus: `prometheus.yml`, alert rules (not in repo)
 - Grafana: `grafana.ini`, provisioning configs (not in repo)
 - Ansible: Playbooks, roles, inventory (not in repo)

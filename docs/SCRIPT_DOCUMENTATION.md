@@ -1,4 +1,4 @@
-# STACKBILL: Script Documentation and Automation Audit
+# STACKWATCH: Script Documentation and Automation Audit
 
 **Document Version:** 1.0.0  
 **Classification:** Internal Technical Documentation  
@@ -9,7 +9,7 @@
 
 ## Executive Summary
 
-This document provides comprehensive documentation for all automation scripts, deployment procedures, and operational utilities expected in the StackBill infrastructure. **Note:** Infrastructure automation scripts (Ansible playbooks, deployment scripts) are not currently present in the repository. This document serves as both an audit of existing scripts and a specification for expected automation.
+This document provides comprehensive documentation for all automation scripts, deployment procedures, and operational utilities expected in the StackWatch infrastructure. **Note:** Infrastructure automation scripts (Ansible playbooks, deployment scripts) are not currently present in the repository. This document serves as both an audit of existing scripts and a specification for expected automation.
 
 ---
 
@@ -368,12 +368,12 @@ iptables-restore < /backup/iptables.rules  # iptables
 `scripts/deploy-frontend.sh` (not in repository)
 
 **Purpose:**  
-Build and deploy StackBill frontend to Nginx web root.
+Build and deploy StackWatch frontend to Nginx web root.
 
 **Expected Behavior:**
 1. Run `npm run build`
 2. Backup existing `dist/` directory
-3. Copy `dist/` to `/var/www/stackbill/dist/`
+3. Copy `dist/` to `/var/www/stackwatch/dist/`
 4. Set proper file permissions
 5. Reload Nginx configuration
 6. Verify deployment
@@ -403,7 +403,7 @@ Build and deploy StackBill frontend to Nginx web root.
 **Rollback Procedure:**
 ```bash
 # Restore previous dist/ directory
-sudo cp -r /var/www/stackbill/dist.backup /var/www/stackbill/dist
+sudo cp -r /var/www/stackwatch/dist.backup /var/www/stackwatch/dist
 sudo systemctl reload nginx
 ```
 
@@ -415,11 +415,11 @@ sudo systemctl reload nginx
 `scripts/health-check.sh` (not in repository)
 
 **Purpose:**  
-Comprehensive health check of all StackBill services.
+Comprehensive health check of all StackWatch services.
 
 **Expected Behavior:**
 1. Check Nginx status and port 80/443
-2. Check StackBill frontend loads
+2. Check StackWatch frontend loads
 3. Check Prometheus health endpoint
 4. Check Grafana health endpoint
 5. Check Node Exporter on target servers
@@ -429,12 +429,12 @@ Comprehensive health check of all StackBill services.
 
 **Expected Output:**
 ```
-StackBill Health Check Report
+StackWatch Health Check Report
 =============================
 Date: 2024-XX-XX XX:XX:XX
 
 [✓] Nginx: OK (port 80 responding)
-[✓] StackBill Frontend: OK
+[✓] StackWatch Frontend: OK
 [✓] Prometheus: OK (/-/healthy)
 [✓] Grafana: OK (/api/health)
 [✓] Node Exporter (server1): OK
@@ -469,10 +469,10 @@ Not applicable (read-only diagnostic script)
 ### 3.5 Backup Script
 
 **Expected Location:**  
-`scripts/backup-stackbill.sh` (not in repository)
+`scripts/backup-stackwatch.sh` (not in repository)
 
 **Purpose:**  
-Backup critical StackBill data and configurations.
+Backup critical StackWatch data and configurations.
 
 **Expected Behavior:**
 1. Backup Prometheus TSDB data
@@ -485,9 +485,9 @@ Backup critical StackBill data and configurations.
 **Backup Targets:**
 - Prometheus data: `/var/lib/prometheus/data/` (or Podman volume)
 - Grafana data: `/var/lib/grafana/` (or Podman volume)
-- Nginx config: `/etc/nginx/sites-available/stackbill`
+- Nginx config: `/etc/nginx/sites-available/stackwatch`
 - Ansible: `ansible/` directory
-- Frontend build: `/var/www/stackbill/dist/` (optional)
+- Frontend build: `/var/www/stackwatch/dist/` (optional)
 
 **Validation:**
 - ✅ Backup archive created

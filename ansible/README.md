@@ -1,4 +1,4 @@
-# STACKBILL: Ansible Infrastructure Automation
+# STACKWATCH: Ansible Infrastructure Automation
 
 **Version:** 1.0.0  
 **Architect:** Backend System Architect and Automation Engineer
@@ -69,9 +69,9 @@ powershell -ExecutionPolicy Bypass -File scripts/deploy-windows-exporter.ps1
 powershell -ExecutionPolicy Bypass -File scripts/deploy-windows-exporter.ps1 -NodeExporterPort 9100
 ```
 
-**NOTE:** For full StackBill deployment, use the main deployment script:
+**NOTE:** For full StackWatch deployment, use the main deployment script:
 ```bash
-./scripts/deploy-stackbill.sh
+./scripts/deploy-stackwatch.sh
 ```
 
 This script orchestrates:

@@ -15,7 +15,7 @@ serve_from_sub_path = true
 enforce_domain = false
 ```
 
-### Nginx (`/etc/nginx/sites-available/stackbill`)
+### Nginx (`/etc/nginx/sites-available/stackwatch`)
 ```nginx
 location /grafana/ {
     proxy_pass http://localhost:3000/;

@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# STACKBILL: Main Deployment Orchestrator
+# STACKWATCH: Main Deployment Orchestrator
 # Backend System Architect and Automation Engineer
 #
 # CRITICAL RULES:
@@ -70,7 +70,7 @@ preflight_checks() {
 # Main deployment function
 main() {
     log_info "=========================================="
-    log_info "StackBill Backend Deployment"
+    log_info "StackWatch Backend Deployment"
     log_info "Environment: ${ENVIRONMENT}"
     log_info "=========================================="
     log_info ""
@@ -130,7 +130,7 @@ main() {
     
     log_info ""
     log_info "=========================================="
-    log_info "StackBill Backend Deployment Complete"
+    log_info "StackWatch Backend Deployment Complete"
     log_info "=========================================="
     log_info ""
     log_info "Backend services deployed successfully"
@@ -138,7 +138,7 @@ main() {
     log_info ""
     log_info "Next steps:"
     log_info "  1. Verify services: ./scripts/health-check.sh"
-    log_info "  2. Access StackBill: http://$(hostname -I | awk '{print $1}')/"
+    log_info "  2. Access StackWatch: http://$(hostname -I | awk '{print $1}')/"
     log_info "  3. Access Prometheus: http://$(hostname -I | awk '{print $1}')/prometheus"
     log_info "  4. Access Grafana: http://$(hostname -I | awk '{print $1}')/grafana"
 }

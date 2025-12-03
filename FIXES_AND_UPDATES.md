@@ -1,4 +1,4 @@
-# STACKBILL: Script Fixes and Documentation Updates
+# STACKWATCH: Script Fixes and Documentation Updates
 
 **Date:** 2024  
 **Engineer:** Backend Engineer and Technical Writer
@@ -17,7 +17,7 @@
 ### Node.js Installation (Required for Frontend Build)
 
 **Why Node.js is Required:**
-Node.js is required to build the StackBill frontend application. The frontend uses npm (Node Package Manager) to install dependencies and build the production-ready static files that Nginx serves.
+Node.js is required to build the StackWatch frontend application. The frontend uses npm (Node Package Manager) to install dependencies and build the production-ready static files that Nginx serves.
 
 **When to Install:**
 Node.js must be installed BEFORE building the frontend (Section 3.2). Install it during the prerequisites phase.
@@ -73,7 +73,7 @@ chmod +x ./scripts/deploy-nginx.sh
 chmod +x ./scripts/deploy-prometheus.sh
 chmod +x ./scripts/deploy-grafana.sh
 chmod +x ./scripts/configure-firewall.sh
-chmod +x ./scripts/deploy-stackbill.sh
+chmod +x ./scripts/deploy-stackwatch.sh
 chmod +x ./scripts/health-check.sh
 ```
 
@@ -96,9 +96,9 @@ ls -l ./scripts/*.sh
 **New Content:**
 
 ```markdown
-**Problem: Nginx shows "Welcome to nginx!" instead of StackBill UI**
+**Problem: Nginx shows "Welcome to nginx!" instead of StackWatch UI**
 
-This occurs when Nginx is serving the default site instead of the StackBill configuration.
+This occurs when Nginx is serving the default site instead of the StackWatch configuration.
 
 **Step 1: Verify Nginx root directory**
 
@@ -106,20 +106,20 @@ This occurs when Nginx is serving the default site instead of the StackBill conf
 # Check which configuration Nginx is using
 sudo nginx -T | grep "root"
 
-# Check if StackBill config is loaded
-sudo nginx -T | grep "stackbill"
+# Check if StackWatch config is loaded
+sudo nginx -T | grep "stackwatch"
 ```
 
-**Expected Result:** Should show `root /var/www/stackbill/dist;` in the active configuration
+**Expected Result:** Should show `root /var/www/stackwatch/dist;` in the active configuration
 
-**Step 2: Confirm StackBill files are present**
+**Step 2: Confirm StackWatch files are present**
 
 ```bash
 # Check if frontend files exist
-ls -la /var/www/stackbill/dist/
+ls -la /var/www/stackwatch/dist/
 
 # Verify index.html exists
-test -f /var/www/stackbill/dist/index.html && echo "File exists" || echo "File missing"
+test -f /var/www/stackwatch/dist/index.html && echo "File exists" || echo "File missing"
 ```
 
 **Expected Result:** `index.html` and `assets/` directory should exist
@@ -130,31 +130,31 @@ test -f /var/www/stackbill/dist/index.html && echo "File exists" || echo "File m
 # List enabled sites
 ls -la /etc/nginx/sites-enabled/
 
-# Check if StackBill config is enabled
-test -L /etc/nginx/sites-enabled/stackbill && echo "Enabled" || echo "Not enabled"
+# Check if StackWatch config is enabled
+test -L /etc/nginx/sites-enabled/stackwatch && echo "Enabled" || echo "Not enabled"
 
 # Check if default site is still enabled (this is the problem)
 test -L /etc/nginx/sites-enabled/default && echo "Default site enabled - DISABLE THIS" || echo "Default site disabled"
 ```
 
 **Expected Result:** 
-- `/etc/nginx/sites-enabled/stackbill` should exist (symlink)
+- `/etc/nginx/sites-enabled/stackwatch` should exist (symlink)
 - `/etc/nginx/sites-enabled/default` should NOT exist (or be disabled)
 
-**Step 4: Disable default site and enable StackBill**
+**Step 4: Disable default site and enable StackWatch**
 
 ```bash
 # Disable default Nginx site (if it exists)
 sudo rm -f /etc/nginx/sites-enabled/default
 
-# Ensure StackBill site is enabled
-sudo ln -sf /etc/nginx/sites-available/stackbill /etc/nginx/sites-enabled/stackbill
+# Ensure StackWatch site is enabled
+sudo ln -sf /etc/nginx/sites-available/stackwatch /etc/nginx/sites-enabled/stackwatch
 
 # Verify symlink
-ls -la /etc/nginx/sites-enabled/stackbill
+ls -la /etc/nginx/sites-enabled/stackwatch
 ```
 
-**Expected Result:** Symlink points to `/etc/nginx/sites-available/stackbill`
+**Expected Result:** Symlink points to `/etc/nginx/sites-available/stackwatch`
 
 **Step 5: Reload Nginx properly**
 
@@ -172,23 +172,23 @@ sudo service nginx reload
 sudo nginx -T 2>&1 | grep -A 5 "server_name _"
 ```
 
-**Expected Result:** Configuration shows `root /var/www/stackbill/dist;`
+**Expected Result:** Configuration shows `root /var/www/stackwatch/dist;`
 
-**Step 6: Verify StackBill UI is served**
+**Step 6: Verify StackWatch UI is served**
 
 ```bash
 # Test from command line
 curl http://localhost/ | head -20
 
-# Check for StackBill content
-curl http://localhost/ | grep -i "stackbill"
+# Check for StackWatch content
+curl http://localhost/ | grep -i "stackwatch"
 ```
 
-**Expected Result:** HTML content contains "StackBill" text, not "Welcome to nginx!"
+**Expected Result:** HTML content contains "StackWatch" text, not "Welcome to nginx!"
 
 **If files are missing, rebuild frontend:**
 ```bash
-cd /opt/stackbill
+cd /opt/stackwatch
 npm run build
 sudo ./scripts/deploy-nginx.sh
 ```
