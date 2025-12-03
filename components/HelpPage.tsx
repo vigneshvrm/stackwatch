@@ -120,51 +120,41 @@ const HelpPage: React.FC = () => {
     setSidebarVisible(prev => !prev);
   };
 
-  // Render sidebar menu
-  const renderSidebar = () => {
-    const renderMenuItem = (item: MenuItem, level: number = 0) => {
-      const isExpanded = item.type === 'section' && expandedSections.has(item.title);
-      const isSelected = item.type === 'file' && item.path === selectedDoc;
-      const hasChildren = item.type === 'section' && item.children && item.children.length > 0;
-
-      return (
-        <div key={`${item.title}-${level}`}>
-          <button
-            onClick={() => handleMenuClick(item)}
-            className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${
-              isSelected
-                ? 'bg-blue-600 dark:bg-blue-600 text-white'
-                : 'text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-brand-700 hover:text-slate-900 dark:hover:text-white'
-            } ${level > 0 ? 'pl-8' : ''}`}
-          >
-            <div className="flex items-center justify-between">
-              <span className="font-medium">{item.title}</span>
-              {hasChildren && (
-                <svg
-                  className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              )}
-            </div>
-          </button>
-          {hasChildren && isExpanded && (
-            <div className="mt-1 ml-2 border-l border-slate-300 dark:border-brand-600 pl-2">
-              {item.children!.map(child => renderMenuItem(child, level + 1))}
-            </div>
-          )}
-        </div>
-      );
-    };
+  // Render sidebar menu - Professional Documentation Style
+  const renderMenuItem = (item: MenuItem, level: number = 0, index: number = 0) => {
+    const isExpanded = item.type === 'section' && expandedSections.has(item.title);
+    const isSelected = item.type === 'file' && item.path === selectedDoc;
+    const hasChildren = item.type === 'section' && item.children && item.children.length > 0;
 
     return (
-      <div className="h-full overflow-y-auto">
-        <div className="space-y-1">
-          {menuItems.map(item => renderMenuItem(item))}
-        </div>
+      <div key={`${item.title}-${level}-${index}`}>
+        <button
+          onClick={() => handleMenuClick(item)}
+          className={`w-full text-left px-3 py-2 rounded transition-colors duration-150 ${
+            isSelected
+              ? 'bg-blue-600 text-white font-medium'
+              : 'text-slate-200 hover:bg-slate-700 dark:hover:bg-slate-700 hover:text-white'
+          } ${level > 0 ? 'pl-6 text-sm' : 'font-medium'}`}
+        >
+          <div className="flex items-center justify-between">
+            <span>{item.title}</span>
+            {hasChildren && (
+              <svg
+                className={`w-4 h-4 transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            )}
+          </div>
+        </button>
+        {hasChildren && isExpanded && (
+          <div className="mt-1 ml-2 border-l border-slate-600 dark:border-slate-600 pl-2 space-y-0.5">
+            {item.children!.map((child, childIndex) => renderMenuItem(child, level + 1, childIndex))}
+          </div>
+        )}
       </div>
     );
   };
@@ -250,11 +240,11 @@ For additional support or questions, please contact your system administrator.
       <Header />
       
       <main className="flex-grow flex flex-col lg:flex-row relative">
-        {/* Floating button to show sidebar when hidden */}
+        {/* Floating button to show sidebar when hidden - Aligned with header */}
         {!sidebarVisible && (
           <button
             onClick={toggleSidebar}
-            className="fixed top-[6.5rem] left-4 z-50 bg-slate-100 dark:bg-brand-800 border border-slate-200 dark:border-brand-700 rounded-lg p-2.5 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-brand-700 transition-all duration-200 shadow-lg"
+            className="fixed top-[6.5rem] left-4 z-50 bg-slate-800 dark:bg-slate-900 border border-slate-700 dark:border-slate-700 rounded-lg p-2.5 text-slate-200 hover:text-white hover:bg-slate-700 dark:hover:bg-slate-800 transition-all duration-200 shadow-lg"
             aria-label="Show sidebar"
             title="Show sidebar"
           >
@@ -265,17 +255,23 @@ For additional support or questions, please contact your system administrator.
           </button>
         )}
 
-        {/* Sidebar - Seamlessly aligned below header (header py-8 = 4rem padding + ~2.5rem content = 6.5rem total, +1px for border) */}
+        {/* Sidebar - Professional Documentation Style (Dark, Clean) - Seamlessly aligned with header */}
         <aside
           className={`${
             sidebarVisible ? 'translate-x-0' : '-translate-x-full'
-          } fixed lg:fixed top-[calc(6.5rem+1px)] left-0 h-[calc(100vh-6.5rem-1px)] w-72 bg-slate-100 dark:bg-brand-800 border-r border-slate-200 dark:border-brand-700 z-40 transition-all duration-300 ease-in-out flex flex-col shadow-xl`}
+          } fixed lg:fixed top-[6.5rem] left-0 h-[calc(100vh-6.5rem)] w-72 bg-slate-800 dark:bg-slate-900 border-r border-slate-700 dark:border-slate-700 z-40 transition-all duration-300 ease-in-out flex flex-col`}
         >
-          <div className="p-4 border-b border-slate-200 dark:border-brand-700 flex items-center justify-between bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20">
-            <h2 className="text-xl font-bold text-slate-900 dark:text-white transition-colors duration-200">Documentation</h2>
+          {/* Sidebar Header - Professional Style */}
+          <div className="p-4 border-b border-slate-700 dark:border-slate-700 flex items-center justify-between bg-slate-700 dark:bg-slate-800">
+            <div className="flex items-center space-x-2">
+              <svg className="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h10M7 16h10" />
+              </svg>
+              <h2 className="text-lg font-semibold text-white">StackWatch</h2>
+            </div>
             <button
               onClick={toggleSidebar}
-              className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors p-1.5 rounded hover:bg-slate-200 dark:hover:bg-brand-700"
+              className="text-slate-300 hover:text-white transition-colors p-1.5 rounded hover:bg-slate-600 dark:hover:bg-slate-700"
               aria-label="Hide sidebar"
               title="Hide sidebar"
             >
@@ -285,12 +281,18 @@ For additional support or questions, please contact your system administrator.
               </svg>
             </button>
           </div>
-          <div className="flex-1 overflow-y-auto p-4">
-            {menuItems.length > 0 ? (
-              renderSidebar()
-            ) : (
-              <p className="text-slate-600 dark:text-slate-400 text-sm transition-colors duration-200">No documentation available</p>
-            )}
+          
+          {/* Navigation Menu - Professional Documentation Style */}
+          <div className="flex-1 overflow-y-auto">
+            <nav className="p-2">
+              {menuItems.length > 0 ? (
+                <div className="space-y-0.5">
+                  {menuItems.map((item, index) => renderMenuItem(item, 0, index))}
+                </div>
+              ) : (
+                <p className="text-slate-400 text-sm p-4">No documentation available</p>
+              )}
+            </nav>
           </div>
         </aside>
 
@@ -302,20 +304,20 @@ For additional support or questions, please contact your system administrator.
           />
         )}
 
-        {/* Content Area - No overlap with sidebar */}
+        {/* Content Area - Professional Documentation Style */}
         <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${
           sidebarVisible ? 'lg:ml-72' : 'lg:ml-0'
         }`}>
-          <div className={`pt-28 sm:pt-28 lg:pt-28 px-4 sm:px-6 lg:px-8 xl:px-12 pb-4 sm:pb-6 lg:pb-8 xl:pb-12 flex-1 transition-all duration-300 ${
-            sidebarVisible ? 'lg:pl-8' : 'lg:pl-20'
+          <div className={`pt-6 px-6 sm:px-8 lg:px-12 xl:px-16 pb-8 sm:pb-12 lg:pb-16 flex-1 transition-all duration-300 ${
+            sidebarVisible ? 'lg:pl-8' : 'lg:pl-6'
           }`}>
-            <div className="max-w-4xl mx-auto">
+            <div className="max-w-4xl">
               {/* Back Button */}
               <button
                 onClick={() => navigate('/')}
-                className="mb-6 flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors duration-200"
+                className="mb-8 flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors duration-200 text-sm font-medium"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
                 </svg>
                 Back to Dashboard
@@ -337,47 +339,32 @@ For additional support or questions, please contact your system administrator.
                 </div>
               )}
 
-              {/* Markdown Content - Professional Industry Standard Formatting */}
+              {/* Markdown Content - Professional Documentation Style */}
               {!docLoading && markdownContent && (
-                <article className="bg-white dark:bg-brand-800 border border-slate-200 dark:border-brand-700 rounded-lg shadow-lg overflow-hidden transition-colors duration-200">
-                  <div className="prose prose-slate dark:prose-invert max-w-none
-                    prose-headings:font-semibold prose-headings:text-slate-900 dark:prose-headings:text-slate-100
-                    prose-h1:text-4xl prose-h1:font-bold prose-h1:mb-6 prose-h1:mt-0 prose-h1:pb-4 prose-h1:border-b prose-h1:border-slate-200 dark:prose-h1:border-brand-700
-                    prose-h2:text-2xl prose-h2:font-semibold prose-h2:mt-10 prose-h2:mb-4 prose-h2:pb-2 prose-h2:border-b prose-h2:border-slate-200 dark:prose-h2:border-brand-700 prose-h2:text-slate-800 dark:prose-h2:text-slate-100
-                    prose-h3:text-xl prose-h3:font-semibold prose-h3:mt-8 prose-h3:mb-3 prose-h3:text-slate-800 dark:prose-h3:text-slate-200
-                    prose-h4:text-lg prose-h4:font-semibold prose-h4:mt-6 prose-h4:mb-2 prose-h4:text-slate-700 dark:prose-h4:text-slate-300
-                    prose-p:text-slate-700 dark:prose-p:text-slate-300 prose-p:leading-7 prose-p:my-4
-                    prose-a:text-blue-600 dark:prose-a:text-blue-400 prose-a:no-underline hover:prose-a:underline prose-a:font-medium
-                    prose-strong:text-slate-900 dark:prose-strong:text-white prose-strong:font-semibold
-                    prose-code:text-blue-700 dark:prose-code:text-blue-300 prose-code:bg-slate-100 dark:prose-code:bg-brand-900 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-sm prose-code:font-mono prose-code:before:content-[''] prose-code:after:content-['']
-                    prose-pre:bg-slate-900 dark:prose-pre:bg-brand-950 prose-pre:border prose-pre:border-slate-700 dark:prose-pre:border-brand-600 prose-pre:rounded-lg prose-pre:p-4 prose-pre:overflow-x-auto
-                    prose-img:rounded-lg prose-img:shadow-md prose-img:border prose-img:border-slate-200 dark:prose-img:border-brand-700 prose-img:max-w-full prose-img:h-auto prose-img:my-6
-                    prose-ul:my-4 prose-ul:pl-6 prose-ul:list-disc
-                    prose-ol:my-4 prose-ol:pl-6 prose-ol:list-decimal
-                    prose-li:my-2 prose-li:leading-7
-                    prose-table:w-full prose-table:my-6 prose-table:border-collapse prose-table:border prose-table:border-slate-300 dark:prose-table:border-brand-600 prose-table:rounded-lg prose-table:overflow-hidden
-                    prose-th:bg-slate-100 dark:prose-th:bg-brand-700 prose-th:text-slate-900 dark:prose-th:text-slate-100 prose-th:font-semibold prose-th:p-3 prose-th:border prose-th:border-slate-300 dark:prose-th:border-brand-600 prose-th:text-left prose-th:align-top
-                    prose-td:p-3 prose-td:border prose-td:border-slate-300 dark:prose-td:border-brand-600 prose-td:text-slate-700 dark:prose-td:text-slate-300 prose-td:align-top prose-td:text-left
-                    prose-tr:border-b prose-tr:border-slate-200 dark:prose-tr:border-brand-700 prose-tr:hover:bg-slate-50 dark:prose-tr:hover:bg-brand-800/50
-                    prose-hr:border-slate-300 dark:prose-hr:border-brand-600 prose-hr:my-8
-                    prose-blockquote:border-l-4 prose-blockquote:border-blue-500 prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-slate-600 dark:prose-blockquote:text-slate-400 prose-blockquote:my-6
-                    [&_table]:w-full [&_table]:border-collapse [&_table]:border [&_table]:border-slate-300 [&_table]:dark:border-brand-600 [&_table]:rounded-lg [&_table]:overflow-hidden [&_table]:my-6
-                    [&_th]:bg-slate-100 [&_th]:dark:bg-brand-700 [&_th]:text-slate-900 [&_th]:dark:text-slate-100 [&_th]:font-semibold [&_th]:p-3 [&_th]:border [&_th]:border-slate-300 [&_th]:dark:border-brand-600 [&_th]:text-left [&_th]:align-top
-                    [&_td]:p-3 [&_td]:border [&_td]:border-slate-300 [&_td]:dark:border-brand-600 [&_td]:text-slate-700 [&_td]:dark:text-slate-300 [&_td]:align-top [&_td]:text-left
-                    [&_tr]:border-b [&_tr]:border-slate-200 [&_tr]:dark:border-brand-700 [&_tr:hover]:bg-slate-50 [&_tr:hover]:dark:bg-brand-800/50
-                    [&_p]:text-slate-700 [&_p]:dark:text-slate-300 [&_p]:leading-7 [&_p]:my-4
-                    [&_strong]:text-slate-900 [&_strong]:dark:text-white [&_strong]:font-semibold
-                    [&_code]:text-blue-700 [&_code]:dark:text-blue-300 [&_code]:bg-slate-100 [&_code]:dark:bg-brand-900 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-sm [&_code]:font-mono
-                    [&_pre]:bg-slate-900 [&_pre]:dark:bg-brand-950 [&_pre]:border [&_pre]:border-slate-700 [&_pre]:dark:border-brand-600 [&_pre]:rounded-lg [&_pre]:p-4 [&_pre]:overflow-x-auto
-                    [&_ul]:my-4 [&_ul]:pl-6 [&_ul]:list-disc
-                    [&_ol]:my-4 [&_ol]:pl-6 [&_ol]:list-decimal
-                    [&_li]:my-2 [&_li]:leading-7">
-                    <div className="px-6 py-8 sm:px-8 sm:py-10 lg:px-12 lg:py-12">
-                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                        {markdownContent}
-                      </ReactMarkdown>
-                    </div>
-                  </div>
+                <article className="prose prose-slate dark:prose-invert max-w-none
+                  prose-headings:font-bold prose-headings:text-slate-900 dark:prose-headings:text-slate-100 prose-headings:tracking-tight
+                  prose-h1:text-4xl prose-h1:font-bold prose-h1:mb-4 prose-h1:mt-0 prose-h1:text-slate-900 dark:prose-h1:text-slate-100
+                  prose-h2:text-2xl prose-h2:font-semibold prose-h2:mt-10 prose-h2:mb-4 prose-h2:text-slate-900 dark:prose-h2:text-slate-100 prose-h2:border-b prose-h2:border-slate-200 dark:prose-h2:border-slate-700 prose-h2:pb-2
+                  prose-h3:text-xl prose-h3:font-semibold prose-h3:mt-8 prose-h3:mb-3 prose-h3:text-slate-800 dark:prose-h3:text-slate-200
+                  prose-h4:text-lg prose-h4:font-semibold prose-h4:mt-6 prose-h4:mb-2 prose-h4:text-slate-700 dark:prose-h4:text-slate-300
+                  prose-p:text-slate-700 dark:prose-p:text-slate-300 prose-p:leading-relaxed prose-p:my-4
+                  prose-a:text-blue-600 dark:prose-a:text-blue-400 prose-a:no-underline hover:prose-a:underline
+                  prose-strong:text-slate-900 dark:prose-strong:text-white prose-strong:font-semibold
+                  prose-code:text-blue-700 dark:prose-code:text-blue-300 prose-code:bg-slate-100 dark:prose-code:bg-slate-800 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-sm prose-code:font-mono prose-code:before:content-[''] prose-code:after:content-['']
+                  prose-pre:bg-slate-900 dark:prose-pre:bg-slate-950 prose-pre:border prose-pre:border-slate-700 prose-pre:rounded-lg prose-pre:p-4 prose-pre:overflow-x-auto
+                  prose-img:rounded-lg prose-img:shadow-md prose-img:border prose-img:border-slate-200 dark:prose-img:border-slate-700 prose-img:max-w-full prose-img:h-auto prose-img:my-6
+                  prose-ul:my-4 prose-ul:pl-6
+                  prose-ol:my-4 prose-ol:pl-6
+                  prose-li:my-2 prose-li:leading-relaxed
+                  prose-table:w-full prose-table:my-6 prose-table:border-collapse prose-table:border prose-table:border-slate-300 dark:prose-table:border-slate-600
+                  prose-th:bg-slate-100 dark:prose-th:bg-slate-700 prose-th:text-slate-900 dark:prose-th:text-slate-100 prose-th:font-semibold prose-th:p-3 prose-th:border prose-th:border-slate-300 dark:prose-th:border-slate-600 prose-th:text-left
+                  prose-td:p-3 prose-td:border prose-td:border-slate-300 dark:prose-td:border-slate-600 prose-td:text-slate-700 dark:prose-td:text-slate-300 prose-td:text-left
+                  prose-tr:border-b prose-tr:border-slate-200 dark:prose-tr:border-slate-700
+                  prose-hr:border-slate-300 dark:prose-hr:border-slate-600 prose-hr:my-8
+                  prose-blockquote:border-l-4 prose-blockquote:border-blue-500 prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-slate-600 dark:prose-blockquote:text-slate-400 prose-blockquote:my-6">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                    {markdownContent}
+                  </ReactMarkdown>
                 </article>
               )}
             </div>
