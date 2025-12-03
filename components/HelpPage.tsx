@@ -270,11 +270,11 @@ For additional support or questions, please contact your system administrator.
           </svg>
         </button>
 
-        {/* Sidebar */}
+        {/* Sidebar - Positioned below header */}
         <aside
           className={`${
             sidebarVisible ? 'translate-x-0' : '-translate-x-full'
-          } fixed lg:fixed top-0 left-0 h-screen w-72 bg-slate-100 dark:bg-brand-800 border-r border-slate-200 dark:border-brand-700 z-40 transition-all duration-300 ease-in-out flex flex-col shadow-xl`}
+          } fixed lg:fixed top-24 left-0 h-[calc(100vh-6rem)] w-72 bg-slate-100 dark:bg-brand-800 border-r border-slate-200 dark:border-brand-700 z-40 transition-all duration-300 ease-in-out flex flex-col shadow-xl`}
         >
           <div className="p-4 border-b border-slate-200 dark:border-brand-700 flex items-center justify-between bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20">
             <h2 className="text-xl font-bold text-slate-900 dark:text-white transition-colors duration-200">Documentation</h2>
