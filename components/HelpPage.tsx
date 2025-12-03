@@ -249,11 +249,11 @@ For additional support or questions, please contact your system administrator.
     <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-brand-900 text-slate-900 dark:text-slate-100 font-sans transition-colors duration-200">
       <Header />
       
-      <main className="flex-grow flex flex-col lg:flex-row relative pt-4">
+      <main className="flex-grow flex flex-col lg:flex-row relative">
         {/* Sidebar Toggle Button - Hamburger Menu (Three Lines) - Positioned below header */}
         <button
           onClick={toggleSidebar}
-          className={`absolute top-6 z-30 bg-slate-100 dark:bg-brand-800 border border-slate-200 dark:border-brand-700 rounded-lg p-2.5 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-brand-700 transition-all duration-200 shadow-lg ${
+          className={`fixed top-40 z-20 bg-slate-100 dark:bg-brand-800 border border-slate-200 dark:border-brand-700 rounded-lg p-2.5 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-brand-700 transition-all duration-200 shadow-lg ${
             sidebarVisible ? 'left-[19rem]' : 'left-4'
           }`}
           aria-label="Toggle sidebar"
@@ -310,7 +310,7 @@ For additional support or questions, please contact your system administrator.
         <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${
           sidebarVisible ? 'lg:ml-72' : 'lg:ml-0'
         }`}>
-          <div className={`pt-20 sm:pt-20 lg:pt-20 px-4 sm:px-6 lg:px-8 xl:px-12 pb-4 sm:pb-6 lg:pb-8 xl:pb-12 flex-1 transition-all duration-300 ${
+          <div className={`pt-28 sm:pt-28 lg:pt-28 px-4 sm:px-6 lg:px-8 xl:px-12 pb-4 sm:pb-6 lg:pb-8 xl:pb-12 flex-1 transition-all duration-300 ${
             sidebarVisible ? 'lg:pl-8' : 'lg:pl-20'
           }`}>
             <div className="max-w-4xl mx-auto">
