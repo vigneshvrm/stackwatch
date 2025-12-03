@@ -27,7 +27,7 @@ This guide helps you convert Word document content to Markdown format for the he
    - Replace content in `public/help/docs/help.md`
    - Test locally before deploying
 
-## Markdown Formatting Reference
+## Markdown Formatting Referenceimage.png
 
 ### Headers
 ```markdown
