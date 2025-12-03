@@ -1,14 +1,24 @@
 {
   "sections": [
     {
-      "title": "Main Documentation",
+      "title": "Prerequisites",
       "type": "file",
-      "path": "help.md"
+      "path": "prerequisites-guide.md"
     },
     {
       "title": "Guides",
       "type": "section",
       "children": [
+        {
+          "title": "Grafana Configuration Doc",
+          "type": "file",
+          "path": "grafana-configuration.md"
+        },
+        {
+          "title": "Prometheus Configuration",
+          "type": "file",
+          "path": "prometheus-configuration.md"
+        },
         {
           "title": "Content Conversion Guide",
           "type": "file",
