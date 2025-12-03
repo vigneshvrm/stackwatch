@@ -1,0 +1,26 @@
+{
+  "sections": [
+    {
+      "title": "Main Documentation",
+      "type": "file",
+      "path": "help.md"
+    },
+    {
+      "title": "Guides",
+      "type": "section",
+      "children": [
+        {
+          "title": "Content Conversion Guide",
+          "type": "file",
+          "path": "CONTENT_CONVERSION_GUIDE.md"
+        },
+        {
+          "title": "Documentation README",
+          "type": "file",
+          "path": "README.md"
+        }
+      ]
+    }
+  ]
+}
+

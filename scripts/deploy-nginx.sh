@@ -114,12 +114,21 @@ server {
         return 301 /grafana/;
     }
 
+    # Serve Help Documentation Manifest (JSON)
+    location ~ ^/help/docs/manifest\.json$ {
+        alias /var/www/stackbill/dist/help/docs/manifest.json;
+        add_header Content-Type "application/json; charset=utf-8";
+        add_header Access-Control-Allow-Origin "*";
+    }
+
     # Serve Help Documentation (Markdown files)
     location /help/docs/ {
         alias /var/www/stackbill/dist/help/docs/;
         default_type text/plain;
         add_header Content-Type "text/markdown; charset=utf-8";
         add_header Access-Control-Allow-Origin "*";
+        # Disable directory listing for security
+        autoindex off;
     }
 
     # Serve Help Documentation Images
