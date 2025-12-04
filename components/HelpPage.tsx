@@ -225,7 +225,7 @@ For additional support or questions, please contact your system administrator.
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-sans transition-colors duration-200">
+    <div className="h-screen flex flex-col overflow-hidden bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-sans transition-colors duration-200">
       <Header />
       
       {/* Seamless Unified Container - Sidebar and Content as One Window */}
@@ -244,11 +244,11 @@ For additional support or questions, please contact your system administrator.
           </button>
         )}
 
-        {/* Sidebar - Sticky/fixed, only scrolls internally if menu is long */}
+        {/* Sidebar - Fixed position, only scrolls internally if menu is long */}
         <aside
           className={`${
             sidebarVisible ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-          } fixed lg:sticky lg:top-0 w-80 h-full bg-slate-800 dark:bg-slate-900 border-r border-slate-700/30 dark:border-slate-700/30 flex flex-col transition-transform duration-300 ease-in-out lg:transition-none z-40 lg:z-auto`}
+          } fixed lg:relative w-80 h-full bg-slate-800 dark:bg-slate-900 border-r border-slate-700/30 dark:border-slate-700/30 flex flex-col transition-transform duration-300 ease-in-out lg:transition-none z-40 lg:z-auto flex-shrink-0`}
         >
           {/* Custom scrollbar styling for sidebar */}
           <style>{`
@@ -304,7 +304,7 @@ For additional support or questions, please contact your system administrator.
         )}
 
         {/* Main Content Area - Scrolls independently within its container */}
-        <main className="flex-1 overflow-y-auto bg-white dark:bg-slate-900 h-full">
+        <main className="flex-1 overflow-y-auto bg-white dark:bg-slate-900 h-full min-w-0">
           <div className="pt-8 px-6 sm:px-8 lg:px-12 xl:px-20 pb-12 sm:pb-16 lg:pb-20">
             <div className="max-w-5xl mx-auto w-full">
               {/* Back Button */}
