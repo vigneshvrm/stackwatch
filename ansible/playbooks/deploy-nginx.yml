@@ -32,12 +32,18 @@
         msg: "Nginx is not installed. Packages should be installed via deploy-from-opt.sh script."
       when: nginx_check.rc != 0
 
+    - name: Check if Nginx config exists
+      stat:
+        path: "{{ nginx_config }}"
+      register: nginx_config_stat
+      changed_when: false
+
     - name: Backup existing Nginx configuration
       copy:
         src: "{{ nginx_config }}"
         dest: "{{ nginx_config }}.backup.{{ ansible_date_time.epoch }}"
         remote_src: yes
-      when: nginx_config | exists
+      when: nginx_config_stat.stat.exists
       ignore_errors: yes
 
     - name: Create Nginx configuration directory
@@ -168,8 +174,8 @@
 
     - name: Determine frontend source
       set_fact:
-        frontend_source: "{{ frontend_found.results | selectattr('files', 'defined') | selectattr('files', 'length', '>', 0) | map(attribute='files') | map('first') | map(attribute='path') | first | dirname }}"
-      when: frontend_found.results | selectattr('files', 'defined') | selectattr('files', 'length', '>', 0) | list | length > 0
+        frontend_source: "{{ (frontend_found.results | selectattr('files', 'defined') | rejectattr('files', 'equalto', []) | map(attribute='files') | map('first') | map(attribute='path') | first | default('')) | dirname }}"
+      when: frontend_found.results | selectattr('files', 'defined') | rejectattr('files', 'equalto', []) | list | length > 0
 
     - name: Create web root directory
       file:
@@ -220,13 +226,19 @@
         path: "{{ web_root }}/index.html"
       register: frontend_index
 
+    - name: Check if Nginx site is enabled
+      stat:
+        path: "{{ nginx_enabled }}"
+      register: nginx_enabled_stat
+      changed_when: false
+
     - name: Display deployment status
       debug:
         msg:
           - "Nginx configuration: {{ nginx_config }}"
           - "Web root: {{ web_root }}"
           - "Frontend deployed: {{ frontend_index.stat.exists | default(false) }}"
-          - "Site enabled: {{ nginx_enabled | exists }}"
+          - "Site enabled: {{ nginx_enabled_stat.stat.exists | default(false) }}"
 
   handlers:
     - name: reload nginx

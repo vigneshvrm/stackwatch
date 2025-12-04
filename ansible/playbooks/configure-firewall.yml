@@ -102,11 +102,31 @@
         proto: tcp
       when: firewall_system.stdout == "ufw"
 
+    - name: Check UFW status
+      command: ufw status
+      register: ufw_status_check
+      changed_when: false
+      failed_when: false
+      when: firewall_system.stdout == "ufw"
+
     - name: Enable UFW (if not already enabled)
       ufw:
         state: enabled
+      when: 
+        - firewall_system.stdout == "ufw"
+        - ufw_status_check.stdout is not defined or "Status: active" not in ufw_status_check.stdout
+      register: ufw_enable_result
+
+    - name: Verify UFW is enabled
+      command: ufw status
+      register: ufw_final_status
+      changed_when: false
       when: firewall_system.stdout == "ufw"
-      ignore_errors: yes
+
+    - name: Display UFW status
+      debug:
+        msg: "UFW status: {{ ufw_final_status.stdout_lines[0] if ufw_final_status.stdout_lines is defined else 'Unknown' }}"
+      when: firewall_system.stdout == "ufw"
 
     # iptables Configuration (manual instructions)
     - name: Display iptables configuration instructions
