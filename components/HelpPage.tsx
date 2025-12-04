@@ -229,7 +229,7 @@ For additional support or questions, please contact your system administrator.
       <Header />
       
       {/* Seamless Unified Container - Sidebar and Content as One Window */}
-      <div className="flex flex-1 overflow-hidden bg-white dark:bg-slate-900">
+      <div className="flex flex-1 overflow-hidden bg-white dark:bg-slate-900" style={{ height: 'calc(100vh - 6.5rem)' }}>
         {/* Mobile toggle button */}
         {!sidebarVisible && (
           <button
@@ -244,11 +244,11 @@ For additional support or questions, please contact your system administrator.
           </button>
         )}
 
-        {/* Sidebar - Part of unified container, no separate header */}
+        {/* Sidebar - Sticky/fixed, only scrolls internally if menu is long */}
         <aside
           className={`${
             sidebarVisible ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-          } fixed lg:relative w-80 h-full bg-slate-800 dark:bg-slate-900 border-r border-slate-700/30 dark:border-slate-700/30 flex flex-col transition-transform duration-300 ease-in-out lg:transition-none z-40 lg:z-auto`}
+          } fixed lg:sticky lg:top-0 w-80 h-full bg-slate-800 dark:bg-slate-900 border-r border-slate-700/30 dark:border-slate-700/30 flex flex-col transition-transform duration-300 ease-in-out lg:transition-none z-40 lg:z-auto`}
         >
           {/* Custom scrollbar styling for sidebar */}
           <style>{`
@@ -303,8 +303,8 @@ For additional support or questions, please contact your system administrator.
           />
         )}
 
-        {/* Main Content Area - Part of unified container */}
-        <main className="flex-1 overflow-y-auto bg-white dark:bg-slate-900">
+        {/* Main Content Area - Scrolls independently within its container */}
+        <main className="flex-1 overflow-y-auto bg-white dark:bg-slate-900 h-full">
           <div className="pt-8 px-6 sm:px-8 lg:px-12 xl:px-20 pb-12 sm:pb-16 lg:pb-20">
             <div className="max-w-5xl mx-auto w-full">
               {/* Back Button */}
