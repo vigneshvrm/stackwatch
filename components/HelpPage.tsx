@@ -136,10 +136,10 @@ const HelpPage: React.FC = () => {
       <div key={`${item.title}-${level}-${index}`}>
         <button
           onClick={() => handleMenuClick(item)}
-          className={`w-full text-left px-4 py-2.5 rounded-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-800 ${
+          className={`w-full text-left px-4 py-2.5 rounded-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-100 dark:focus:ring-offset-slate-800 ${
             isSelected
               ? 'bg-blue-600 dark:bg-blue-600 text-white font-semibold shadow-sm ring-2 ring-blue-400/50'
-              : 'text-slate-300 dark:text-slate-300 hover:bg-slate-700/50 dark:hover:bg-slate-700/50 hover:text-white dark:hover:text-white'
+              : 'text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700/50 hover:text-slate-900 dark:hover:text-white'
           } ${level > 0 ? 'pl-8 text-sm font-normal' : 'font-medium text-base'}`}
         >
           <span className="truncate">{item.title}</span>
@@ -234,7 +234,7 @@ For additional support or questions, please contact your system administrator.
         {!sidebarVisible && (
           <button
             onClick={toggleSidebar}
-            className="lg:hidden fixed top-24 left-4 z-50 bg-slate-800 dark:bg-slate-900 border border-slate-700/50 dark:border-slate-700/50 rounded-lg p-3 text-slate-200 hover:text-white hover:bg-slate-700/80 dark:hover:bg-slate-800/80 transition-all duration-200 shadow-xl hover:shadow-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            className="lg:hidden fixed top-24 left-4 z-50 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700/50 rounded-lg p-3 text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-700/80 transition-all duration-200 shadow-xl hover:shadow-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             aria-label="Show sidebar"
             title="Show sidebar"
           >
@@ -248,7 +248,7 @@ For additional support or questions, please contact your system administrator.
         <aside
           className={`${
             sidebarVisible ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-          } fixed lg:relative w-80 h-full bg-slate-800 dark:bg-slate-900 border-r border-slate-700/30 dark:border-slate-700/30 flex flex-col transition-transform duration-300 ease-in-out lg:transition-none z-40 lg:z-auto flex-shrink-0`}
+          } fixed lg:relative w-80 h-full bg-slate-100 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700/30 flex flex-col transition-all duration-300 ease-in-out lg:transition-none z-40 lg:z-auto flex-shrink-0`}
         >
           {/* Custom scrollbar styling for sidebar */}
           <style>{`
@@ -275,7 +275,7 @@ For additional support or questions, please contact your system administrator.
               <div className="lg:hidden flex justify-end mb-4">
                 <button
                   onClick={toggleSidebar}
-                  className="text-slate-400 hover:text-white transition-all duration-200 p-2 rounded-md hover:bg-slate-700/50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-white transition-all duration-200 p-2 rounded-md hover:bg-slate-200 dark:hover:bg-slate-700/50 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   aria-label="Hide sidebar"
                   title="Hide sidebar"
                 >
@@ -289,7 +289,7 @@ For additional support or questions, please contact your system administrator.
                   {menuItems.map((item, index) => renderMenuItem(item, 0, index))}
                 </div>
               ) : (
-                <p className="text-slate-400 text-sm p-4 text-center">No documentation available</p>
+                <p className="text-slate-500 dark:text-slate-400 text-sm p-4 text-center">No documentation available</p>
               )}
             </nav>
           </div>
