@@ -172,13 +172,19 @@ install_required_packages() {
     
     # Display versions
     log_info "Installed package versions:"
-    for package in ansible podman nginx python3; do
+    for package in ansible podman python3; do
         if command -v "${package}" >/dev/null 2>&1; then
             local version_output
             version_output=$("${package}" --version 2>&1 | head -n 1 || echo "version check failed")
             log_info "  ${package}: ${version_output}"
         fi
     done
+    # Nginx uses -v (not --version)
+    if command -v nginx >/dev/null 2>&1; then
+        local nginx_version
+        nginx_version=$(nginx -v 2>&1 | head -n 1 || echo "version check failed")
+        log_info "  nginx: ${nginx_version}"
+    fi
     
     log_info "[Phase 0] ✓ All required packages installed successfully"
 }

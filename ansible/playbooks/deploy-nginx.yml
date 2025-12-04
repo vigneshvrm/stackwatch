@@ -215,13 +215,6 @@
       debug:
         msg: "{{ nginx_test.stderr_lines + nginx_test.stdout_lines }}"
 
-    handlers:
-      - name: reload nginx
-        systemd:
-          name: nginx
-          state: reloaded
-        listen: reload nginx
-
     - name: Verify frontend deployment
       stat:
         path: "{{ web_root }}/index.html"
@@ -234,4 +227,10 @@
           - "Web root: {{ web_root }}"
           - "Frontend deployed: {{ frontend_index.stat.exists | default(false) }}"
           - "Site enabled: {{ nginx_enabled | exists }}"
+
+  handlers:
+    - name: reload nginx
+      systemd:
+        name: nginx
+        state: reloaded
 

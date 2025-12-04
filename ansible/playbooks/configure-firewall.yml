@@ -34,12 +34,12 @@
         description: Windows Exporter direct access (internal only)
 
   tasks:
-    - name: Detect firewall system
+    - name: Detect firewall system (Ubuntu-first)
       shell: |
-        if command -v firewall-cmd &> /dev/null; then
-          echo "firewalld"
-        elif command -v ufw &> /dev/null; then
+        if command -v ufw &> /dev/null; then
           echo "ufw"
+        elif command -v firewall-cmd &> /dev/null; then
+          echo "firewalld"
         elif command -v iptables &> /dev/null; then
           echo "iptables"
         else
@@ -52,66 +52,20 @@
       debug:
         msg: "Detected firewall system: {{ firewall_system.stdout }}"
 
-    # Firewalld Configuration
-    - name: Configure firewalld - Allow HTTP
-      firewalld:
-        service: http
-        permanent: yes
-        immediate: yes
-        state: enabled
-      when: firewall_system.stdout == "firewalld"
+    # UFW Configuration (Ubuntu default)
+    - name: Ensure UFW is installed (Ubuntu)
+      apt:
+        name: ufw
+        state: present
+      when: firewall_system.stdout == "ufw"
       ignore_errors: yes
 
-    - name: Configure firewalld - Allow HTTPS
-      firewalld:
-        service: https
-        permanent: yes
-        immediate: yes
-        state: enabled
-      when: firewall_system.stdout == "firewalld"
-      ignore_errors: yes
-
-    - name: Configure firewalld - Block Prometheus direct access
-      shell: |
-        firewall-cmd --permanent --add-rich-rule='rule family="ipv4" port port="9090" protocol="tcp" reject' || true
-        firewall-cmd --reload
-      when: firewall_system.stdout == "firewalld"
-      ignore_errors: yes
-
-    - name: Configure firewalld - Block Grafana direct access
-      shell: |
-        firewall-cmd --permanent --add-rich-rule='rule family="ipv4" port port="3000" protocol="tcp" reject' || true
-        firewall-cmd --reload
-      when: firewall_system.stdout == "firewalld"
-      ignore_errors: yes
-
-    - name: Configure firewalld - Block Node Exporter direct access
-      shell: |
-        firewall-cmd --permanent --add-rich-rule='rule family="ipv4" port port="9100" protocol="tcp" reject' || true
-        firewall-cmd --reload
-      when: firewall_system.stdout == "firewalld"
-      ignore_errors: yes
-
-    - name: Configure firewalld - Block Windows Exporter direct access
-      shell: |
-        firewall-cmd --permanent --add-rich-rule='rule family="ipv4" port port="9182" protocol="tcp" reject' || true
-        firewall-cmd --reload
-      when: firewall_system.stdout == "firewalld"
-      ignore_errors: yes
-
-    - name: Reload firewalld
-      command: firewall-cmd --reload
-      when: firewall_system.stdout == "firewalld"
-      ignore_errors: yes
-
-    # UFW Configuration
     - name: Configure UFW - Allow HTTP
       ufw:
         rule: allow
         port: "80"
         proto: tcp
       when: firewall_system.stdout == "ufw"
-      ignore_errors: yes
 
     - name: Configure UFW - Allow HTTPS
       ufw:
@@ -119,7 +73,6 @@
         port: "443"
         proto: tcp
       when: firewall_system.stdout == "ufw"
-      ignore_errors: yes
 
     - name: Configure UFW - Block Prometheus direct access
       ufw:
@@ -127,7 +80,6 @@
         port: "9090"
         proto: tcp
       when: firewall_system.stdout == "ufw"
-      ignore_errors: yes
 
     - name: Configure UFW - Block Grafana direct access
       ufw:
@@ -135,7 +87,6 @@
         port: "3000"
         proto: tcp
       when: firewall_system.stdout == "ufw"
-      ignore_errors: yes
 
     - name: Configure UFW - Block Node Exporter direct access
       ufw:
@@ -143,13 +94,17 @@
         port: "9100"
         proto: tcp
       when: firewall_system.stdout == "ufw"
-      ignore_errors: yes
 
     - name: Configure UFW - Block Windows Exporter direct access
       ufw:
         rule: deny
         port: "9182"
         proto: tcp
+      when: firewall_system.stdout == "ufw"
+
+    - name: Enable UFW (if not already enabled)
+      ufw:
+        state: enabled
       when: firewall_system.stdout == "ufw"
       ignore_errors: yes
 
