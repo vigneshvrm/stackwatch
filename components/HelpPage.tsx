@@ -22,7 +22,6 @@ const HelpPage: React.FC = () => {
   const [selectedDoc, setSelectedDoc] = useState<string>('');
   const [markdownContent, setMarkdownContent] = useState<string>('');
   const [sidebarVisible, setSidebarVisible] = useState<boolean>(true);
-  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [docLoading, setDocLoading] = useState<boolean>(false);
@@ -92,7 +91,7 @@ const HelpPage: React.FC = () => {
     }
   };
 
-  // Handle menu item click
+  // Handle menu item click - only for file items
   const handleMenuClick = (item: MenuItem): void => {
     if (item.type === 'file' && item.path) {
       fetchDocument(item.path);
@@ -100,19 +99,8 @@ const HelpPage: React.FC = () => {
       if (window.innerWidth < 1024) {
         setSidebarVisible(false);
       }
-    } else if (item.type === 'section' && item.children) {
-      // Toggle section expansion
-      const sectionKey = item.title;
-      setExpandedSections(prev => {
-        const newSet = new Set(prev);
-        if (newSet.has(sectionKey)) {
-          newSet.delete(sectionKey);
-        } else {
-          newSet.add(sectionKey);
-        }
-        return newSet;
-      });
     }
+    // Section items are not clickable - they're just category headers
   };
 
   // Toggle sidebar visibility
@@ -120,12 +108,30 @@ const HelpPage: React.FC = () => {
     setSidebarVisible(prev => !prev);
   };
 
-  // Render sidebar menu - Professional Documentation Style
+  // Render sidebar menu - Flat structure like Ceph docs (no expandable sections)
   const renderMenuItem = (item: MenuItem, level: number = 0, index: number = 0) => {
-    const isExpanded = item.type === 'section' && expandedSections.has(item.title);
     const isSelected = item.type === 'file' && item.path === selectedDoc;
     const hasChildren = item.type === 'section' && item.children && item.children.length > 0;
 
+    // Section headers are non-clickable category labels
+    if (item.type === 'section') {
+      return (
+        <div key={`${item.title}-${level}-${index}`} className="mt-4 first:mt-0">
+          {/* Section header - non-clickable label */}
+          <div className="px-4 py-2 text-slate-400 dark:text-slate-400 text-xs uppercase font-semibold tracking-wider">
+            {item.title}
+          </div>
+          {/* Always render children - flat structure */}
+          {hasChildren && (
+            <div className="space-y-0.5">
+              {item.children!.map((child, childIndex) => renderMenuItem(child, level + 1, childIndex))}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // File items are clickable menu items
     return (
       <div key={`${item.title}-${level}-${index}`}>
         <button
@@ -136,25 +142,8 @@ const HelpPage: React.FC = () => {
               : 'text-slate-300 dark:text-slate-300 hover:bg-slate-700/50 dark:hover:bg-slate-700/50 hover:text-white dark:hover:text-white'
           } ${level > 0 ? 'pl-8 text-sm font-normal' : 'font-medium text-base'}`}
         >
-          <div className="flex items-center justify-between">
-            <span className="truncate">{item.title}</span>
-            {hasChildren && (
-              <svg
-                className={`w-4 h-4 ml-2 flex-shrink-0 transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            )}
-          </div>
+          <span className="truncate">{item.title}</span>
         </button>
-        {hasChildren && isExpanded && (
-          <div className="mt-1 ml-3 border-l-2 border-slate-600/50 dark:border-slate-600/50 pl-3 space-y-1">
-            {item.children!.map((child, childIndex) => renderMenuItem(child, level + 1, childIndex))}
-          </div>
-        )}
       </div>
     );
   };
