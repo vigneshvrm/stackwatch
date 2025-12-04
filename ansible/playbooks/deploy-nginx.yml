@@ -29,7 +29,7 @@
 
     - name: Fail if Nginx is not installed
       fail:
-        msg: "Nginx is not installed. Run install-packages.yml first."
+        msg: "Nginx is not installed. Packages should be installed via deploy-from-opt.sh script."
       when: nginx_check.rc != 0
 
     - name: Backup existing Nginx configuration

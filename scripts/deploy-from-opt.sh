@@ -108,7 +108,6 @@ preflight_checks() {
     
     # Check required playbooks exist
     local required_playbooks=(
-        "install-packages.yml"
         "configure-firewall.yml"
         "deploy-nginx.yml"
         "deploy-prometheus.yml"
@@ -123,6 +122,65 @@ preflight_checks() {
     done
     
     log_info "Pre-flight checks passed"
+}
+
+# Install required packages directly (before Ansible is available)
+install_required_packages() {
+    log_info "[Phase 0] Installing required packages directly..."
+    
+    # Required packages list
+    local required_packages=(
+        "ansible"
+        "podman"
+        "nginx"
+        "python3"
+        "sshpass"
+    )
+    
+    # Update package cache
+    log_info "Updating apt package cache..."
+    if ! apt-get update >> "${LOG_FILE}" 2>&1; then
+        log_error "Failed to update package cache"
+        exit 1
+    fi
+    
+    # Install packages
+    log_info "Installing packages: ${required_packages[*]}..."
+    if ! DEBIAN_FRONTEND=noninteractive apt-get install -y "${required_packages[@]}" >> "${LOG_FILE}" 2>&1; then
+        log_error "Failed to install required packages"
+        log_error "Check ${LOG_FILE} for details"
+        exit 1
+    fi
+    
+    # Verify installations
+    log_info "Verifying package installations..."
+    local failed_checks=0
+    
+    for package in "${required_packages[@]}"; do
+        if command -v "${package}" >/dev/null 2>&1 || dpkg -l | grep -q "^ii.*${package}"; then
+            log_info "  ✓ ${package} installed"
+        else
+            log_error "  ✗ ${package} not found"
+            failed_checks=$((failed_checks + 1))
+        fi
+    done
+    
+    if [[ ${failed_checks} -gt 0 ]]; then
+        log_error "Some packages failed verification"
+        exit 1
+    fi
+    
+    # Display versions
+    log_info "Installed package versions:"
+    for package in ansible podman nginx python3; do
+        if command -v "${package}" >/dev/null 2>&1; then
+            local version_output
+            version_output=$("${package}" --version 2>&1 | head -n 1 || echo "version check failed")
+            log_info "  ${package}: ${version_output}"
+        fi
+    done
+    
+    log_info "[Phase 0] ✓ All required packages installed successfully"
 }
 
 # Deploy frontend files
@@ -150,34 +208,29 @@ deploy_frontend() {
     log_info "Frontend size: $(du -sh "${WEB_ROOT}" | cut -f1)"
 }
 
-# Deploy packages
-deploy_packages() {
-    run_playbook "1" "Installing required packages" "install-packages.yml" || exit 1
-}
-
 # Deploy firewall configuration
 deploy_firewall() {
-    run_playbook "2" "Configuring firewall" "configure-firewall.yml" || exit 1
+    run_playbook "1" "Configuring firewall" "configure-firewall.yml" || exit 1
 }
 
 # Deploy Nginx
 deploy_nginx() {
-    run_playbook "3" "Deploying Nginx" "deploy-nginx.yml" || exit 1
+    run_playbook "2" "Deploying Nginx" "deploy-nginx.yml" || exit 1
 }
 
 # Deploy Prometheus
 deploy_prometheus() {
-    run_playbook "4" "Deploying Prometheus" "deploy-prometheus.yml" || exit 1
+    run_playbook "3" "Deploying Prometheus" "deploy-prometheus.yml" || exit 1
 }
 
 # Deploy Grafana
 deploy_grafana() {
-    run_playbook "5" "Deploying Grafana" "deploy-grafana.yml" || exit 1
+    run_playbook "4" "Deploying Grafana" "deploy-grafana.yml" || exit 1
 }
 
 # Deploy Node Exporter (Ansible)
 deploy_node_exporter() {
-    log_info "[Phase 6] Node Exporter deployment (skipped on source node)"
+    log_info "[Phase 5] Node Exporter deployment (skipped on source node)"
     log_info "Node Exporter should be deployed on target monitoring servers, not the StackWatch server"
     log_info "To deploy Node Exporter on target servers:"
     log_info "  1. Configure ${ANSIBLE_INVENTORY} with target server IPs"
@@ -187,7 +240,7 @@ deploy_node_exporter() {
 
 # Health check
 run_health_check() {
-    log_info "[Phase 7] Running health checks..."
+    log_info "[Phase 6] Running health checks..."
     
     if [[ -f "${SCRIPTS_DIR}/health-check.sh" ]]; then
         "${SCRIPTS_DIR}/health-check.sh" >> "${LOG_FILE}" 2>&1 || {
@@ -246,11 +299,14 @@ main() {
     # Pre-flight checks
     preflight_checks
     
-    # Deploy frontend first
+    # Install required packages first (before Ansible is available)
+    install_required_packages
+    
+    # Deploy frontend
     deploy_frontend
     
-    # Deploy backend services via Ansible playbooks
-    deploy_packages
+    # Deploy backend services via Ansible playbooks (Ansible now available)
+    # Note: deploy_packages() is skipped - packages already installed in Phase 0
     deploy_firewall
     deploy_nginx
     deploy_prometheus
