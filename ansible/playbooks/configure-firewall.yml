@@ -48,16 +48,20 @@
       register: firewall_system
       changed_when: false
 
+    - name: Set firewall system fact (trimmed)
+      set_fact:
+        firewall_type: "{{ firewall_system.stdout | trim }}"
+
     - name: Display detected firewall system
       debug:
-        msg: "Detected firewall system: {{ firewall_system.stdout }}"
+        msg: "Detected firewall system: {{ firewall_type }}"
 
     # UFW Configuration (Ubuntu default)
     - name: Ensure UFW is installed (Ubuntu)
       apt:
         name: ufw
         state: present
-      when: firewall_system.stdout == "ufw"
+      when: firewall_type == "ufw"
       ignore_errors: yes
 
     - name: Configure UFW - Allow HTTP
@@ -65,55 +69,55 @@
         rule: allow
         port: "80"
         proto: tcp
-      when: firewall_system.stdout == "ufw"
+      when: firewall_type == "ufw"
 
     - name: Configure UFW - Allow HTTPS
       ufw:
         rule: allow
         port: "443"
         proto: tcp
-      when: firewall_system.stdout == "ufw"
+      when: firewall_type == "ufw"
 
     - name: Configure UFW - Block Prometheus direct access
       ufw:
         rule: deny
         port: "9090"
         proto: tcp
-      when: firewall_system.stdout == "ufw"
+      when: firewall_type == "ufw"
 
     - name: Configure UFW - Block Grafana direct access
       ufw:
         rule: deny
         port: "3000"
         proto: tcp
-      when: firewall_system.stdout == "ufw"
+      when: firewall_type == "ufw"
 
     - name: Configure UFW - Block Node Exporter direct access
       ufw:
         rule: deny
         port: "9100"
         proto: tcp
-      when: firewall_system.stdout == "ufw"
+      when: firewall_type == "ufw"
 
     - name: Configure UFW - Block Windows Exporter direct access
       ufw:
         rule: deny
         port: "9182"
         proto: tcp
-      when: firewall_system.stdout == "ufw"
+      when: firewall_type == "ufw"
 
     - name: Check UFW status
       command: ufw status
       register: ufw_status_check
       changed_when: false
       failed_when: false
-      when: firewall_system.stdout == "ufw"
+      when: firewall_type == "ufw"
 
     - name: Enable UFW (if not already enabled)
       ufw:
         state: enabled
       when: 
-        - firewall_system.stdout == "ufw"
+        - firewall_type == "ufw"
         - ufw_status_check.stdout is not defined or "Status: active" not in ufw_status_check.stdout
       register: ufw_enable_result
 
@@ -121,12 +125,12 @@
       command: ufw status
       register: ufw_final_status
       changed_when: false
-      when: firewall_system.stdout == "ufw"
+      when: firewall_type == "ufw"
 
     - name: Display UFW status
       debug:
         msg: "UFW status: {{ ufw_final_status.stdout_lines[0] if ufw_final_status.stdout_lines is defined else 'Unknown' }}"
-      when: firewall_system.stdout == "ufw"
+      when: firewall_type == "ufw"
 
     # iptables Configuration (manual instructions)
     - name: Display iptables configuration instructions
@@ -140,15 +144,15 @@
           - "  iptables -A INPUT -p tcp --dport 3000 -j REJECT"
           - "  iptables -A INPUT -p tcp --dport 9100 -j REJECT"
           - "  iptables -A INPUT -p tcp --dport 9182 -j REJECT"
-      when: firewall_system.stdout == "iptables"
+      when: firewall_type == "iptables"
 
     - name: Verify firewall configuration
       debug:
-        msg: "Firewall configuration completed for {{ firewall_system.stdout }}"
-      when: firewall_system.stdout != "unknown"
+        msg: "Firewall configuration completed for {{ firewall_type }}"
+      when: firewall_type != "unknown"
 
     - name: Fail if firewall system is unknown
       fail:
         msg: "Unknown firewall system detected. Manual configuration required."
-      when: firewall_system.stdout == "unknown"
+      when: firewall_type == "unknown"
 
