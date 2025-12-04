@@ -62,7 +62,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     setSystemPreference(systemTheme);
 
     // Only update theme if no saved preference exists
-    if (!localStorage.getItem('stackbill-theme')) {
+    if (!localStorage.getItem('stackwatch-theme')) {
       setTheme(systemTheme);
     }
 
@@ -71,7 +71,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
       const newSystemTheme: Theme = e.matches ? 'dark' : 'light';
       setSystemPreference(newSystemTheme);
       // Only update theme if user hasn't manually set a preference
-      if (!localStorage.getItem('stackbill-theme')) {
+      if (!localStorage.getItem('stackwatch-theme')) {
         setTheme(newSystemTheme);
       }
     };
