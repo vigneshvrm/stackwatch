@@ -225,15 +225,16 @@ For additional support or questions, please contact your system administrator.
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-brand-900 text-slate-900 dark:text-slate-100 font-sans transition-colors duration-200">
+    <div className="min-h-screen flex flex-col bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-sans transition-colors duration-200">
       <Header />
       
-      <main className="flex-grow flex flex-col lg:flex-row relative bg-white dark:bg-slate-900/50">
-        {/* Floating button to show sidebar when hidden - Aligned with header */}
+      {/* Seamless Unified Container - Sidebar and Content as One Window */}
+      <div className="flex flex-1 overflow-hidden bg-white dark:bg-slate-900">
+        {/* Mobile toggle button */}
         {!sidebarVisible && (
           <button
             onClick={toggleSidebar}
-            className="fixed top-[6.5rem] left-4 z-50 bg-slate-800 dark:bg-slate-900 border border-slate-700/50 dark:border-slate-700/50 rounded-lg p-3 text-slate-200 hover:text-white hover:bg-slate-700/80 dark:hover:bg-slate-800/80 transition-all duration-200 shadow-xl hover:shadow-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-50 dark:focus:ring-offset-brand-900"
+            className="lg:hidden fixed top-24 left-4 z-50 bg-slate-800 dark:bg-slate-900 border border-slate-700/50 dark:border-slate-700/50 rounded-lg p-3 text-slate-200 hover:text-white hover:bg-slate-700/80 dark:hover:bg-slate-800/80 transition-all duration-200 shadow-xl hover:shadow-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             aria-label="Show sidebar"
             title="Show sidebar"
           >
@@ -243,38 +244,14 @@ For additional support or questions, please contact your system administrator.
           </button>
         )}
 
-        {/* Sidebar - Professional Documentation Style (Dark, Clean) - Seamlessly aligned with header */}
+        {/* Sidebar - Part of unified container, no separate header */}
         <aside
           className={`${
-            sidebarVisible ? 'translate-x-0' : '-translate-x-full'
-          } fixed lg:fixed top-[6.5rem] left-0 h-[calc(100vh-6.5rem)] w-80 bg-slate-800 dark:bg-slate-900 border-r border-slate-700/50 dark:border-slate-700/50 z-40 transition-all duration-300 ease-in-out flex flex-col shadow-xl`}
+            sidebarVisible ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+          } fixed lg:relative w-80 h-full bg-slate-800 dark:bg-slate-900 border-r border-slate-700/30 dark:border-slate-700/30 flex flex-col transition-transform duration-300 ease-in-out lg:transition-none z-40 lg:z-auto`}
         >
-          {/* Sidebar Header - Professional Style with Enhanced Branding */}
-          <div className="p-5 border-b border-slate-700/50 dark:border-slate-700/50 flex items-center justify-between bg-slate-700/30 dark:bg-slate-800/80 backdrop-blur-sm">
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-md flex items-center justify-center shadow-md flex-shrink-0">
-                <span className="text-white font-bold text-sm">S</span>
-              </div>
-              <div className="flex flex-col">
-                <h2 className="text-base font-bold text-white leading-tight">StackWatch</h2>
-                <p className="text-xs text-slate-400 dark:text-slate-400 uppercase tracking-wider font-semibold leading-tight">INFRASTRUCTURE GATEWAY</p>
-              </div>
-            </div>
-            <button
-              onClick={toggleSidebar}
-              className="text-slate-400 hover:text-white transition-all duration-200 p-2 rounded-md hover:bg-slate-700/50 dark:hover:bg-slate-700/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-800"
-              aria-label="Hide sidebar"
-              title="Hide sidebar"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-          
-          {/* Navigation Menu - Professional Documentation Style */}
+          {/* Custom scrollbar styling for sidebar */}
           <style>{`
-            /* Custom scrollbar styling for sidebar */
             .sidebar-scroll::-webkit-scrollbar {
               width: 8px;
             }
@@ -290,8 +267,23 @@ For additional support or questions, please contact your system administrator.
               background: rgba(71, 85, 105, 0.7);
             }
           `}</style>
+          
+          {/* Navigation Menu - Clean, minimal, no header branding */}
           <div className="flex-1 overflow-y-auto sidebar-scroll">
             <nav className="p-4">
+              {/* Mobile close button */}
+              <div className="lg:hidden flex justify-end mb-4">
+                <button
+                  onClick={toggleSidebar}
+                  className="text-slate-400 hover:text-white transition-all duration-200 p-2 rounded-md hover:bg-slate-700/50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  aria-label="Hide sidebar"
+                  title="Hide sidebar"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
               {menuItems.length > 0 ? (
                 <div className="space-y-1">
                   {menuItems.map((item, index) => renderMenuItem(item, 0, index))}
@@ -311,13 +303,9 @@ For additional support or questions, please contact your system administrator.
           />
         )}
 
-        {/* Content Area - Professional Documentation Style */}
-        <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ease-in-out ${
-          sidebarVisible ? 'lg:ml-80' : 'lg:ml-0'
-        }`}>
-          <div className={`pt-8 px-6 sm:px-8 lg:px-12 xl:px-20 pb-12 sm:pb-16 lg:pb-20 flex-1 transition-all duration-300 ${
-            sidebarVisible ? 'lg:pl-10' : 'lg:pl-8'
-          }`}>
+        {/* Main Content Area - Part of unified container */}
+        <main className="flex-1 overflow-y-auto bg-white dark:bg-slate-900">
+          <div className="pt-8 px-6 sm:px-8 lg:px-12 xl:px-20 pb-12 sm:pb-16 lg:pb-20">
             <div className="max-w-5xl mx-auto w-full">
               {/* Back Button */}
               <button
@@ -377,8 +365,8 @@ For additional support or questions, please contact your system administrator.
               )}
             </div>
           </div>
-        </div>
-      </main>
+        </main>
+      </div>
 
       <Footer />
     </div>
