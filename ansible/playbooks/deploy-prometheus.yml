@@ -43,12 +43,17 @@
         state: directory
         mode: '0755'
 
+    - name: Check if Prometheus config file exists
+      stat:
+        path: "{{ prometheus_config_file }}"
+      register: prometheus_config_stat
+
     - name: Backup existing Prometheus configuration
       copy:
         src: "{{ prometheus_config_file }}"
         dest: "{{ prometheus_config_file }}.backup.{{ ansible_date_time.epoch }}"
         remote_src: yes
-      when: prometheus_config_file | exists
+      when: prometheus_config_stat.stat.exists
       ignore_errors: yes
 
     - name: Create Prometheus configuration file
@@ -93,7 +98,7 @@
         mode: '0644'
 
     - name: Check if Prometheus container exists
-      command: podman ps -a --format "{{{{.Names}}}}"
+      shell: "{% raw %}podman ps -a --format '{{.Names}}'{% endraw %}"
       register: existing_containers
       changed_when: false
       failed_when: false
@@ -160,7 +165,7 @@
       ignore_errors: yes
 
     - name: Verify Prometheus container is running
-      command: podman ps --format "{{{{.Names}}}}"
+      shell: "{% raw %}podman ps --format '{{.Names}}'{% endraw %}"
       register: running_containers
       changed_when: false
 

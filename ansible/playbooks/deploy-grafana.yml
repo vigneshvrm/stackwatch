@@ -71,6 +71,8 @@
         else
           echo ""
         fi
+      args:
+        executable: /bin/bash
       register: server_ip_detection
       changed_when: false
 
@@ -107,12 +109,17 @@
         - "{{ grafana_provisioning_dir }}"
       ignore_errors: yes
 
+    - name: Check if Grafana config file exists
+      stat:
+        path: "{{ grafana_config_file }}"
+      register: grafana_config_stat
+
     - name: Backup existing Grafana configuration
       copy:
         src: "{{ grafana_config_file }}"
         dest: "{{ grafana_config_file }}.backup.{{ ansible_date_time.epoch }}"
         remote_src: yes
-      when: grafana_config_file | exists
+      when: grafana_config_stat.stat.exists
       ignore_errors: yes
 
     - name: Create Grafana configuration file
@@ -150,7 +157,7 @@
         mode: '0644'
 
     - name: Check if Grafana container exists
-      command: podman ps -a --format "{{{{.Names}}}}"
+      shell: "{% raw %}podman ps -a --format '{{.Names}}'{% endraw %}"
       register: existing_containers
       changed_when: false
       failed_when: false
@@ -220,7 +227,7 @@
       ignore_errors: yes
 
     - name: Verify Grafana container is running
-      command: podman ps --format "{{{{.Names}}}}"
+      shell: "{% raw %}podman ps --format '{{.Names}}'{% endraw %}"
       register: running_containers
       changed_when: false
 
