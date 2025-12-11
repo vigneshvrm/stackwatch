@@ -5,7 +5,7 @@ pipeline {
         booleanParam(
             name: 'DEPLOY_TO_PROD',
             defaultValue: false,
-            description: 'Promote this build to production?'
+            description: 'Promote this build to PRODUCTION?'
         )
     }
 
@@ -13,41 +13,41 @@ pipeline {
         APP_NAME = 'stackwatch'
         TEST_REPO_SSH = "ssh://git@gitlab.assistanz24x7.com:223/stackwatch/stackwatch.git"
         PROD_REPO_SSH = "ssh://git@gitlab.assistanz24x7.com:223/stackwatch/stackwatch-prod.git"
-        CRED_ID = 'stackwatch-testing'   // <-- MUST MATCH YOUR JENKINS CREDENTIAL ID
+        CRED_ID = 'stackwatch-testing'    // MUST MATCH JENKINS CREDENTIAL ID
     }
 
     stages {
 
-        /* -------------------------------
-         *  CHECKOUT
-         * ------------------------------- */
+        /* ------------------------------
+         * CHECKOUT FROM GITLAB
+         * ------------------------------ */
         stage('Checkout') {
             steps {
                 checkout scm
             }
         }
 
-        /* -------------------------------
-         *  NODE MODULE INSTALL
-         * ------------------------------- */
+        /* ------------------------------
+         * INSTALL DEPENDENCIES
+         * ------------------------------ */
         stage('Install dependencies') {
             steps {
                 sh 'npm ci || npm install'
             }
         }
 
-        /* -------------------------------
-         *  FRONTEND BUILD
-         * ------------------------------- */
+        /* ------------------------------
+         * BUILD FRONTEND
+         * ------------------------------ */
         stage('Build frontend') {
             steps {
                 sh 'npm run build'
             }
         }
 
-        /* -------------------------------
-         *  CREATE PREBUILT PACKAGE
-         * ------------------------------- */
+        /* ------------------------------
+         * CREATE PREBUILT PACKAGE
+         * ------------------------------ */
         stage('Create prebuilt package') {
             steps {
                 sh '''
@@ -60,18 +60,18 @@ pipeline {
             }
         }
 
-        /* -------------------------------
-         *  ARCHIVE ARTIFACT FOR DOWNLOAD
-         * ------------------------------- */
+        /* ------------------------------
+         * ARCHIVE ARTIFACT IN JENKINS
+         * ------------------------------ */
         stage('Archive package') {
             steps {
                 archiveArtifacts artifacts: 'stackwatch-prebuilt-*.tar.gz', fingerprint: true
             }
         }
 
-        /* -------------------------------
-         *  CREATE TEST TAG IN GITLAB
-         * ------------------------------- */
+        /* ------------------------------
+         * CREATE TEST TAG IN GITLAB
+         * ------------------------------ */
         stage('Create Test Tag') {
             steps {
                 sh '''
@@ -90,9 +90,9 @@ pipeline {
             }
         }
 
-        /* -------------------------------
-         *  PROMOTE ARTIFACT TO PRODUCTION
-         * ------------------------------- */
+        /* ------------------------------
+         * PROMOTE TO PRODUCTION
+         * ------------------------------ */
         stage('Promote to Production') {
             when { expression { params.DEPLOY_TO_PROD == true } }
 
@@ -100,51 +100,41 @@ pipeline {
                 sshagent(credentials: ["${CRED_ID}"]) {
 
                     sh '''
-                        echo "== Locating artifact inside Jenkins =="
+                        echo "== Locating artifact in workspace =="
 
-                        # 1. GET EXACT ARTIFACT NAME FROM BUILD PAGE (since wildcard won't work)
-                        ARTIFACT=$(curl -s "$BUILD_URL/artifact/" \
-                            | grep -oP 'stackwatch-prebuilt-[^"]+\\.tar\\.gz' \
-                            | head -n1)
+                        ARTIFACT=$(ls $WORKSPACE/stackwatch-prebuilt-*.tar.gz | head -n1)
 
-                        if [ -z "$ARTIFACT" ]; then
-                            echo "ERROR: Artifact not found in Jenkins!"
+                        if [ ! -f "$ARTIFACT" ]; then
+                            echo "❌ ERROR: Artifact not found in workspace!"
                             exit 1
                         fi
 
-                        echo "Found artifact name: $ARTIFACT"
+                        echo "Found artifact: $ARTIFACT"
 
-                        # 2. DOWNLOAD EXACT ARTIFACT
-                        echo "Downloading artifact..."
-                        curl -L -o latest.tar.gz "$BUILD_URL/artifact/$ARTIFACT"
-
-                        if [ ! -f latest.tar.gz ]; then
-                            echo "ERROR: Artifact download failed!"
-                            exit 1
-                        fi
+                        # Standard name for promote script
+                        cp "$ARTIFACT" latest.tar.gz
 
                         TEST_TAG=$(cat test_tag.txt)
 
-                        echo "Promoting artifact: latest.tar.gz"
-                        echo "Using test tag: $TEST_TAG"
+                        echo "Promoting latest.tar.gz using tag: $TEST_TAG"
 
                         chmod +x scripts/promote-to-prod.sh
-
-                        # Run promotion script
                         ./scripts/promote-to-prod.sh "${PROD_REPO_SSH}" latest.tar.gz "$TEST_TAG"
                     '''
                 }
             }
         }
+    }
 
-    }  // end stages
-
+    /* ------------------------------
+     * POST ACTIONS
+     * ------------------------------ */
     post {
         success {
-            echo "Pipeline completed successfully"
+            echo "Pipeline completed successfully ✔️"
         }
         failure {
-            echo "Pipeline failed"
+            echo "Pipeline failed ❌"
         }
     }
 }
