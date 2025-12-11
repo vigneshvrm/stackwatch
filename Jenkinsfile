@@ -70,7 +70,7 @@ pipeline {
             when { expression { params.DEPLOY_TO_PROD == true } }
 
             steps {
-                sshagent(credentials: ["gitlab-stackwatch"]) {
+                sshagent(credentials: ["${CRED_ID}"]) {
                     sh '''
                         TEST_TAG=$(cat test_tag.txt)
                         ARTIFACT=$(ls stackwatch-prebuilt-*.tar.gz | head -n1)
