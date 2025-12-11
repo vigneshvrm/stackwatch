@@ -9,7 +9,7 @@ pipeline {
         APP_NAME = 'stackwatch'
         TEST_REPO_SSH = "ssh://git@gitlab.assistanz24x7.com:223/stackwatch/stackwatch.git"
         PROD_REPO_SSH = "ssh://git@gitlab.assistanz24x7.com:223/stackwatch/stackwatch-prod.git"
-        CRED_ID = 'gitlab-stackwatch'    // THIS MUST MATCH JENKINS CREDENTIAL ID
+        CRED_ID = 'stackwatch-testing'    // THIS MUST MATCH JENKINS CREDENTIAL ID
     }
 
     stages {
