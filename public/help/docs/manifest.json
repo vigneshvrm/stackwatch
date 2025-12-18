@@ -1,9 +1,14 @@
 {
   "sections": [
     {
+      "title": "01-Getting Started",
+      "type": "file",
+      "path": "01-Getting Started.md"
+    },
+    {
       "title": "Prerequisites",
       "type": "file",
-      "path": "prerequisites-guide.md"
+      "path": "02-Installation & Prerequisites.md"
     },
     {
       "title": "Guides",
