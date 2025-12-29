@@ -56,9 +56,57 @@ scripts/
 
 ---
 
+## Deployment Scenarios
+
+### Scenario 1: Full Infrastructure Deployment (Source Repository)
+
+When deploying from the **source repository**, all scripts and playbooks are available for complete infrastructure setup:
+
+```bash
+# Full deployment (recommended for infrastructure server)
+./scripts/deploy-stackwatch.sh
+```
+
+This deploys:
+- ✅ Nginx web server
+- ✅ Prometheus monitoring
+- ✅ Grafana dashboards
+- ✅ Firewall configuration
+- ✅ All infrastructure components
+
+**Use case:** Setting up the central StackWatch monitoring server
+
+### Scenario 2: Client Package Deployment (Prebuilt Package)
+
+When deploying from the **prebuilt client package**, only monitoring agent tools are included:
+
+```bash
+# Extract package
+tar -xzf stackwatch-prebuilt-*.tar.gz -C /opt
+mv /opt/stackwatch-prebuilt /opt/stackwatch
+
+# Run deployment helper (informational only in client mode)
+sudo /opt/stackwatch/scripts/deploy-from-opt.sh
+
+# Deploy monitoring agents to target servers
+ansible-playbook -i /opt/stackwatch/ansible/inventory/hosts \
+    /opt/stackwatch/ansible/playbooks/deploy-node-exporter.yml
+```
+
+This deploys:
+- ✅ Node Exporter (Linux monitoring agent)
+- ✅ Windows Exporter (Windows monitoring agent)
+- ❌ No infrastructure components (must be deployed separately)
+
+**Use case:** Deploying monitoring agents to servers that will be monitored by a central StackWatch server
+
+**Note:** The client package requires a separate StackWatch monitoring server to be already deployed and running.
+
+---
+
 ## Usage
 
-### Full Deployment
+### Full Deployment (Source Repository Only)
 
 ```bash
 # Deploy all backend services

@@ -119,37 +119,103 @@ copy_frontend() {
     log_info "Frontend files copied: $(du -sh "${dest_dir}" | cut -f1)"
 }
 
-# Copy scripts directory
+# Copy scripts directory (CLIENT TOOLS ONLY)
 copy_scripts() {
-    log_info "Copying scripts directory..."
-    
+    log_info "Copying client deployment scripts..."
+
     local source_dir="${PROJECT_ROOT}/scripts"
     local dest_dir="${PACKAGE_DIR}/scripts"
-    
-    cp -r "${source_dir}"/* "${dest_dir}/" || {
-        log_error "Failed to copy scripts directory"
-        exit 1
-    }
-    
+
+    # Define client-side scripts to include (monitoring tools only)
+    local client_scripts=(
+        "deploy-from-opt.sh"
+        "health-check.sh"
+        "health-api.sh"
+        "deploy-windows-exporter.ps1"
+        "README.md"
+    )
+
+    # Copy only client scripts
+    local copied_count=0
+    for script in "${client_scripts[@]}"; do
+        local source_file="${source_dir}/${script}"
+        if [[ -f "${source_file}" ]]; then
+            cp "${source_file}" "${dest_dir}/" || {
+                log_error "Failed to copy ${script}"
+                exit 1
+            }
+            copied_count=$((copied_count + 1))
+            log_info "  ✓ Copied: ${script}"
+        else
+            log_warn "  ⚠ Not found: ${script} (skipping)"
+        fi
+    done
+
     # Ensure scripts are executable
     chmod +x "${dest_dir}"/*.sh 2>/dev/null || true
-    
-    log_info "Scripts copied: $(find "${dest_dir}" -type f | wc -l) files"
+    chmod +x "${dest_dir}"/*.ps1 2>/dev/null || true
+
+    log_info "Client scripts copied: ${copied_count} files"
 }
 
-# Copy ansible directory
+# Copy ansible directory (CLIENT PLAYBOOKS ONLY)
 copy_ansible() {
-    log_info "Copying ansible directory..."
-    
+    log_info "Copying client ansible playbooks..."
+
     local source_dir="${PROJECT_ROOT}/ansible"
     local dest_dir="${PACKAGE_DIR}/ansible"
-    
-    cp -r "${source_dir}"/* "${dest_dir}/" || {
-        log_error "Failed to copy ansible directory"
-        exit 1
-    }
-    
-    log_info "Ansible files copied: $(find "${dest_dir}" -type f | wc -l) files"
+
+    # Copy ansible configuration
+    if [[ -f "${source_dir}/ansible.cfg" ]]; then
+        cp "${source_dir}/ansible.cfg" "${dest_dir}/" || {
+            log_error "Failed to copy ansible.cfg"
+            exit 1
+        }
+        log_info "  ✓ Copied: ansible.cfg"
+    fi
+
+    # Copy README if exists
+    if [[ -f "${source_dir}/README.md" ]]; then
+        cp "${source_dir}/README.md" "${dest_dir}/" || {
+            log_warn "Failed to copy ansible/README.md (continuing)"
+        }
+    fi
+
+    # Create subdirectories
+    mkdir -p "${dest_dir}/playbooks"
+    mkdir -p "${dest_dir}/inventory"
+
+    # Copy inventory template
+    if [[ -d "${source_dir}/inventory" ]]; then
+        cp -r "${source_dir}/inventory"/* "${dest_dir}/inventory/" || {
+            log_error "Failed to copy inventory"
+            exit 1
+        }
+        log_info "  ✓ Copied: inventory/ directory"
+    fi
+
+    # Define client-side playbooks to include (monitoring agents only)
+    local client_playbooks=(
+        "deploy-node-exporter.yml"
+    )
+
+    # Copy only client playbooks
+    local copied_count=0
+    for playbook in "${client_playbooks[@]}"; do
+        local source_file="${source_dir}/playbooks/${playbook}"
+        if [[ -f "${source_file}" ]]; then
+            cp "${source_file}" "${dest_dir}/playbooks/" || {
+                log_error "Failed to copy ${playbook}"
+                exit 1
+            }
+            copied_count=$((copied_count + 1))
+            log_info "  ✓ Copied: playbooks/${playbook}"
+        else
+            log_warn "  ⚠ Not found: ${playbook} (skipping)"
+        fi
+    done
+
+    log_info "Client ansible files copied: ${copied_count} playbooks + inventory"
 }
 
 # Copy client deployment README if exists
@@ -196,17 +262,31 @@ display_package_info() {
     log_info "Version: ${VERSION}"
     log_info "Date: ${DATE}"
     log_info ""
-    log_info "Package Contents:"
+    log_info "Package Contents (CLIENT MONITORING TOOLS ONLY):"
     log_info "  - Frontend build (dist/)"
-    log_info "  - Deployment scripts (scripts/)"
-    log_info "  - Ansible playbooks (ansible/)"
+    log_info "  - Client deployment scripts (scripts/):"
+    log_info "      * deploy-from-opt.sh (client mode)"
+    log_info "      * health-check.sh"
+    log_info "      * health-api.sh"
+    log_info "      * deploy-windows-exporter.ps1"
+    log_info "  - Ansible playbooks (ansible/):"
+    log_info "      * deploy-node-exporter.yml"
+    log_info "      * inventory/ (template)"
     log_info "  - Client deployment guide (CLIENT_DEPLOYMENT.md)"
+    log_info ""
+    log_info "NOTE: This is a CLIENT PACKAGE for monitoring agent deployment"
+    log_info "      Infrastructure playbooks NOT included"
+    log_info "      For full infrastructure setup, deploy from source repository"
     log_info ""
     log_info "Client Deployment Instructions:"
     log_info "  1. Download the package file"
     log_info "  2. Extract to /opt: tar -xzf ${PACKAGE_FILE} -C /opt"
     log_info "  3. Rename if needed: mv /opt/${PACKAGE_NAME} /opt/stackwatch"
-    log_info "  4. Deploy: sudo /opt/stackwatch/scripts/deploy-from-opt.sh"
+    log_info "  4. Configure: Edit /opt/stackwatch/ansible/inventory/hosts"
+    log_info "  5. Deploy monitoring agents:"
+    log_info "      - Linux: ansible-playbook -i /opt/stackwatch/ansible/inventory/hosts \\"
+    log_info "               /opt/stackwatch/ansible/playbooks/deploy-node-exporter.yml"
+    log_info "      - Windows: Copy and run deploy-windows-exporter.ps1"
     log_info ""
 }
 

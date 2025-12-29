@@ -26,6 +26,37 @@ ANSIBLE_INVENTORY="${ANSIBLE_DIR}/inventory/hosts"
 LOG_DIR="/var/log/stackwatch"
 LOG_FILE="${LOG_DIR}/deploy.log"
 
+# Deployment mode detection
+DEPLOYMENT_MODE="client"  # Default to client mode
+INFRASTRUCTURE_PLAYBOOKS_AVAILABLE=false
+
+# Check deployment mode based on available playbooks
+check_deployment_mode() {
+    local infra_playbooks=(
+        "${ANSIBLE_DIR}/playbooks/configure-firewall.yml"
+        "${ANSIBLE_DIR}/playbooks/deploy-nginx.yml"
+        "${ANSIBLE_DIR}/playbooks/deploy-prometheus.yml"
+        "${ANSIBLE_DIR}/playbooks/deploy-grafana.yml"
+    )
+
+    local found_count=0
+    for playbook in "${infra_playbooks[@]}"; do
+        if [[ -f "${playbook}" ]]; then
+            found_count=$((found_count + 1))
+        fi
+    done
+
+    if [[ ${found_count} -eq 4 ]]; then
+        DEPLOYMENT_MODE="full"
+        INFRASTRUCTURE_PLAYBOOKS_AVAILABLE=true
+        log_info "Deployment Mode: FULL (infrastructure + monitoring)"
+    else
+        DEPLOYMENT_MODE="client"
+        INFRASTRUCTURE_PLAYBOOKS_AVAILABLE=false
+        log_info "Deployment Mode: CLIENT (monitoring agents only)"
+    fi
+}
+
 # Logging functions
 log_info() {
     echo -e "${GREEN}[INFO]${NC} $1"
@@ -105,22 +136,31 @@ preflight_checks() {
         log_error "Ansible directory not found: ${ANSIBLE_DIR}"
         exit 1
     fi
-    
-    # Check required playbooks exist
-    local required_playbooks=(
-        "configure-firewall.yml"
-        "deploy-nginx.yml"
-        "deploy-prometheus.yml"
-        "deploy-grafana.yml"
-    )
-    
-    for playbook in "${required_playbooks[@]}"; do
-        if [[ ! -f "${ANSIBLE_DIR}/playbooks/${playbook}" ]]; then
-            log_error "Required playbook not found: ${ANSIBLE_DIR}/playbooks/${playbook}"
-            exit 1
-        fi
-    done
-    
+
+    # Detect deployment mode
+    check_deployment_mode
+
+    # Validate infrastructure playbooks only if in full mode
+    if [[ "${DEPLOYMENT_MODE}" == "full" ]]; then
+        log_info "Validating infrastructure playbooks..."
+        local required_playbooks=(
+            "configure-firewall.yml"
+            "deploy-nginx.yml"
+            "deploy-prometheus.yml"
+            "deploy-grafana.yml"
+        )
+
+        for playbook in "${required_playbooks[@]}"; do
+            if [[ ! -f "${ANSIBLE_DIR}/playbooks/${playbook}" ]]; then
+                log_error "Required playbook not found: ${ANSIBLE_DIR}/playbooks/${playbook}"
+                exit 1
+            fi
+        done
+        log_info "All infrastructure playbooks validated"
+    else
+        log_info "Skipping infrastructure playbook validation (client mode)"
+    fi
+
     log_info "Pre-flight checks passed"
 }
 
@@ -259,8 +299,14 @@ run_health_check() {
 
 # Display deployment summary
 display_summary() {
+    if [[ "${DEPLOYMENT_MODE}" != "full" ]]; then
+        # Summary already displayed in main() for client mode
+        return 0
+    fi
+
+    # Full mode summary
     local server_ip=$(hostname -I | awk '{print $1}' 2>/dev/null || echo "localhost")
-    
+
     log_info ""
     log_info "=========================================="
     log_info "StackWatch Deployment Complete"
@@ -291,40 +337,84 @@ main() {
         log_error "This script must be run as root or with sudo"
         exit 1
     fi
-    
+
     log_info "=========================================="
     log_info "StackWatch Client Deployment"
     log_info "Installation: ${INSTALL_DIR}"
     log_info "Log File: ${LOG_FILE}"
     log_info "=========================================="
     log_info ""
-    
+
     # Setup logging
     setup_logging
-    
-    # Pre-flight checks
+
+    # Pre-flight checks (includes mode detection)
     preflight_checks
-    
-    # Install required packages first (before Ansible is available)
-    install_required_packages
-    
-    # Deploy frontend
-    deploy_frontend
-    
-    # Deploy backend services via Ansible playbooks (Ansible now available)
-    # Note: deploy_packages() is skipped - packages already installed in Phase 0
-    deploy_firewall
-    deploy_nginx
-    deploy_prometheus
-    deploy_grafana
-    deploy_node_exporter
-    
-    # Health check
-    run_health_check
-    
-    # Display summary
-    display_summary
-    
+
+    # Branch based on deployment mode
+    if [[ "${DEPLOYMENT_MODE}" == "full" ]]; then
+        log_info "=== FULL INFRASTRUCTURE DEPLOYMENT MODE ==="
+        log_info ""
+
+        # Install required packages first (before Ansible is available)
+        install_required_packages
+
+        # Deploy frontend
+        deploy_frontend
+
+        # Deploy backend services via Ansible playbooks
+        deploy_firewall
+        deploy_nginx
+        deploy_prometheus
+        deploy_grafana
+        deploy_node_exporter
+
+        # Health check
+        run_health_check
+
+        # Display summary
+        display_summary
+
+    else
+        log_info "=== CLIENT MONITORING DEPLOYMENT MODE ==="
+        log_info ""
+        log_info "This package contains only client-side monitoring tools."
+        log_info "Infrastructure playbooks are not included."
+        log_info ""
+        log_info "The StackWatch infrastructure (Nginx, Prometheus, Grafana) should be"
+        log_info "deployed separately using the full source repository deployment."
+        log_info ""
+        log_info "This package is designed for deploying monitoring agents to target servers."
+        log_info ""
+        log_info "=========================================="
+        log_info "Client Monitoring Deployment Steps"
+        log_info "=========================================="
+        log_info ""
+        log_info "1. Configure Ansible Inventory:"
+        log_info "   Edit: ${ANSIBLE_INVENTORY}"
+        log_info "   Add your target Linux servers to monitor"
+        log_info ""
+        log_info "2. Deploy Node Exporter to Linux Servers:"
+        log_info "   Run: ansible-playbook -i ${ANSIBLE_INVENTORY} \\"
+        log_info "        ${ANSIBLE_DIR}/playbooks/deploy-node-exporter.yml"
+        log_info ""
+        log_info "3. Deploy Windows Exporter to Windows Servers:"
+        log_info "   a. Copy script to Windows server:"
+        log_info "      scp ${SCRIPTS_DIR}/deploy-windows-exporter.ps1 admin@windows-server:/tmp/"
+        log_info "   b. Run on Windows (as Administrator):"
+        log_info "      powershell -ExecutionPolicy Bypass -File C:\\tmp\\deploy-windows-exporter.ps1"
+        log_info ""
+        log_info "4. Verify Monitoring Agents:"
+        log_info "   - Node Exporter: http://<linux-server>:9100/metrics"
+        log_info "   - Windows Exporter: http://<windows-server>:9100/metrics"
+        log_info ""
+        log_info "5. Configure Prometheus:"
+        log_info "   Add monitoring targets to your Prometheus configuration"
+        log_info ""
+        log_info "=========================================="
+        log_info ""
+    fi
+
     log_info ""
     log_info "Deployment log saved to: ${LOG_FILE}"
     log_info ""

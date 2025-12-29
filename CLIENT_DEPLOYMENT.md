@@ -1,17 +1,36 @@
-# StackWatch Client Deployment Guide
+# StackWatch Client Monitoring Package Deployment Guide
 
-**Version:** 1.0.0  
-**Purpose:** Step-by-step instructions for deploying StackWatch from prebuilt package
+**Version:** 2.0.0
+**Purpose:** Deploy monitoring agents to target servers using prebuilt package
+
+**IMPORTANT**: This client package contains ONLY monitoring agent deployment tools.
+It does NOT include the StackWatch infrastructure (Nginx, Prometheus, Grafana).
+The central monitoring server must be deployed separately from the source repository.
+
+---
+
+## Package Contents
+
+This client package includes:
+- ✅ Node Exporter deployment playbook (for Linux servers)
+- ✅ Windows Exporter deployment script (for Windows servers)
+- ✅ Health check scripts
+- ✅ Ansible configuration and inventory templates
+
+This package does NOT include:
+- ❌ Nginx, Prometheus, Grafana deployment playbooks
+- ❌ Infrastructure configuration scripts
+- ❌ Full StackWatch server deployment capabilities
 
 ---
 
 ## Prerequisites
 
-- Linux server (Ubuntu/Debian/CentOS/RHEL)
-- Root or sudo access
-- Network connectivity
-- Port 80 available (for Nginx)
-- Ports 9090 and 3000 available (for Prometheus and Grafana)
+- A running StackWatch monitoring server (deployed from source)
+- Target Linux/Windows servers to monitor
+- Ansible installed (for Linux deployments)
+- SSH access to Linux servers
+- RDP/Remote access to Windows servers
 
 ---
 
@@ -58,282 +77,345 @@ You should see:
 - `ansible/` - Ansible playbooks
 - `CLIENT_DEPLOYMENT.md` - This file
 
-### Step 5: Run Deployment Script
+### Step 5: Run Deployment Script (Optional - Information Only)
 
-Execute the deployment script:
+The package includes `deploy-from-opt.sh`, but in client mode it serves as a guide only:
 
 ```bash
 sudo /opt/stackwatch/scripts/deploy-from-opt.sh
 ```
 
-This script will:
-1. Copy frontend files to `/var/www/stackwatch/dist/`
-2. Configure firewall rules
-3. Deploy and configure Nginx
-4. Deploy Prometheus container
-5. Deploy Grafana container
-6. Run health checks
+In client mode, this script will:
+1. Detect that infrastructure playbooks are not present
+2. Display instructions for deploying monitoring agents
+3. Exit with guidance (no infrastructure deployment)
 
-**Expected Duration:** 5-10 minutes depending on network speed (image downloads)
+**Note**: For actual agent deployment, follow the instructions in Step 6 below.
 
-### Step 6: Verify Deployment
+### Step 6: Deploy Monitoring Agents
 
-After deployment completes, verify services:
+Now deploy the monitoring agents to your target servers:
 
-```bash
-# Check service status
-sudo /opt/stackwatch/scripts/health-check.sh
+#### A. Deploy Node Exporter to Linux Servers
 
-# Check Nginx
-sudo systemctl status nginx
-
-# Check Prometheus container
-sudo podman ps | grep prometheus
-
-# Check Grafana container
-sudo podman ps | grep grafana
-```
-
----
-
-## Accessing Services
-
-After successful deployment, access services using your server's IP address:
-
-### StackWatch Dashboard
-```
-http://<server-ip>/
-```
-
-### Prometheus
-```
-http://<server-ip>/prometheus/
-```
-
-### Grafana
-```
-http://<server-ip>/grafana/
-```
-**Default Credentials:**
-- Username: `admin`
-- Password: `admin`
-- **⚠️ IMPORTANT:** Change these credentials immediately in production!
-
-### Help Documentation
-```
-http://<server-ip>/help
-```
-
----
-
-## Post-Deployment Configuration
-
-### 1. Configure Grafana
-
-1. Access Grafana at `http://<server-ip>/grafana/`
-2. Log in with default credentials (admin/admin)
-3. Change the admin password when prompted
-4. Add Prometheus as a data source:
-   - Go to Configuration → Data Sources
-   - Add Prometheus
-   - URL: `http://localhost:9090`
-   - Save & Test
-
-### 2. Configure Ansible Inventory
-
-To deploy Node Exporter on Linux servers:
-
-1. Edit the inventory file:
+1. Configure Ansible inventory:
    ```bash
    sudo nano /opt/stackwatch/ansible/inventory/hosts
    ```
 
-2. Add your target servers:
+2. Add your Linux servers:
    ```ini
    [linux_servers]
-   server1 ansible_host=192.168.1.10
-   server2 ansible_host=192.168.1.11
+   server1 ansible_host=192.168.1.10 ansible_user=deploy
+   server2 ansible_host=192.168.1.11 ansible_user=deploy
    ```
 
-3. Deploy Node Exporter:
+3. Run deployment:
    ```bash
    sudo ansible-playbook -i /opt/stackwatch/ansible/inventory/hosts \
        /opt/stackwatch/ansible/playbooks/deploy-node-exporter.yml
    ```
 
-### 3. Deploy Windows Exporter
+#### B. Deploy Windows Exporter to Windows Servers
 
-For Windows servers, use the PowerShell script:
-
-1. Copy the script to Windows server:
+1. Copy script to Windows server:
    ```bash
    scp /opt/stackwatch/scripts/deploy-windows-exporter.ps1 administrator@windows-server:/tmp/
    ```
 
-2. Run on Windows server (as Administrator):
+2. Run on Windows (as Administrator):
    ```powershell
    powershell -ExecutionPolicy Bypass -File C:\tmp\deploy-windows-exporter.ps1
    ```
 
 ---
 
+## Verifying Monitoring Agents
+
+After deploying monitoring agents, verify they are running and accessible:
+
+### Verify Node Exporter (on Linux servers)
+```bash
+curl http://<linux-server-ip>:9100/metrics
+```
+
+### Verify Windows Exporter (on Windows servers)
+```powershell
+Invoke-WebRequest -Uri http://<windows-server-ip>:9100/metrics
+```
+
+---
+
+## Configure Prometheus Targets
+
+On your StackWatch monitoring server, add these targets to Prometheus:
+
+1. SSH to your central StackWatch server
+2. Edit Prometheus configuration
+3. Add scrape configs for your deployed exporters
+4. Reload Prometheus configuration
+
+**Note**: The StackWatch dashboard, Prometheus, and Grafana interfaces are
+accessed on your central monitoring server, not from this client package.
+
+### Example Prometheus Configuration
+
+Add to your Prometheus `/etc/prometheus/prometheus.yml`:
+
+```yaml
+scrape_configs:
+  - job_name: 'linux_servers'
+    static_configs:
+      - targets:
+        - '192.168.1.10:9100'  # server1
+        - '192.168.1.11:9100'  # server2
+
+  - job_name: 'windows_servers'
+    static_configs:
+      - targets:
+        - '192.168.1.20:9100'  # windows-server1
+```
+
+Then reload Prometheus:
+```bash
+sudo systemctl reload container-prometheus
+```
+
+---
+
+## Accessing StackWatch Dashboard
+
+The StackWatch dashboard and monitoring interfaces are on your central monitoring server:
+
+### StackWatch Dashboard
+```
+http://<monitoring-server-ip>/
+```
+
+### Prometheus
+```
+http://<monitoring-server-ip>/prometheus/
+```
+
+### Grafana
+```
+http://<monitoring-server-ip>/grafana/
+```
+
+---
+
+## Post-Deployment Configuration
+
+### 1. Verify Metrics Collection
+
+After configuring Prometheus targets:
+
+1. Access Prometheus on your monitoring server
+2. Go to Status → Targets
+3. Verify all exporters are showing as "UP"
+4. Query metrics: `up{job=~"linux_servers|windows_servers"}`
+
+### 2. Create Grafana Dashboards
+
+1. Access Grafana on your monitoring server
+2. Import pre-built dashboards:
+   - Node Exporter Full (Dashboard ID: 1860)
+   - Windows Exporter Dashboard (Dashboard ID: 14694)
+3. Customize as needed for your environment
+
+---
+
 ## Troubleshooting
 
-### Frontend Not Loading
+### Node Exporter Not Accessible
 
-**Symptom:** Browser shows 404 or blank page
-
-**Solutions:**
-1. Check if frontend files exist:
-   ```bash
-   ls -la /var/www/stackwatch/dist/
-   ```
-
-2. Check Nginx status:
-   ```bash
-   sudo systemctl status nginx
-   sudo nginx -t
-   ```
-
-3. Check Nginx error logs:
-   ```bash
-   sudo tail -f /var/log/nginx/error.log
-   ```
-
-4. Redeploy frontend:
-   ```bash
-   sudo cp -r /opt/stackwatch/dist/* /var/www/stackwatch/dist/
-   sudo systemctl reload nginx
-   ```
-
-### Prometheus Not Accessible
-
-**Symptom:** Cannot access `/prometheus/` endpoint
+**Symptom:** Cannot access metrics at `http://<server>:9100/metrics`
 
 **Solutions:**
-1. Check Prometheus container:
+1. Check if Node Exporter is running:
    ```bash
-   sudo podman ps | grep prometheus
+   sudo systemctl status node_exporter
+   ```
+
+2. Check Node Exporter logs:
+   ```bash
+   sudo journalctl -u node_exporter -n 50
+   ```
+
+3. Verify port is listening:
+   ```bash
+   sudo netstat -tlnp | grep 9100
+   ```
+
+4. Check firewall rules:
+   ```bash
+   sudo firewall-cmd --list-ports  # firewalld
+   sudo ufw status                  # ufw
+   ```
+
+5. Restart Node Exporter:
+   ```bash
+   sudo systemctl restart node_exporter
+   ```
+
+### Windows Exporter Not Accessible
+
+**Symptom:** Cannot access metrics on Windows server
+
+**Solutions:**
+1. Check if service is running (on Windows):
+   ```powershell
+   Get-Service -Name "windows_exporter"
+   ```
+
+2. Check if port is listening:
+   ```powershell
+   netstat -an | findstr ":9100"
+   ```
+
+3. Check Windows Firewall:
+   ```powershell
+   Get-NetFirewallRule | Where-Object {$_.DisplayName -like "*exporter*"}
+   ```
+
+4. Restart service:
+   ```powershell
+   Restart-Service -Name "windows_exporter"
+   ```
+
+### Ansible Deployment Fails
+
+**Symptom:** Ansible playbook fails with connection errors
+
+**Solutions:**
+1. Verify SSH connectivity:
+   ```bash
+   ssh user@target-server
+   ```
+
+2. Check Ansible inventory:
+   ```bash
+   ansible -i /opt/stackwatch/ansible/inventory/hosts all --list-hosts
+   ```
+
+3. Test Ansible ping:
+   ```bash
+   ansible -i /opt/stackwatch/ansible/inventory/hosts all -m ping
+   ```
+
+4. Run playbook with verbose output:
+   ```bash
+   ansible-playbook -i /opt/stackwatch/ansible/inventory/hosts \
+       /opt/stackwatch/ansible/playbooks/deploy-node-exporter.yml -vvv
+   ```
+
+### Metrics Not Showing in Prometheus
+
+**Symptom:** Exporters are running but metrics don't appear in Prometheus
+
+**Solutions:**
+1. Verify Prometheus targets (on monitoring server):
+   - Go to `http://<monitoring-server>/prometheus/targets`
+   - Check if targets are showing as "UP"
+
+2. Check Prometheus configuration (on monitoring server):
+   ```bash
+   sudo cat /etc/prometheus/prometheus.yml
+   ```
+
+3. Verify network connectivity from monitoring server to exporters:
+   ```bash
+   curl http://<target-server>:9100/metrics
+   ```
+
+4. Check Prometheus logs (on monitoring server):
+   ```bash
    sudo podman logs container-prometheus
-   ```
-
-2. Check service status:
-   ```bash
-   sudo systemctl status container-prometheus
-   ```
-
-3. Restart Prometheus:
-   ```bash
-   sudo systemctl restart container-prometheus
-   ```
-
-### Grafana Redirect Loop
-
-**Symptom:** ERR_TOO_MANY_REDIRECTS when accessing Grafana
-
-**Solutions:**
-1. Check Grafana configuration:
-   ```bash
-   sudo cat /etc/grafana/config/grafana.ini | grep -A 5 "\[server\]"
-   ```
-
-2. Verify Grafana domain matches server IP:
-   ```bash
-   # Get server IP
-   hostname -I | awk '{print $1}'
-   
-   # Update Grafana domain (if needed)
-   sudo GRAFANA_DOMAIN="<server-ip>" /opt/stackwatch/scripts/deploy-grafana.sh
-   ```
-
-### Services Not Starting
-
-**Symptom:** Containers fail to start
-
-**Solutions:**
-1. Check Podman service:
-   ```bash
-   sudo systemctl status podman
-   ```
-
-2. Check container logs:
-   ```bash
-   sudo podman logs container-prometheus
-   sudo podman logs container-grafana
-   ```
-
-3. Check disk space:
-   ```bash
-   df -h
-   ```
-
-4. Check ports in use:
-   ```bash
-   sudo netstat -tlnp | grep -E '9090|3000|80'
    ```
 
 ---
 
 ## Manual Service Management
 
-### Start Services
+### Managing Node Exporter on Linux Servers
+
+Start Node Exporter:
 ```bash
-sudo systemctl start container-prometheus
-sudo systemctl start container-grafana
-sudo systemctl start nginx
+sudo systemctl start node_exporter
 ```
 
-### Stop Services
+Stop Node Exporter:
 ```bash
-sudo systemctl stop container-prometheus
-sudo systemctl stop container-grafana
-sudo systemctl stop nginx
+sudo systemctl stop node_exporter
 ```
 
-### Restart Services
+Restart Node Exporter:
 ```bash
-sudo systemctl restart container-prometheus
-sudo systemctl restart container-grafana
-sudo systemctl restart nginx
+sudo systemctl restart node_exporter
 ```
 
-### View Logs
+View logs:
 ```bash
-# Prometheus logs
-sudo podman logs container-prometheus
+sudo journalctl -u node_exporter -f
+```
 
-# Grafana logs
-sudo podman logs container-grafana
+### Managing Windows Exporter on Windows Servers
 
-# Nginx logs
-sudo tail -f /var/log/nginx/error.log
-sudo tail -f /var/log/nginx/access.log
+Start service:
+```powershell
+Start-Service -Name "windows_exporter"
+```
+
+Stop service:
+```powershell
+Stop-Service -Name "windows_exporter"
+```
+
+Restart service:
+```powershell
+Restart-Service -Name "windows_exporter"
 ```
 
 ---
 
 ## Uninstallation
 
-To remove StackWatch:
+### Remove Node Exporter from Linux Servers
 
 ```bash
-# Stop services
-sudo systemctl stop container-prometheus
-sudo systemctl stop container-grafana
-sudo systemctl stop nginx
+# Stop service
+sudo systemctl stop node_exporter
+sudo systemctl disable node_exporter
 
-# Remove containers
-sudo podman rm -f container-prometheus container-grafana
+# Remove service file
+sudo rm -f /etc/systemd/system/node_exporter.service
+sudo systemctl daemon-reload
 
-# Remove Nginx configuration
-sudo rm -f /etc/nginx/sites-enabled/stackwatch
-sudo rm -f /etc/nginx/sites-available/stackwatch
-sudo systemctl reload nginx
+# Remove binary
+sudo rm -f /usr/local/bin/node_exporter
 
-# Remove web files
-sudo rm -rf /var/www/stackwatch
+# Remove user (optional)
+sudo userdel node_exporter
+```
 
-# Remove installation (optional)
+### Remove Windows Exporter from Windows Servers
+
+```powershell
+# Stop and remove service
+Stop-Service -Name "windows_exporter"
+sc.exe delete windows_exporter
+
+# Remove installation directory
+Remove-Item -Path "C:\Program Files\windows_exporter" -Recurse -Force
+
+# Remove firewall rule
+Remove-NetFirewallRule -DisplayName "Windows Exporter"
+```
+
+### Remove Client Package
+
+```bash
+# Remove installation directory
 sudo rm -rf /opt/stackwatch
 ```
 
@@ -342,11 +424,14 @@ sudo rm -rf /opt/stackwatch
 ## Support
 
 For additional support:
-- Review service logs for error details
-- Check health check output: `sudo /opt/stackwatch/scripts/health-check.sh`
+- Review exporter logs for error details
+- Verify network connectivity between monitoring server and exporters
+- Check Prometheus targets page: `http://<monitoring-server>/prometheus/targets`
+- Test exporter endpoints directly: `curl http://<target-server>:9100/metrics`
 - Contact your system administrator
 
 ---
 
-**Last Updated:** 2025-01-01
+**Last Updated:** 2025-12-29
+**Package Type:** Client Monitoring Tools Only
 
