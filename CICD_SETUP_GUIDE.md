@@ -9,7 +9,7 @@ Complete guide to set up the build and deployment pipeline for StackWatch.
 ```
 ┌─────────────┐      ┌─────────────┐      ┌─────────────────────────────────┐
 │   GitLab    │ ──►  │   Jenkins   │ ──►  │   Artifact Server               │
-│  (Source)   │      │   (Build)   │      │   (artifact.stackbill.com)      │
+│  (Source)   │      │   (Build)   │      │   (artifact.stackwatch.io)      │
 └─────────────┘      └─────────────┘      └─────────────────────────────────┘
                                                       │
                                           ┌───────────┼───────────┐
@@ -60,7 +60,7 @@ Make sure these files are in your repo:
 
 - Linux server (Ubuntu/CentOS)
 - Nginx installed
-- Domain: `artifact.stackbill.com` pointing to server IP
+- Domain: `artifact.stackwatch.io` pointing to server IP
 
 ### 2.2 Run Setup Script
 
@@ -100,7 +100,7 @@ This will:
 sudo apt-get install certbot python3-certbot-nginx
 
 # Get SSL certificate
-sudo certbot --nginx -d artifact.stackbill.com
+sudo certbot --nginx -d artifact.stackwatch.io
 ```
 
 ---
@@ -203,7 +203,7 @@ Jenkins > stackwatch > Build with Parameters
 
 Result:
 ```
-https://artifact.stackbill.com/stackwatch/build/2025/01/beta/stackwatch-beta.tar.gz
+https://artifact.stackwatch.io/stackwatch/build/2025/01/beta/stackwatch-beta.tar.gz
 ```
 
 ### 4.4 Latest Build (Tested/Stable)
@@ -216,7 +216,7 @@ Jenkins > stackwatch > Build with Parameters
 
 Result:
 ```
-https://artifact.stackbill.com/stackwatch/build/2025/01/latest/stackwatch-latest.tar.gz
+https://artifact.stackwatch.io/stackwatch/build/2025/01/latest/stackwatch-latest.tar.gz
 ```
 
 ---
@@ -229,7 +229,7 @@ After testing a beta build, promote it to latest:
 
 ```bash
 # SSH to artifact server
-ssh deploy@artifact.stackbill.com
+ssh deploy@artifact.stackwatch.io
 
 # Run promotion script
 cd /var/www/artifacts
@@ -248,21 +248,21 @@ Just run Jenkins again with `RELEASE_TYPE = latest`
 
 | Type | URL |
 |------|-----|
-| Beta | `https://artifact.stackbill.com/stackwatch/build/YYYY/MM/beta/stackwatch-beta.tar.gz` |
-| Latest | `https://artifact.stackbill.com/stackwatch/build/YYYY/MM/latest/stackwatch-latest.tar.gz` |
-| Browse | `https://artifact.stackbill.com/stackwatch/build/` |
+| Beta | `https://artifact.stackwatch.io/stackwatch/build/YYYY/MM/beta/stackwatch-beta.tar.gz` |
+| Latest | `https://artifact.stackwatch.io/stackwatch/build/YYYY/MM/latest/stackwatch-latest.tar.gz` |
+| Browse | `https://artifact.stackwatch.io/stackwatch/build/` |
 
 ### Download Commands
 
 ```bash
 # Download latest stable
-curl -LO https://artifact.stackbill.com/stackwatch/build/2025/01/latest/stackwatch-latest.tar.gz
+curl -LO https://artifact.stackwatch.io/stackwatch/build/2025/01/latest/stackwatch-latest.tar.gz
 
 # Download beta for testing
-curl -LO https://artifact.stackbill.com/stackwatch/build/2025/01/beta/stackwatch-beta.tar.gz
+curl -LO https://artifact.stackwatch.io/stackwatch/build/2025/01/beta/stackwatch-beta.tar.gz
 
 # Check version
-curl https://artifact.stackbill.com/stackwatch/build/2025/01/latest/version.txt
+curl https://artifact.stackwatch.io/stackwatch/build/2025/01/latest/version.txt
 ```
 
 ---
@@ -318,7 +318,7 @@ stackwatch/
 ```bash
 # Test connection from Jenkins
 sudo su - jenkins
-ssh deploy@artifact.stackbill.com "echo 'Connection OK'"
+ssh deploy@artifact.stackwatch.io "echo 'Connection OK'"
 ```
 
 ### Build fails - npm not found
@@ -353,7 +353,7 @@ sudo certbot renew --dry-run
 | New stable build | Jenkins: RELEASE_TYPE=latest |
 | Promote beta to latest | `./promote-beta-to-latest.sh YYYY MM` |
 | Check latest version | `curl .../latest/version.txt` |
-| Browse artifacts | `https://artifact.stackbill.com/stackwatch/build/` |
+| Browse artifacts | `https://artifact.stackwatch.io/stackwatch/build/` |
 
 ---
 

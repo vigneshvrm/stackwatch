@@ -16,7 +16,7 @@ pipeline {
 
     environment {
         APP_NAME = 'stackwatch'
-        ARTIFACT_SERVER = 'artifact.stackbill.com'
+        ARTIFACT_SERVER = 'artifact.stackwatch.io'
         ARTIFACT_USER = 'deploy'
         ARTIFACT_BASE_PATH = '/var/www/artifacts/stackwatch/build'
         GITLAB_REPO = 'ssh://git@gitlab.assistanz24x7.com:223/stackwatch/stackwatch.git'

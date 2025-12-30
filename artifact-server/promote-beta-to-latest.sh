@@ -24,7 +24,7 @@ log_step() { echo -e "${CYAN}[STEP]${NC} $1"; }
 # Configuration
 ARTIFACT_ROOT="/var/www/artifacts"
 STACKWATCH_ROOT="${ARTIFACT_ROOT}/stackwatch/build"
-DOMAIN="artifact.stackbill.com"
+DOMAIN="artifact.stackwatch.io"
 
 # Get year and month (default to current)
 YEAR=${1:-$(date +%Y)}

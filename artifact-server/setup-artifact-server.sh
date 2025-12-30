@@ -22,8 +22,8 @@ log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
 ARTIFACT_ROOT="/var/www/artifacts"
 STACKWATCH_ROOT="${ARTIFACT_ROOT}/stackwatch/build"
 DEPLOY_USER="deploy"
-NGINX_CONF="/etc/nginx/sites-available/artifact.stackbill.com"
-DOMAIN="artifact.stackbill.com"
+NGINX_CONF="/etc/nginx/sites-available/artifact.stackwatch.io"
+DOMAIN="artifact.stackwatch.io"
 
 # Check if running as root
 if [[ $EUID -ne 0 ]]; then

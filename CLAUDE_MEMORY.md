@@ -36,7 +36,7 @@ Think of it as: **One door to see all your servers' health and performance.**
 ### Overview
 ```
 ┌─────────────┐      ┌─────────────┐      ┌─────────────────────────────────┐
-│   GitLab    │ ──►  │   Jenkins   │ ──►  │   artifact.stackbill.com        │
+│   GitLab    │ ──►  │   Jenkins   │ ──►  │   artifact.stackwatch.io        │
 │  (Source)   │      │   (Build)   │      │   (Download Server)             │
 └─────────────┘      └─────────────┘      └─────────────────────────────────┘
 ```
@@ -48,7 +48,7 @@ Think of it as: **One door to see all your servers' health and performance.**
 
 ### Artifact Server Structure
 ```
-artifact.stackbill.com/stackwatch/build/
+artifact.stackwatch.io/stackwatch/build/
 └── YYYY/              # Year (2025)
     └── MM/            # Month (01, 02, etc.)
         ├── beta/      # New untested builds
@@ -64,8 +64,8 @@ artifact.stackbill.com/stackwatch/build/
 | `VERSION_TAG` | Optional custom version name |
 
 ### Download URLs
-- **Beta**: `https://artifact.stackbill.com/stackwatch/build/YYYY/MM/beta/stackwatch-beta.tar.gz`
-- **Latest**: `https://artifact.stackbill.com/stackwatch/build/YYYY/MM/latest/stackwatch-latest.tar.gz`
+- **Beta**: `https://artifact.stackwatch.io/stackwatch/build/YYYY/MM/beta/stackwatch-beta.tar.gz`
+- **Latest**: `https://artifact.stackwatch.io/stackwatch/build/YYYY/MM/latest/stackwatch-latest.tar.gz`
 
 ### Key Files
 | File | Purpose |
@@ -263,7 +263,7 @@ npm run build         # Production build
 ./promote-beta-to-latest.sh YYYY MM
 
 # Download latest build
-curl -LO https://artifact.stackbill.com/stackwatch/build/YYYY/MM/latest/stackwatch-latest.tar.gz
+curl -LO https://artifact.stackwatch.io/stackwatch/build/YYYY/MM/latest/stackwatch-latest.tar.gz
 ```
 
 ---
