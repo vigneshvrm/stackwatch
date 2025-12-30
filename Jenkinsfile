@@ -2,77 +2,207 @@ pipeline {
     agent any
 
     parameters {
-        booleanParam(name: 'DEPLOY_TO_PROD', defaultValue: false, description: 'Promote this build to PRODUCTION?')
+        choice(
+            name: 'RELEASE_TYPE',
+            choices: ['beta', 'latest'],
+            description: 'Select release type: beta (new untested) or latest (tested, stable)'
+        )
+        string(
+            name: 'VERSION_TAG',
+            defaultValue: '',
+            description: 'Optional: Custom version tag (leave empty for auto-generated)'
+        )
     }
 
     environment {
         APP_NAME = 'stackwatch'
-        TEST_REPO_SSH = "ssh://git@gitlab.assistanz24x7.com:223/stackwatch/stackwatch.git"
-        PROD_REPO_SSH = "ssh://git@gitlab.assistanz24x7.com:223/stackwatch/stackwatch-prod.git"
-        CRED_ID = 'stackwatch-testing'
+        ARTIFACT_SERVER = 'artifact.stackbill.com'
+        ARTIFACT_USER = 'deploy'
+        ARTIFACT_BASE_PATH = '/var/www/artifacts/stackwatch/build'
+        GITLAB_REPO = 'ssh://git@gitlab.assistanz24x7.com:223/stackwatch/stackwatch.git'
+        CRED_ID = 'stackwatch-deploy'
     }
 
     stages {
-        stage('Checkout') { steps { checkout scm } }
+        stage('Checkout') {
+            steps {
+                checkout scm
+                script {
+                    // Get current date for folder structure
+                    env.BUILD_YEAR = sh(script: 'date +%Y', returnStdout: true).trim()
+                    env.BUILD_MONTH = sh(script: 'date +%m', returnStdout: true).trim()
+                    env.BUILD_DATE = sh(script: 'date +%Y%m%d-%H%M%S', returnStdout: true).trim()
 
-        stage('Install dependencies') { steps { sh 'npm ci || npm install' } }
+                    // Get version from package.json
+                    env.APP_VERSION = sh(script: "jq -r '.version' package.json", returnStdout: true).trim()
 
-        stage('Build frontend') { steps { sh 'npm run build' } }
+                    // Set version tag
+                    if (params.VERSION_TAG?.trim()) {
+                        env.FINAL_VERSION = params.VERSION_TAG
+                    } else {
+                        env.FINAL_VERSION = "${env.APP_VERSION}-${env.BUILD_DATE}"
+                    }
 
-        stage('Create prebuilt package') {
+                    echo "Building version: ${env.FINAL_VERSION}"
+                    echo "Release type: ${params.RELEASE_TYPE}"
+                }
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                sh 'npm ci || npm install'
+            }
+        }
+
+        stage('Build Frontend') {
+            steps {
+                sh 'npm run build'
+            }
+        }
+
+        stage('Create Package') {
             steps {
                 sh '''
-                    echo "Cleaning old artifacts..."
-                    rm -f stackwatch-prebuilt-*.tar.gz || true
+                    echo "Creating build package..."
+
+                    # Clean old artifacts
+                    rm -f stackwatch-*.tar.gz || true
+
+                    # Create package
                     chmod +x scripts/create-prebuilt-package.sh
-                    ./scripts/create-prebuilt-package.sh
+                    VERSION="${FINAL_VERSION}" ./scripts/create-prebuilt-package.sh
+
+                    # Rename to standard format
+                    PACKAGE_FILE=$(ls stackwatch-prebuilt-*.tar.gz | head -n1)
+                    mv "$PACKAGE_FILE" "stackwatch-${FINAL_VERSION}.tar.gz"
+
+                    echo "Package created: stackwatch-${FINAL_VERSION}.tar.gz"
                 '''
             }
         }
 
-        stage('Archive package') {
-            steps { archiveArtifacts artifacts: 'stackwatch-prebuilt-*.tar.gz', fingerprint: true }
-        }
-
-        stage('Create Test Tag') {
+        stage('Archive Artifact') {
             steps {
-                sh '''
-                    VERSION=$(jq -r '.version' package.json)
-                    DATE=$(date +%Y%m%d-%H%M%S)
-                    TEST_TAG="test-${VERSION}-${DATE}"
-                    echo "${TEST_TAG}" > test_tag.txt
-                    git config user.name "jenkins"
-                    git config user.email "jenkins@stackwatch"
-                    git tag -a "${TEST_TAG}" -m "Test build ${TEST_TAG}"
-                    git push origin "${TEST_TAG}"
-                '''
+                archiveArtifacts artifacts: "stackwatch-${FINAL_VERSION}.tar.gz", fingerprint: true
             }
         }
 
-        stage('Promote to Production') {
-            when { expression { params.DEPLOY_TO_PROD == true } }
+        stage('Deploy to Artifact Server') {
             steps {
                 sshagent(credentials: ["${CRED_ID}"]) {
                     sh '''
-                        echo "== Locate artifact in workspace =="
-                        ARTIFACT=$(ls $WORKSPACE/stackwatch-prebuilt-*.tar.gz | head -n1)
-                        if [ -z "$ARTIFACT" ]; then
-                          echo "ERROR: artifact not found: $WORKSPACE"
-                          exit 1
+                        echo "=========================================="
+                        echo "Deploying to Artifact Server"
+                        echo "=========================================="
+                        echo "Server: ${ARTIFACT_SERVER}"
+                        echo "Release Type: ${RELEASE_TYPE}"
+                        echo "Version: ${FINAL_VERSION}"
+                        echo ""
+
+                        # Define paths
+                        YEAR_MONTH_PATH="${ARTIFACT_BASE_PATH}/${BUILD_YEAR}/${BUILD_MONTH}"
+                        TARGET_PATH="${YEAR_MONTH_PATH}/${RELEASE_TYPE}"
+                        ARCHIVE_PATH="${YEAR_MONTH_PATH}/archive"
+
+                        # Create directories on artifact server
+                        ssh -o StrictHostKeyChecking=no ${ARTIFACT_USER}@${ARTIFACT_SERVER} "
+                            mkdir -p ${TARGET_PATH}
+                            mkdir -p ${ARCHIVE_PATH}
+                        "
+
+                        # If deploying to 'latest', archive the current latest first
+                        if [ '${RELEASE_TYPE}' = 'latest' ]; then
+                            echo "Archiving current latest version..."
+                            ssh -o StrictHostKeyChecking=no ${ARTIFACT_USER}@${ARTIFACT_SERVER} "
+                                if [ -f ${TARGET_PATH}/stackwatch-latest.tar.gz ]; then
+                                    # Get the version from current latest
+                                    OLD_VERSION=\\$(cat ${TARGET_PATH}/version.txt 2>/dev/null || echo 'unknown')
+                                    mv ${TARGET_PATH}/stackwatch-latest.tar.gz ${ARCHIVE_PATH}/stackwatch-\\${OLD_VERSION}.tar.gz 2>/dev/null || true
+                                    echo 'Archived previous latest: '\\${OLD_VERSION}
+                                fi
+                            "
                         fi
-                        cp "$ARTIFACT" latest.tar.gz
-                        TEST_TAG=$(cat test_tag.txt)
-                        echo "Promoting latest.tar.gz using test tag: $TEST_TAG"
-                        chmod +x scripts/promote-to-prod.sh
-                        ./scripts/promote-to-prod.sh "${PROD_REPO_SSH}" "${WORKSPACE}/latest.tar.gz" "$TEST_TAG"
+
+                        # Upload new package
+                        echo "Uploading package..."
+                        scp -o StrictHostKeyChecking=no stackwatch-${FINAL_VERSION}.tar.gz ${ARTIFACT_USER}@${ARTIFACT_SERVER}:${TARGET_PATH}/
+
+                        # Create symlink and version file
+                        ssh -o StrictHostKeyChecking=no ${ARTIFACT_USER}@${ARTIFACT_SERVER} "
+                            cd ${TARGET_PATH}
+
+                            # Remove old symlink
+                            rm -f stackwatch-${RELEASE_TYPE}.tar.gz
+
+                            # Create new symlink
+                            ln -sf stackwatch-${FINAL_VERSION}.tar.gz stackwatch-${RELEASE_TYPE}.tar.gz
+
+                            # Save version info
+                            echo '${FINAL_VERSION}' > version.txt
+                            echo '${BUILD_DATE}' > build-date.txt
+
+                            # Create metadata JSON
+                            cat > metadata.json << EOF
+{
+    \"version\": \"${FINAL_VERSION}\",
+    \"release_type\": \"${RELEASE_TYPE}\",
+    \"build_date\": \"${BUILD_DATE}\",
+    \"year\": \"${BUILD_YEAR}\",
+    \"month\": \"${BUILD_MONTH}\"
+}
+EOF
+
+                            echo 'Deployment complete!'
+                            echo 'Download URL: https://${ARTIFACT_SERVER}/stackwatch/build/${BUILD_YEAR}/${BUILD_MONTH}/${RELEASE_TYPE}/stackwatch-${RELEASE_TYPE}.tar.gz'
+                        "
                     '''
                 }
+            }
+        }
+
+        stage('Promote Beta to Latest') {
+            when {
+                expression { params.RELEASE_TYPE == 'latest' }
+            }
+            steps {
+                echo "This build was deployed directly to 'latest' channel."
+                echo "Previous latest has been moved to archive."
+            }
+        }
+
+        stage('Git Tag') {
+            steps {
+                sh '''
+                    git config user.name "jenkins"
+                    git config user.email "jenkins@stackwatch"
+
+                    TAG_NAME="${RELEASE_TYPE}-${FINAL_VERSION}"
+
+                    git tag -a "${TAG_NAME}" -m "Release ${TAG_NAME} - ${RELEASE_TYPE} build"
+                    git push origin "${TAG_NAME}" || echo "Tag push failed (may already exist)"
+                '''
             }
         }
     }
 
     post {
-        success { echo "Pipeline OK" }
-        failure { echo "Pipeline FAILED" }
+        success {
+            echo """
+========================================
+BUILD SUCCESSFUL
+========================================
+Version: ${FINAL_VERSION}
+Release Type: ${RELEASE_TYPE}
+Download URL: https://${ARTIFACT_SERVER}/stackwatch/build/${BUILD_YEAR}/${BUILD_MONTH}/${RELEASE_TYPE}/stackwatch-${RELEASE_TYPE}.tar.gz
+========================================
+            """
+        }
+        failure {
+            echo "Pipeline FAILED - Check logs for details"
+        }
+        always {
+            cleanWs()
+        }
     }
 }

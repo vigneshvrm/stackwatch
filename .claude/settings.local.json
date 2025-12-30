@@ -4,7 +4,8 @@
       "Bash(wc:*)",
       "Bash(npm install:*)",
       "Bash(bash scripts/create-prebuilt-package.sh:*)",
-      "Bash(tar:*)"
+      "Bash(tar:*)",
+      "Bash(dir:*)"
     ]
   }
 }

@@ -7,10 +7,25 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencies
 node_modules
+
+# Build outputs - NEVER commit these
 dist
 dist-ssr
+build
 *.local
+
+# Artifacts - NEVER commit these
+*.tar.gz
+*.zip
+stackwatch-prebuilt-*
+stackwatch-*.tar.gz
+
+# Temporary files
+.package-temp
+*.tmp
+*.temp
 
 # Editor directories and files
 .vscode/*
@@ -22,3 +37,11 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Test files
+coverage
+.nyc_output
