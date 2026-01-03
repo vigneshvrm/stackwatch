@@ -116,20 +116,18 @@ pipeline {
                         # If deploying to 'latest', archive the current latest first
                         if [ '${RELEASE_TYPE}' = 'latest' ]; then
                             echo "Archiving current latest version..."
-                            ssh -o StrictHostKeyChecking=no ${ARTIFACT_USER}@${ARTIFACT_SERVER} "
-                                if [ -L ${TARGET_PATH}/stackwatch-latest.tar.gz ]; then
-                                    # Get the actual file the symlink points to
-                                    OLD_FILE=\\$(readlink -f ${TARGET_PATH}/stackwatch-latest.tar.gz)
-                                    OLD_VERSION=\\$(cat ${TARGET_PATH}/version.txt 2>/dev/null || echo 'unknown')
-                                    if [ -f \\\"\\${OLD_FILE}\\\" ]; then
-                                        # Move the actual file to archive
-                                        mv \\\"\\${OLD_FILE}\\\" ${ARCHIVE_PATH}/stackwatch-\\${OLD_VERSION}.tar.gz 2>/dev/null || true
-                                        # Remove the old symlink
-                                        rm -f ${TARGET_PATH}/stackwatch-latest.tar.gz
-                                        echo 'Archived previous latest: '\\${OLD_VERSION}
+                            ssh -o StrictHostKeyChecking=no ${ARTIFACT_USER}@${ARTIFACT_SERVER} bash -c "'
+                                cd ${TARGET_PATH}
+                                if [ -L stackwatch-latest.tar.gz ]; then
+                                    OLD_FILE=\$(readlink stackwatch-latest.tar.gz)
+                                    OLD_VERSION=\$(cat version.txt 2>/dev/null || echo unknown)
+                                    if [ -f \"\${OLD_FILE}\" ]; then
+                                        mv \"\${OLD_FILE}\" ${ARCHIVE_PATH}/stackwatch-\${OLD_VERSION}.tar.gz
+                                        rm -f stackwatch-latest.tar.gz
+                                        echo \"Archived: \${OLD_FILE} -> archive/stackwatch-\${OLD_VERSION}.tar.gz\"
                                     fi
                                 fi
-                            "
+                            '"
                         fi
 
                         # Upload new package
