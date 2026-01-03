@@ -116,18 +116,7 @@ pipeline {
                         # If deploying to 'latest', archive the current latest first
                         if [ '${RELEASE_TYPE}' = 'latest' ]; then
                             echo "Archiving current latest version..."
-                            ssh -o StrictHostKeyChecking=no ${ARTIFACT_USER}@${ARTIFACT_SERVER} bash -c "'
-                                cd ${TARGET_PATH}
-                                if [ -L stackwatch-latest.tar.gz ]; then
-                                    OLD_FILE=\$(readlink stackwatch-latest.tar.gz)
-                                    OLD_VERSION=\$(cat version.txt 2>/dev/null || echo unknown)
-                                    if [ -f \"\${OLD_FILE}\" ]; then
-                                        mv \"\${OLD_FILE}\" ${ARCHIVE_PATH}/stackwatch-\${OLD_VERSION}.tar.gz
-                                        rm -f stackwatch-latest.tar.gz
-                                        echo \"Archived: \${OLD_FILE} -> archive/stackwatch-\${OLD_VERSION}.tar.gz\"
-                                    fi
-                                fi
-                            '"
+                            ssh -o StrictHostKeyChecking=no ${ARTIFACT_USER}@${ARTIFACT_SERVER} "cd ${TARGET_PATH} && if [ -L stackwatch-latest.tar.gz ]; then OLD_FILE=\\\$(readlink stackwatch-latest.tar.gz); OLD_VER=\\\$(cat version.txt 2>/dev/null || echo unknown); if [ -f \\\"\\\${OLD_FILE}\\\" ]; then mv \\\"\\\${OLD_FILE}\\\" ${ARCHIVE_PATH}/stackwatch-\\\${OLD_VER}.tar.gz && rm -f stackwatch-latest.tar.gz && echo Archived \\\${OLD_FILE}; fi; fi"
                         fi
 
                         # Upload new package
