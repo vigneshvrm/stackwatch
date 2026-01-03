@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StackWatch Downloads</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #fff;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .logo {
+            font-size: 3rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, #00d4ff, #7b2cbf);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        .tagline {
+            color: #888;
+            font-size: 1.1rem;
+        }
+
+        .download-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+
+        .download-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 30px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .download-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .download-card.latest {
+            border-color: #00d4ff;
+            background: rgba(0, 212, 255, 0.05);
+        }
+
+        .download-card.beta {
+            border-color: #ff6b35;
+            background: rgba(255, 107, 53, 0.05);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .card-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .latest .card-icon {
+            background: linear-gradient(135deg, #00d4ff, #0099cc);
+        }
+
+        .beta .card-icon {
+            background: linear-gradient(135deg, #ff6b35, #f7931e);
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .card-badge {
+            font-size: 0.75rem;
+            padding: 4px 10px;
+            border-radius: 20px;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .latest .card-badge {
+            background: #00d4ff;
+            color: #000;
+        }
+
+        .beta .card-badge {
+            background: #ff6b35;
+            color: #000;
+        }
+
+        .card-description {
+            color: #aaa;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .version-info {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+
+        .version-info div {
+            margin-bottom: 5px;
+        }
+
+        .version-info span {
+            color: #888;
+        }
+
+        .download-btn {
+            display: block;
+            width: 100%;
+            padding: 15px 25px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            text-align: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .download-btn:hover {
+            transform: scale(1.02);
+        }
+
+        .latest .download-btn {
+            background: linear-gradient(135deg, #00d4ff, #0099cc);
+            color: #000;
+        }
+
+        .beta .download-btn {
+            background: linear-gradient(135deg, #ff6b35, #f7931e);
+            color: #000;
+        }
+
+        .instructions {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .instructions h2 {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .code-block {
+            background: #0d1117;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+            overflow-x: auto;
+            position: relative;
+        }
+
+        .code-block code {
+            font-family: 'Fira Code', 'Monaco', monospace;
+            font-size: 0.9rem;
+            color: #c9d1d9;
+            line-height: 1.6;
+        }
+
+        .code-block .comment {
+            color: #8b949e;
+        }
+
+        .code-block .command {
+            color: #79c0ff;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: 6px;
+            padding: 8px 12px;
+            color: #888;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: background 0.2s;
+        }
+
+        .copy-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+        }
+
+        .steps {
+            list-style: none;
+            counter-reset: step;
+        }
+
+        .steps li {
+            counter-increment: step;
+            padding: 15px 0;
+            padding-left: 50px;
+            position: relative;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .steps li:last-child {
+            border-bottom: none;
+        }
+
+        .steps li::before {
+            content: counter(step);
+            position: absolute;
+            left: 0;
+            top: 15px;
+            width: 30px;
+            height: 30px;
+            background: linear-gradient(135deg, #00d4ff, #7b2cbf);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .steps li h4 {
+            margin-bottom: 8px;
+            font-size: 1.1rem;
+        }
+
+        .steps li p {
+            color: #888;
+            font-size: 0.95rem;
+        }
+
+        footer {
+            text-align: center;
+            padding: 30px;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        footer a {
+            color: #00d4ff;
+            text-decoration: none;
+        }
+
+        .archive-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .archive-link a {
+            color: #888;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+
+        .archive-link a:hover {
+            color: #00d4ff;
+        }
+
+        @media (max-width: 600px) {
+            .logo {
+                font-size: 2rem;
+            }
+
+            .download-card {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">StackWatch</div>
+            <p class="tagline">Centralized Observability Gateway</p>
+        </header>
+
+        <div class="download-section">
+            <!-- Latest Release -->
+            <div class="download-card latest">
+                <div class="card-header">
+                    <div class="card-icon">&#x2713;</div>
+                    <div>
+                        <div class="card-title">Latest</div>
+                        <span class="card-badge">Stable</span>
+                    </div>
+                </div>
+                <p class="card-description">
+                    Production-ready release. Recommended for most users.
+                    Tested and verified for stability.
+                </p>
+                <div class="version-info" id="latest-info">
+                    <div><span>Version:</span> <span id="latest-version">Loading...</span></div>
+                    <div><span>Built:</span> <span id="latest-date">Loading...</span></div>
+                </div>
+                <a href="/stackwatch/build/2026/01/latest/stackwatch-latest.tar.gz" class="download-btn" id="latest-download">
+                    &#x2B07; Download Latest
+                </a>
+            </div>
+
+            <!-- Beta Release -->
+            <div class="download-card beta">
+                <div class="card-header">
+                    <div class="card-icon">&#x26A1;</div>
+                    <div>
+                        <div class="card-title">Beta</div>
+                        <span class="card-badge">Testing</span>
+                    </div>
+                </div>
+                <p class="card-description">
+                    New features and improvements. May contain bugs.
+                    Help us test before stable release.
+                </p>
+                <div class="version-info" id="beta-info">
+                    <div><span>Version:</span> <span id="beta-version">Loading...</span></div>
+                    <div><span>Built:</span> <span id="beta-date">Loading...</span></div>
+                </div>
+                <a href="/stackwatch/build/2026/01/beta/stackwatch-beta.tar.gz" class="download-btn" id="beta-download">
+                    &#x2B07; Download Beta
+                </a>
+            </div>
+        </div>
+
+        <div class="instructions">
+            <h2>&#x1F4E6; Installation Guide</h2>
+
+            <ol class="steps">
+                <li>
+                    <h4>Download the package</h4>
+                    <p>Click the download button above or use curl:</p>
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                        <code><span class="comment"># Download latest stable version</span><br>
+curl -LO https://artifact.stackwatch.io/stackwatch/build/2026/01/latest/stackwatch-latest.tar.gz</code>
+                    </div>
+                </li>
+                <li>
+                    <h4>Extract the package</h4>
+                    <p>Unpack the downloaded archive:</p>
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                        <code>tar -xzf stackwatch-latest.tar.gz<br>
+cd stackwatch</code>
+                    </div>
+                </li>
+                <li>
+                    <h4>Run the installer</h4>
+                    <p>Execute the deployment script with sudo:</p>
+                    <div class="code-block">
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                        <code>sudo ./deploy-stackwatch.sh</code>
+                    </div>
+                </li>
+                <li>
+                    <h4>Access StackWatch</h4>
+                    <p>Open your browser and navigate to your server's domain or IP address.</p>
+                </li>
+            </ol>
+        </div>
+
+        <div class="archive-link">
+            <a href="/stackwatch/build/">&#x1F4C1; Browse all builds and archives</a>
+        </div>
+
+        <footer>
+            <p>StackWatch &copy; 2026 | <a href="https://stackwatch.io">stackwatch.io</a></p>
+        </footer>
+    </div>
+
+    <script>
+        // Get current year and month for dynamic paths
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const basePath = `/stackwatch/build/${year}/${month}`;
+
+        // Update download links
+        document.getElementById('latest-download').href = `${basePath}/latest/stackwatch-latest.tar.gz`;
+        document.getElementById('beta-download').href = `${basePath}/beta/stackwatch-beta.tar.gz`;
+
+        // Fetch version info
+        async function loadVersionInfo(type) {
+            try {
+                const response = await fetch(`${basePath}/${type}/metadata.json`);
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById(`${type}-version`).textContent = data.version || 'N/A';
+                    document.getElementById(`${type}-date`).textContent = data.build_date || 'N/A';
+                }
+            } catch (e) {
+                document.getElementById(`${type}-version`).textContent = 'N/A';
+                document.getElementById(`${type}-date`).textContent = 'N/A';
+            }
+        }
+
+        loadVersionInfo('latest');
+        loadVersionInfo('beta');
+
+        // Copy to clipboard function
+        function copyCode(btn) {
+            const codeBlock = btn.parentElement.querySelector('code');
+            const text = codeBlock.innerText.replace(/^#.*\n/gm, '').trim();
+            navigator.clipboard.writeText(text).then(() => {
+                btn.textContent = 'Copied!';
+                setTimeout(() => btn.textContent = 'Copy', 2000);
+            });
+        }
+
+        // Update code blocks with current year/month
+        document.querySelectorAll('.code-block code').forEach(code => {
+            code.innerHTML = code.innerHTML.replace(/2026\/01/g, `${year}/${month}`);
+        });
+    </script>
+</body>
+</html>

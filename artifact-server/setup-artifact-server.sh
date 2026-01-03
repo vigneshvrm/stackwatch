@@ -168,39 +168,15 @@ EOF
 chmod +x "${ARTIFACT_ROOT}/promote-to-latest.sh"
 chown "${DEPLOY_USER}:${DEPLOY_USER}" "${ARTIFACT_ROOT}/promote-to-latest.sh"
 
-# Create index HTML for better browsing
-cat > "${ARTIFACT_ROOT}/index.html" << 'EOF'
-<!DOCTYPE html>
-<html>
-<head>
-    <title>StackWatch Artifacts</title>
-    <style>
-        body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
-        h1 { color: #333; }
-        a { color: #0066cc; text-decoration: none; }
-        a:hover { text-decoration: underline; }
-        .info { background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0; }
-        code { background: #eee; padding: 2px 6px; border-radius: 3px; }
-    </style>
-</head>
-<body>
-    <h1>StackWatch Artifact Server</h1>
-    <div class="info">
-        <h3>Quick Links</h3>
-        <ul>
-            <li><a href="/stackwatch/build/">Browse all builds</a></li>
-        </ul>
-    </div>
-    <div class="info">
-        <h3>Download Commands</h3>
-        <p><strong>Latest (stable):</strong></p>
-        <code>curl -LO https://artifact.stackwatch.io/stackwatch/build/YYYY/MM/latest/stackwatch-latest.tar.gz</code>
-        <p><strong>Beta (testing):</strong></p>
-        <code>curl -LO https://artifact.stackwatch.io/stackwatch/build/YYYY/MM/beta/stackwatch-beta.tar.gz</code>
-    </div>
-</body>
-</html>
-EOF
+# Copy index HTML for download page
+if [[ -f "${SCRIPT_DIR}/index.html" ]]; then
+    cp "${SCRIPT_DIR}/index.html" "${ARTIFACT_ROOT}/index.html"
+    chown "${DEPLOY_USER}:${DEPLOY_USER}" "${ARTIFACT_ROOT}/index.html"
+    log_info "Copied index.html to ${ARTIFACT_ROOT}/"
+else
+    log_warn "index.html not found in ${SCRIPT_DIR}"
+    log_warn "Please copy the index.html manually to ${ARTIFACT_ROOT}/"
+fi
 
 log_info ""
 log_info "=========================================="

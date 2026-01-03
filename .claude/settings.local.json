@@ -5,7 +5,13 @@
       "Bash(npm install:*)",
       "Bash(bash scripts/create-prebuilt-package.sh:*)",
       "Bash(tar:*)",
-      "Bash(dir:*)"
+      "Bash(dir:*)",
+      "Bash(wsl bash -c \"cd /mnt/c/stackbill/Course/Node-red/vibe-code/stackwatch && git status\")",
+      "Bash(wsl bash -c \"cd /mnt/c/stackbill/Course/Node-red/vibe-code/stackwatch && git diff artifact-server/\")",
+      "Bash(wsl bash -c \"cd /mnt/c/stackbill/Course/Node-red/vibe-code/stackwatch && git log --oneline -5\")",
+      "Bash(wsl bash -c \"cd /mnt/c/stackbill/Course/Node-red/vibe-code/stackwatch && git remote -v\")",
+      "Bash(wsl bash -c \"cd /mnt/c/stackbill/Course/Node-red/vibe-code/stackwatch && git add artifact-server/nginx-artifact.conf artifact-server/setup-artifact-server.sh && git commit -m ''Update artifact server domain from stackbill.com to stackwatch.io\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>''\")",
+      "Bash(wsl bash -c \"cd /mnt/c/stackbill/Course/Node-red/vibe-code/stackwatch && git push origin main\")"
     ]
   }
 }
