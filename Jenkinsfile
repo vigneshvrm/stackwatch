@@ -138,15 +138,7 @@ pipeline {
                             echo '${BUILD_DATE}' > build-date.txt
 
                             # Create metadata JSON
-                            cat > metadata.json << EOF
-{
-    \"version\": \"${FINAL_VERSION}\",
-    \"release_type\": \"${RELEASE_TYPE}\",
-    \"build_date\": \"${BUILD_DATE}\",
-    \"year\": \"${BUILD_YEAR}\",
-    \"month\": \"${BUILD_MONTH}\"
-}
-EOF
+                            echo '{\"version\": \"${FINAL_VERSION}\", \"release_type\": \"${RELEASE_TYPE}\", \"build_date\": \"${BUILD_DATE}\", \"year\": \"${BUILD_YEAR}\", \"month\": \"${BUILD_MONTH}\"}' > metadata.json
 
                             echo 'Deployment complete!'
                             echo 'Download URL: https://${ARTIFACT_SERVER}/stackwatch/build/${BUILD_YEAR}/${BUILD_MONTH}/${RELEASE_TYPE}/stackwatch-${RELEASE_TYPE}.tar.gz'
