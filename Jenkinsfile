@@ -117,11 +117,17 @@ pipeline {
                         if [ '${RELEASE_TYPE}' = 'latest' ]; then
                             echo "Archiving current latest version..."
                             ssh -o StrictHostKeyChecking=no ${ARTIFACT_USER}@${ARTIFACT_SERVER} "
-                                if [ -f ${TARGET_PATH}/stackwatch-latest.tar.gz ]; then
-                                    # Get the version from current latest
+                                if [ -L ${TARGET_PATH}/stackwatch-latest.tar.gz ]; then
+                                    # Get the actual file the symlink points to
+                                    OLD_FILE=\\$(readlink -f ${TARGET_PATH}/stackwatch-latest.tar.gz)
                                     OLD_VERSION=\\$(cat ${TARGET_PATH}/version.txt 2>/dev/null || echo 'unknown')
-                                    mv ${TARGET_PATH}/stackwatch-latest.tar.gz ${ARCHIVE_PATH}/stackwatch-\\${OLD_VERSION}.tar.gz 2>/dev/null || true
-                                    echo 'Archived previous latest: '\\${OLD_VERSION}
+                                    if [ -f \\\"\\${OLD_FILE}\\\" ]; then
+                                        # Move the actual file to archive
+                                        mv \\\"\\${OLD_FILE}\\\" ${ARCHIVE_PATH}/stackwatch-\\${OLD_VERSION}.tar.gz 2>/dev/null || true
+                                        # Remove the old symlink
+                                        rm -f ${TARGET_PATH}/stackwatch-latest.tar.gz
+                                        echo 'Archived previous latest: '\\${OLD_VERSION}
+                                    fi
                                 fi
                             "
                         fi
