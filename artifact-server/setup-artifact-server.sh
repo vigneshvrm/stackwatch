@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # StackWatch Artifact Server Setup Script
-# Run this on your artifact server (artifact.stackbill.com)
+# Run this on your artifact server (artifact.stackwatch.io)
 #
 # Usage: sudo ./setup-artifact-server.sh
 #
@@ -162,7 +162,7 @@ cp "${BASE_PATH}/beta/metadata.json" "${BASE_PATH}/latest/metadata.json"
 sed -i 's/"release_type": "beta"/"release_type": "latest"/g' "${BASE_PATH}/latest/metadata.json"
 
 echo "SUCCESS: Beta ${BETA_VERSION} promoted to latest"
-echo "Download URL: https://artifact.stackbill.com/stackwatch/build/${YEAR}/${MONTH}/latest/stackwatch-latest.tar.gz"
+echo "Download URL: https://artifact.stackwatch.io/stackwatch/build/${YEAR}/${MONTH}/latest/stackwatch-latest.tar.gz"
 EOF
 
 chmod +x "${ARTIFACT_ROOT}/promote-to-latest.sh"
@@ -194,9 +194,9 @@ cat > "${ARTIFACT_ROOT}/index.html" << 'EOF'
     <div class="info">
         <h3>Download Commands</h3>
         <p><strong>Latest (stable):</strong></p>
-        <code>curl -LO https://artifact.stackbill.com/stackwatch/build/YYYY/MM/latest/stackwatch-latest.tar.gz</code>
+        <code>curl -LO https://artifact.stackwatch.io/stackwatch/build/YYYY/MM/latest/stackwatch-latest.tar.gz</code>
         <p><strong>Beta (testing):</strong></p>
-        <code>curl -LO https://artifact.stackbill.com/stackwatch/build/YYYY/MM/beta/stackwatch-beta.tar.gz</code>
+        <code>curl -LO https://artifact.stackwatch.io/stackwatch/build/YYYY/MM/beta/stackwatch-beta.tar.gz</code>
     </div>
 </body>
 </html>
