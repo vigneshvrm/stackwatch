@@ -82,11 +82,11 @@ When deploying from the **prebuilt client package**, only monitoring agent tools
 
 ```bash
 # Extract package
-tar -xzf stackwatch-prebuilt-*.tar.gz -C /opt
-mv /opt/stackwatch-prebuilt /opt/stackwatch
+tar -xzf stackwatch-*.tar.gz
+cd stackwatch
 
 # Run deployment helper (informational only in client mode)
-sudo /opt/stackwatch/scripts/deploy-from-opt.sh
+sudo ./scripts/deploy-from-opt.sh
 
 # Deploy monitoring agents to target servers
 ansible-playbook -i /opt/stackwatch/ansible/inventory/hosts \

@@ -74,8 +74,10 @@ pipeline {
                     VERSION="${FINAL_VERSION}" ./scripts/create-prebuilt-package.sh
 
                     # Rename to standard format
-                    PACKAGE_FILE=$(ls stackwatch-prebuilt-*.tar.gz | head -n1)
-                    mv "$PACKAGE_FILE" "stackwatch-${FINAL_VERSION}.tar.gz"
+                    PACKAGE_FILE=$(ls stackwatch-*.tar.gz | head -n1)
+                    if [ "$PACKAGE_FILE" != "stackwatch-${FINAL_VERSION}.tar.gz" ]; then
+                        mv "$PACKAGE_FILE" "stackwatch-${FINAL_VERSION}.tar.gz"
+                    fi
 
                     echo "Package created: stackwatch-${FINAL_VERSION}.tar.gz"
                 '''

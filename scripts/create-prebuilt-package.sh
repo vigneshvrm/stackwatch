@@ -22,7 +22,7 @@ PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
 # Configuration
 FRONTEND_BUILD_DIR="dist"
-PACKAGE_NAME="stackwatch-prebuilt"
+PACKAGE_NAME="stackwatch"
 VERSION="${VERSION:-$(grep -oP '"version":\s*"\K[^"]+' "${PROJECT_ROOT}/package.json" 2>/dev/null || echo "1.0.0")}"
 DATE=$(date +%Y%m%d)
 PACKAGE_FILE="${PACKAGE_NAME}-${VERSION}-${DATE}.tar.gz"
@@ -281,7 +281,7 @@ display_package_info() {
     log_info "Client Deployment Instructions:"
     log_info "  1. Download the package file"
     log_info "  2. Extract to /opt: tar -xzf ${PACKAGE_FILE} -C /opt"
-    log_info "  3. Rename if needed: mv /opt/${PACKAGE_NAME} /opt/stackwatch"
+    log_info "  3. Navigate to: cd /opt/stackwatch"
     log_info "  4. Configure: Edit /opt/stackwatch/ansible/inventory/hosts"
     log_info "  5. Deploy monitoring agents:"
     log_info "      - Linux: ansible-playbook -i /opt/stackwatch/ansible/inventory/hosts \\"

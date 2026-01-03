@@ -19,7 +19,6 @@ build
 # Artifacts - NEVER commit these
 *.tar.gz
 *.zip
-stackwatch-prebuilt-*
 stackwatch-*.tar.gz
 
 # Temporary files

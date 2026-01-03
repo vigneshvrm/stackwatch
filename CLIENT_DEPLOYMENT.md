@@ -38,32 +38,23 @@ This package does NOT include:
 
 ### Step 1: Download the Package
 
-Download the StackWatch prebuilt package file:
+Download the StackWatch package file:
 ```
-stackwatch-prebuilt-<version>-<date>.tar.gz
+stackwatch-<version>-<date>.tar.gz
 ```
 
-### Step 2: Extract to /opt
+### Step 2: Extract the Package
 
-Extract the package to `/opt`:
+Extract the package:
 
 ```bash
-sudo tar -xzf stackwatch-prebuilt-*.tar.gz -C /opt
+tar -xzf stackwatch-*.tar.gz
+cd stackwatch
 ```
 
-This will create `/opt/stackwatch-prebuilt/` directory.
+This will create a `stackwatch/` directory.
 
-### Step 3: Rename Directory (if needed)
-
-If the extracted directory is not named `stackwatch`, rename it:
-
-```bash
-sudo mv /opt/stackwatch-prebuilt /opt/stackwatch
-```
-
-**Note:** The deployment script expects the installation to be at `/opt/stackwatch`.
-
-### Step 4: Verify Package Contents
+### Step 3: Verify Package Contents
 
 Verify the package structure:
 
