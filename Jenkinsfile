@@ -127,25 +127,22 @@ pipeline {
                         echo "Uploading package..."
                         scp -o StrictHostKeyChecking=no stackwatch-${FINAL_VERSION}.tar.gz ${ARTIFACT_USER}@${ARTIFACT_SERVER}:${TARGET_PATH}/
 
-                        # Create symlink and metadata
+                        # Create metadata JSON locally first
+                        echo "{\"version\": \"${FINAL_VERSION}\", \"release_type\": \"beta\", \"build_date\": \"${BUILD_DATE}\", \"year\": \"${BUILD_YEAR}\", \"month\": \"${BUILD_MONTH}\"}" > metadata.json
+                        echo "${FINAL_VERSION}" > version.txt
+                        echo "${BUILD_DATE}" > build-date.txt
+
+                        # Create symlink and upload metadata
                         ssh -o StrictHostKeyChecking=no ${ARTIFACT_USER}@${ARTIFACT_SERVER} "
                             cd ${TARGET_PATH}
-
-                            # Remove old symlink
                             rm -f stackwatch-beta.tar.gz
-
-                            # Create new symlink
                             ln -sf stackwatch-${FINAL_VERSION}.tar.gz stackwatch-beta.tar.gz
-
-                            # Save version info
-                            echo '${FINAL_VERSION}' > version.txt
-                            echo '${BUILD_DATE}' > build-date.txt
-
-                            # Create metadata JSON
-                            echo '{\"version\": \"${FINAL_VERSION}\", \"release_type\": \"beta\", \"build_date\": \"${BUILD_DATE}\", \"year\": \"${BUILD_YEAR}\", \"month\": \"${BUILD_MONTH}\"}' > metadata.json
-
-                            echo 'Beta deployment complete!'
                         "
+
+                        # Upload metadata files
+                        scp -o StrictHostKeyChecking=no metadata.json version.txt build-date.txt ${ARTIFACT_USER}@${ARTIFACT_SERVER}:${TARGET_PATH}/
+
+                        echo "Beta deployment complete!"
 
                         echo ""
                         echo "Beta Download URL: https://${ARTIFACT_SERVER}/stackwatch/build/${BUILD_YEAR}/${BUILD_MONTH}/beta/stackwatch-beta.tar.gz"
