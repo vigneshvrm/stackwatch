@@ -11,7 +11,11 @@
       "Bash(wsl bash -c \"cd /mnt/c/stackbill/Course/Node-red/vibe-code/stackwatch && git log --oneline -5\")",
       "Bash(wsl bash -c \"cd /mnt/c/stackbill/Course/Node-red/vibe-code/stackwatch && git remote -v\")",
       "Bash(wsl bash -c \"cd /mnt/c/stackbill/Course/Node-red/vibe-code/stackwatch && git add artifact-server/nginx-artifact.conf artifact-server/setup-artifact-server.sh && git commit -m ''Update artifact server domain from stackbill.com to stackwatch.io\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>''\")",
-      "Bash(wsl bash -c \"cd /mnt/c/stackbill/Course/Node-red/vibe-code/stackwatch && git push origin main\")"
+      "Bash(wsl bash -c \"cd /mnt/c/stackbill/Course/Node-red/vibe-code/stackwatch && git push origin main\")",
+      "Bash(wsl bash -c \"whoami && cd /mnt/c/stackbill/Course/Node-red/vibe-code/stackwatch && git push origin main\")",
+      "Bash(wsl bash -c \"cd /mnt/c/stackbill/Course/Node-red/vibe-code/stackwatch && git add artifact-server/index.html && git commit -m ''Redesign download page with full project info and archive selector\n\n- Added hero section explaining StackWatch\n- Added features section with 6 key benefits\n- Added architecture diagram showing gateway concept\n- Download section with Latest and Archive cards\n- Archive dropdown dynamically loads from archive folder\n- Shows version info when archive selected\n- Installation guide with copy-to-clipboard\n- Responsive design for mobile/desktop\n- Smooth scroll navigation\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>''\")",
+      "Bash(wsl bash:*)",
+      "Bash(git add:*)"
     ]
   }
 }

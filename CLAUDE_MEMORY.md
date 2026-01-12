@@ -149,39 +149,59 @@ artifact.stackwatch.io/stackwatch/build/
 
 ```
 stackwatch/
-├── Frontend Source
-│   ├── App.tsx              # Main app with routing
-│   ├── index.tsx            # Entry point
-│   ├── components/          # UI components
-│   ├── contexts/            # React contexts
-│   ├── constants.tsx        # App config
-│   └── types.ts             # TypeScript types
+├── src/                          # Frontend Source Code
+│   ├── App.tsx                   # Main app with routing
+│   ├── index.tsx                 # Entry point
+│   ├── constants.tsx             # App config
+│   ├── types.ts                  # TypeScript types
+│   ├── components/               # UI components
+│   │   ├── Dashboard.tsx
+│   │   ├── HelpPage.tsx
+│   │   ├── ServiceCard.tsx
+│   │   └── ...
+│   └── contexts/                 # React contexts
+│       └── ThemeContext.tsx
 │
-├── Backend Scripts
-│   └── scripts/
-│       ├── deploy-stackbill.sh
-│       ├── create-prebuilt-package.sh
-│       └── (other scripts)
+├── docs/                         # Documentation
+│   ├── architecture/             # System design docs
+│   │   ├── API_MODEL.md
+│   │   ├── ARCHITECTURE_OVERVIEW.md
+│   │   ├── ARCHITECTURE_DIAGRAM.md
+│   │   ├── SECURITY_DESIGN.md
+│   │   └── WORKFLOW_DIAGRAMS.md
+│   ├── deployment/               # Deployment guides
+│   │   ├── CICD_SETUP_GUIDE.md
+│   │   ├── CLIENT_DEPLOYMENT_GUIDE.md
+│   │   ├── BACKEND_DEPLOYMENT_FLOW.md
+│   │   └── ...
+│   └── operations/               # Operational docs
+│       ├── OPERATIONAL_RUNBOOK.md
+│       ├── OPERATIONS_GUIDE.md
+│       ├── GAP_ANALYSIS.md
+│       └── ...
 │
-├── CI/CD (NEW)
-│   ├── Jenkinsfile          # Pipeline config
-│   └── artifact-server/     # Server setup files
-│       ├── nginx-artifact.conf
-│       ├── setup-artifact-server.sh
-│       └── promote-beta-to-latest.sh
+├── scripts/                      # Backend Scripts
+│   ├── deploy-stackbill.sh
+│   ├── create-prebuilt-package.sh
+│   └── (other scripts)
 │
-├── Ansible Automation
-│   └── ansible/
+├── artifact-server/              # CI/CD Artifact Server
+│   ├── index.html                # Download website
+│   ├── nginx-artifact.conf
+│   ├── setup-artifact-server.sh
+│   └── promote-beta-to-latest.sh
 │
-├── Documentation
-│   ├── docs/
-│   ├── CICD_SETUP_GUIDE.md  # CI/CD instructions
-│   └── CLAUDE_MEMORY.md     # This file
+├── ansible/                      # Ansible Automation
+│
+├── Jenkinsfile                   # CI/CD Pipeline config
+├── README.md                     # Project readme
+├── CLAUDE_MEMORY.md              # This file (Claude's memory)
 │
 └── Config Files
     ├── package.json
-    ├── .gitignore           # Excludes dist, node_modules, *.tar.gz
-    └── vite.config.ts
+    ├── tsconfig.json
+    ├── vite.config.ts
+    └── .gitignore
 ```
 
 ---
@@ -234,17 +254,19 @@ npm run build  # Build to dist/
 > Use this section to track our conversation progress
 
 ### Current Session
-- **Date**: 2025-12-30
-- **Status**: CI/CD pipeline setup completed
+- **Date**: 2026-01-12
+- **Status**: Project structure reorganization completed
 - **What Was Done**:
-  - Created Jenkinsfile with beta/latest options
-  - Created artifact server configuration
-  - Created setup and promote scripts
-  - Updated .gitignore to exclude build artifacts
-  - Created CICD_SETUP_GUIDE.md
-- **Next Steps**: Follow CICD_SETUP_GUIDE.md to set up servers
+  - Reorganized project structure for better maintainability
+  - Moved all frontend source files to `src/` folder
+  - Organized documentation into `docs/architecture/`, `docs/deployment/`, `docs/operations/`
+  - Updated vite.config.ts, tsconfig.json, index.html for new paths
+  - Cleaned up unnecessary files from root
+- **Next Steps**: Verify build works, commit changes
 
 ### Previous Sessions
+- 2026-01-11: Fixed Jenkins archive logic, metadata.json format, download page
+- 2025-12-30: CI/CD pipeline setup, artifact server configuration
 - 2025-12-30: Initial project review and documentation
 
 ---
@@ -278,4 +300,4 @@ curl -LO https://artifact.stackwatch.io/stackwatch/build/YYYY/MM/latest/stackwat
 
 ---
 
-*Last Updated: 2025-12-30*
+*Last Updated: 2026-01-12*

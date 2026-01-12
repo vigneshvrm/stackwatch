@@ -18,16 +18,17 @@
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
+    "baseUrl": ".",
     "paths": {
       "@/*": [
-        "./*"
+        "src/*"
       ]
     },
     "allowImportingTsExtensions": true,
     "noEmit": true
   },
   "include": [
-    "**/*.ts",
-    "**/*.tsx"
+    "src/**/*.ts",
+    "src/**/*.tsx"
   ]
 }
