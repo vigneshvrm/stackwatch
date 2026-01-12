@@ -928,12 +928,17 @@
             const pathsToTry = getPathsToTry();
             availableVersions = [];
 
+            console.log('Loading versions from paths:', pathsToTry);
+
             // Check for latest version
             for (const basePath of pathsToTry) {
                 try {
-                    const response = await fetch(`${basePath}/latest/metadata.json`);
+                    console.log('Checking latest at:', `${basePath}/latest/metadata.json`);
+                    const response = await fetch(`${basePath}/latest/metadata.json`, { cache: 'no-store' });
+                    console.log('Latest response status:', response.status);
                     if (response.ok) {
                         const data = await response.json();
+                        console.log('Latest data:', data);
                         availableVersions.push({
                             type: 'latest',
                             label: `Latest (${data.version || 'stable'})`,
@@ -944,15 +949,20 @@
                         });
                         break;
                     }
-                } catch (e) {}
+                } catch (e) {
+                    console.log('Error fetching latest:', e);
+                }
             }
 
             // Check for beta version
             for (const basePath of pathsToTry) {
                 try {
-                    const response = await fetch(`${basePath}/beta/metadata.json`);
+                    console.log('Checking beta at:', `${basePath}/beta/metadata.json`);
+                    const response = await fetch(`${basePath}/beta/metadata.json`, { cache: 'no-store' });
+                    console.log('Beta response status:', response.status);
                     if (response.ok) {
                         const data = await response.json();
+                        console.log('Beta data:', data);
                         availableVersions.push({
                             type: 'beta',
                             label: `Beta (${data.version || 'testing'})`,
@@ -963,13 +973,17 @@
                         });
                         break;
                     }
-                } catch (e) {}
+                } catch (e) {
+                    console.log('Error fetching beta:', e);
+                }
             }
 
             // Check for archive versions
             for (const basePath of pathsToTry) {
                 try {
-                    const response = await fetch(`${basePath}/archive/`);
+                    console.log('Checking archive at:', `${basePath}/archive/`);
+                    const response = await fetch(`${basePath}/archive/`, { cache: 'no-store' });
+                    console.log('Archive response status:', response.status);
                     if (!response.ok) continue;
 
                     const html = await response.text();
@@ -983,6 +997,7 @@
                             const filename = href.split('/').pop();
                             const match = filename.match(/stackwatch-(.+)\.tar\.gz/);
                             if (match) {
+                                console.log('Found archive:', match[1]);
                                 availableVersions.push({
                                     type: 'archive',
                                     label: `Archive (${match[1]})`,
@@ -994,17 +1009,29 @@
                             }
                         }
                     });
-                } catch (e) {}
+                } catch (e) {
+                    console.log('Error fetching archive:', e);
+                }
             }
+
+            console.log('Total versions found:', availableVersions.length, availableVersions);
 
             // Populate dropdown
             select.innerHTML = '';
 
             if (availableVersions.length === 0) {
-                select.innerHTML = '<option value="">No versions available</option>';
+                // Fallback: Show default options when fetch fails
+                console.log('No versions found, using fallback');
+                select.innerHTML = `
+                    <option value="fallback-latest" selected>Latest (stable)</option>
+                    <option value="fallback-beta">Beta (testing)</option>
+                `;
+                // Set fallback mode
+                window.fallbackMode = true;
                 return;
             }
 
+            window.fallbackMode = false;
             availableVersions.forEach((v, index) => {
                 const option = document.createElement('option');
                 option.value = index;
@@ -1020,14 +1047,32 @@
         // Update install commands based on selected version
         function updateInstallCommands() {
             const select = document.getElementById('version-select');
-            const selectedIndex = select.value;
+            const selectedValue = select.value;
+            const quickCmd = document.getElementById('quick-install-cmd');
+            const downloadCmd = document.getElementById('download-cmd');
+            const tarFilename = document.getElementById('tar-filename');
 
+            // Handle fallback mode
+            if (window.fallbackMode || selectedValue.startsWith('fallback-')) {
+                const type = selectedValue.replace('fallback-', '') || 'latest';
+                if (type === 'latest') {
+                    quickCmd.textContent = 'curl -fsSL https://artifact.stackwatch.io/install.sh | sudo bash';
+                    downloadCmd.textContent = 'curl -LO https://artifact.stackwatch.io/latest/stackwatch-latest.tar.gz';
+                    tarFilename.textContent = 'stackwatch-latest.tar.gz';
+                } else {
+                    quickCmd.textContent = 'curl -fsSL https://artifact.stackwatch.io/install.sh | sudo bash -s -- --version beta';
+                    downloadCmd.textContent = 'curl -LO https://artifact.stackwatch.io/beta/stackwatch-beta.tar.gz';
+                    tarFilename.textContent = 'stackwatch-beta.tar.gz';
+                }
+                return;
+            }
+
+            const selectedIndex = selectedValue;
             if (selectedIndex === '' || !availableVersions[selectedIndex]) return;
 
             const version = availableVersions[selectedIndex];
 
             // Update quick install command
-            const quickCmd = document.getElementById('quick-install-cmd');
             if (version.type === 'latest') {
                 quickCmd.textContent = 'curl -fsSL https://artifact.stackwatch.io/install.sh | sudo bash';
             } else if (version.type === 'beta') {
@@ -1037,11 +1082,9 @@
             }
 
             // Update download command
-            const downloadCmd = document.getElementById('download-cmd');
             downloadCmd.textContent = `curl -LO https://artifact.stackwatch.io${version.url}`;
 
             // Update tar filename
-            const tarFilename = document.getElementById('tar-filename');
             tarFilename.textContent = version.filename;
         }
 
