@@ -456,6 +456,105 @@
             transform: none;
         }
 
+        /* Quick Install Section */
+        .quick-install {
+            background: linear-gradient(180deg, rgba(0, 212, 255, 0.05), transparent);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .quick-install-box {
+            background: var(--bg-card);
+            border: 2px solid var(--primary);
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            max-width: 900px;
+            margin: 0 auto;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .quick-install-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+        }
+
+        .quick-install-box h3 {
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+            color: var(--primary);
+        }
+
+        .quick-install-box .subtitle {
+            color: var(--text-muted);
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+        }
+
+        .one-liner-code {
+            background: #0d1117;
+            border-radius: 12px;
+            padding: 25px 30px;
+            margin-bottom: 25px;
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            position: relative;
+            text-align: left;
+            overflow-x: auto;
+        }
+
+        .one-liner-code code {
+            font-family: 'Fira Code', 'Monaco', 'Consolas', monospace;
+            font-size: 1rem;
+            color: #58a6ff;
+            word-break: break-all;
+        }
+
+        .one-liner-code .copy-btn {
+            position: absolute;
+            top: 50%;
+            right: 15px;
+            transform: translateY(-50%);
+            background: var(--primary);
+            color: #000;
+            font-weight: 600;
+        }
+
+        .one-liner-code .copy-btn:hover {
+            background: #00b8e6;
+        }
+
+        .install-options {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        .install-option {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 15px 25px;
+            font-size: 0.9rem;
+        }
+
+        .install-option .label {
+            color: var(--text-muted);
+            display: block;
+            margin-bottom: 5px;
+            font-size: 0.8rem;
+        }
+
+        .install-option code {
+            color: var(--secondary);
+            font-family: 'Monaco', 'Consolas', monospace;
+        }
+
         /* Installation Section */
         .installation {
             background: var(--bg-card);
@@ -633,8 +732,8 @@
             <ul class="nav-links">
                 <li><a href="#features">Features</a></li>
                 <li><a href="#architecture">Architecture</a></li>
+                <li><a href="#quick-install">Install</a></li>
                 <li><a href="#download">Download</a></li>
-                <li><a href="#installation">Installation</a></li>
             </ul>
         </div>
     </nav>
@@ -649,7 +748,7 @@
                 Grafana dashboards, and system health through a single, secure gateway.
             </p>
             <div class="hero-buttons">
-                <a href="#download" class="btn btn-primary">Download Now</a>
+                <a href="#quick-install" class="btn btn-primary">Install Now</a>
                 <a href="#features" class="btn btn-secondary">Learn More</a>
             </div>
         </div>
@@ -721,12 +820,36 @@
         </div>
     </section>
 
+    <!-- Quick Install Section -->
+    <section class="section quick-install" id="quick-install">
+        <div class="container">
+            <div class="quick-install-box">
+                <h3>Quick Install</h3>
+                <p class="subtitle">Install StackWatch with a single command - just like Helm!</p>
+                <div class="one-liner-code">
+                    <button class="copy-btn" onclick="copyOneLiner()">Copy</button>
+                    <code>curl -fsSL https://artifact.stackwatch.io/install.sh | sudo bash</code>
+                </div>
+                <div class="install-options">
+                    <div class="install-option">
+                        <span class="label">Install Beta Version</span>
+                        <code>curl -fsSL https://artifact.stackwatch.io/install.sh | sudo bash -s -- --version beta</code>
+                    </div>
+                    <div class="install-option">
+                        <span class="label">Install Specific Version</span>
+                        <code>curl -fsSL https://artifact.stackwatch.io/install.sh | sudo bash -s -- --version 2025.01.55</code>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Download Section -->
     <section class="section download-section" id="download">
         <div class="container">
             <div class="section-header">
-                <h2>Download StackWatch</h2>
-                <p>Choose the latest stable release or download from archives</p>
+                <h2>Manual Download</h2>
+                <p>Prefer to download manually? Choose the latest stable release or download from archives</p>
             </div>
             <div class="download-grid">
                 <!-- Latest Release -->
@@ -968,6 +1091,16 @@
             const codeBlock = btn.parentElement.querySelector('code');
             const text = codeBlock.innerText.replace(/^#.*\n/gm, '').trim();
             navigator.clipboard.writeText(text).then(() => {
+                btn.textContent = 'Copied!';
+                setTimeout(() => btn.textContent = 'Copy', 2000);
+            });
+        }
+
+        // Copy one-liner install command
+        function copyOneLiner() {
+            const cmd = 'curl -fsSL https://artifact.stackwatch.io/install.sh | sudo bash';
+            const btn = document.querySelector('.one-liner-code .copy-btn');
+            navigator.clipboard.writeText(cmd).then(() => {
                 btn.textContent = 'Copied!';
                 setTimeout(() => btn.textContent = 'Copy', 2000);
             });

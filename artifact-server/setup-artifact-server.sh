@@ -178,6 +178,18 @@ else
     log_warn "Please copy the index.html manually to ${ARTIFACT_ROOT}/"
 fi
 
+# Copy install.sh for one-liner installation
+if [[ -f "${SCRIPT_DIR}/install.sh" ]]; then
+    cp "${SCRIPT_DIR}/install.sh" "${ARTIFACT_ROOT}/install.sh"
+    chmod 644 "${ARTIFACT_ROOT}/install.sh"
+    chown "${DEPLOY_USER}:${DEPLOY_USER}" "${ARTIFACT_ROOT}/install.sh"
+    log_info "Copied install.sh to ${ARTIFACT_ROOT}/"
+    log_info "One-liner install available: curl -fsSL https://${DOMAIN}/install.sh | sudo bash"
+else
+    log_warn "install.sh not found in ${SCRIPT_DIR}"
+    log_warn "Please copy the install.sh manually to ${ARTIFACT_ROOT}/"
+fi
+
 log_info ""
 log_info "=========================================="
 log_info "Setup Complete!"
