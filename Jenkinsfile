@@ -127,8 +127,10 @@ pipeline {
                         echo "Uploading package..."
                         scp -o StrictHostKeyChecking=no stackwatch-${FINAL_VERSION}.tar.gz ${ARTIFACT_USER}@${ARTIFACT_SERVER}:${TARGET_PATH}/
 
-                        # Create metadata JSON locally first
-                        echo "{\"version\": \"${FINAL_VERSION}\", \"release_type\": \"beta\", \"build_date\": \"${BUILD_DATE}\", \"year\": \"${BUILD_YEAR}\", \"month\": \"${BUILD_MONTH}\"}" > metadata.json
+                        # Create metadata JSON locally first using cat heredoc for proper quoting
+                        cat > metadata.json << METADATA_EOF
+{"version": "${FINAL_VERSION}", "release_type": "beta", "build_date": "${BUILD_DATE}", "year": "${BUILD_YEAR}", "month": "${BUILD_MONTH}"}
+METADATA_EOF
                         echo "${FINAL_VERSION}" > version.txt
                         echo "${BUILD_DATE}" > build-date.txt
 
