@@ -928,41 +928,76 @@
                 <div class="step">
                     <div class="step-number">1</div>
                     <div class="step-content">
-                        <h4>Download the Package</h4>
-                        <p>Click the download button above or use curl to fetch the latest release:</p>
+                        <h4>One-Command Install (Recommended)</h4>
+                        <p>The fastest way to install StackWatch - downloads, extracts, and deploys automatically:</p>
                         <div class="code-block">
                             <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-                            <code><span class="comment"># Download latest stable version</span><br>curl -LO <span id="curl-url">https://artifact.stackwatch.io/stackwatch/build/2026/01/latest/stackwatch-latest.tar.gz</span></code>
+                            <code>curl -fsSL https://artifact.stackwatch.io/install.sh | sudo bash</code>
                         </div>
                     </div>
                 </div>
                 <div class="step">
                     <div class="step-number">2</div>
                     <div class="step-content">
-                        <h4>Extract the Package</h4>
-                        <p>Unpack the downloaded archive to access the installation files:</p>
+                        <h4>Access StackWatch</h4>
+                        <p>Once installation completes, open your browser and navigate to your server's IP address:</p>
                         <div class="code-block">
                             <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-                            <code>tar -xzf stackwatch-latest.tar.gz<br>cd stackwatch</code>
+                            <code><span class="comment"># Check your server IP</span><br>hostname -I | awk '{print $1}'</code>
+                        </div>
+                        <p style="margin-top: 15px; color: var(--text-muted);">You'll see the StackWatch dashboard with access to Prometheus, Grafana, and system health.</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h4>Verify Installation</h4>
+                        <p>Run the health check to ensure all services are running:</p>
+                        <div class="code-block">
+                            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                            <code>sudo /opt/stackwatch/scripts/health-check.sh</code>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Manual Installation -->
+            <div class="section-header" style="margin-top: 60px;">
+                <h2>Manual Installation</h2>
+                <p>Prefer to install manually? Follow these steps</p>
+            </div>
+            <div class="install-steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h4>Download the Package</h4>
+                        <p>Download the latest release from the download section above or use curl:</p>
+                        <div class="code-block">
+                            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                            <code><span class="comment"># Download latest stable version</span><br>curl -LO <span id="curl-url">https://artifact.stackwatch.io/latest/stackwatch-latest.tar.gz</span></code>
+                        </div>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h4>Extract to /opt/stackwatch</h4>
+                        <p>Extract the package to the installation directory:</p>
+                        <div class="code-block">
+                            <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                            <code>sudo mkdir -p /opt<br>sudo tar -xzf stackwatch-latest.tar.gz -C /opt<br>sudo mv /opt/stackwatch-* /opt/stackwatch</code>
                         </div>
                     </div>
                 </div>
                 <div class="step">
                     <div class="step-number">3</div>
                     <div class="step-content">
-                        <h4>Run the Installer</h4>
-                        <p>Execute the deployment script with root privileges:</p>
+                        <h4>Run the Deployment Script</h4>
+                        <p>Execute the deployment script to configure and start all services:</p>
                         <div class="code-block">
                             <button class="copy-btn" onclick="copyCode(this)">Copy</button>
-                            <code>sudo ./deploy-stackwatch.sh</code>
+                            <code>sudo /opt/stackwatch/scripts/deploy-from-opt.sh</code>
                         </div>
-                    </div>
-                </div>
-                <div class="step">
-                    <div class="step-number">4</div>
-                    <div class="step-content">
-                        <h4>Access StackWatch</h4>
-                        <p>Open your browser and navigate to your server's domain or IP address. You'll see the StackWatch dashboard with access to Prometheus, Grafana, and system health information.</p>
                     </div>
                 </div>
             </div>
@@ -983,107 +1018,128 @@
     </footer>
 
     <script>
-        // Configuration
+        // Configuration - try current month and previous months
         const now = new Date();
-        const year = now.getFullYear();
-        const month = String(now.getMonth() + 1).padStart(2, '0');
-        const basePath = `/stackwatch/build/${year}/${month}`;
+        let foundBasePath = null;
 
-        // Load latest version info
-        async function loadLatestInfo() {
-            try {
-                const response = await fetch(`${basePath}/latest/metadata.json`);
-                if (response.ok) {
-                    const data = await response.json();
-                    document.getElementById('latest-version').textContent = data.version || 'N/A';
-                    document.getElementById('latest-date').textContent = data.build_date || 'N/A';
-                    document.getElementById('latest-download').href = `${basePath}/latest/stackwatch-latest.tar.gz`;
-                    document.getElementById('curl-url').textContent = `https://artifact.stackwatch.io${basePath}/latest/stackwatch-latest.tar.gz`;
-                } else {
-                    throw new Error('Not found');
-                }
-            } catch (e) {
-                document.getElementById('latest-version').textContent = 'N/A';
-                document.getElementById('latest-date').textContent = 'N/A';
+        // Generate paths to try (current month and 2 previous months)
+        function getPathsToTry() {
+            const paths = [];
+            for (let i = 0; i < 3; i++) {
+                const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                const year = d.getFullYear();
+                const month = String(d.getMonth() + 1).padStart(2, '0');
+                paths.push(`/stackwatch/build/${year}/${month}`);
             }
+            return paths;
         }
 
-        // Load archive versions
+        // Load latest version info - try multiple paths
+        async function loadLatestInfo() {
+            const pathsToTry = getPathsToTry();
+
+            for (const basePath of pathsToTry) {
+                try {
+                    const response = await fetch(`${basePath}/latest/metadata.json`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        foundBasePath = basePath;
+
+                        document.getElementById('latest-version').textContent = data.version || 'N/A';
+                        document.getElementById('latest-date').textContent = data.build_date || 'N/A';
+                        document.getElementById('latest-download').href = `${basePath}/latest/stackwatch-latest.tar.gz`;
+                        document.getElementById('curl-url').textContent = `https://artifact.stackwatch.io${basePath}/latest/stackwatch-latest.tar.gz`;
+
+                        console.log(`Found latest at: ${basePath}`);
+                        return;
+                    }
+                } catch (e) {
+                    // Continue to next path
+                }
+            }
+
+            // No builds found in any month
+            document.getElementById('latest-version').textContent = 'No builds available';
+            document.getElementById('latest-date').textContent = '-';
+            document.getElementById('latest-download').style.opacity = '0.5';
+            document.getElementById('latest-download').style.pointerEvents = 'none';
+        }
+
+        // Load archive versions - try multiple paths
         async function loadArchives() {
             const select = document.getElementById('archive-select');
             const downloadBtn = document.getElementById('archive-download');
             const archiveInfo = document.getElementById('archive-info');
+            const pathsToTry = getPathsToTry();
 
-            try {
-                // Fetch the archive directory listing
-                const response = await fetch(`${basePath}/archive/`);
-                if (!response.ok) throw new Error('Archive not found');
+            const allArchives = [];
 
-                const html = await response.text();
+            // Try all paths and collect archives
+            for (const basePath of pathsToTry) {
+                try {
+                    const response = await fetch(`${basePath}/archive/`);
+                    if (!response.ok) continue;
 
-                // Parse the directory listing to find .tar.gz files
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(html, 'text/html');
-                const links = doc.querySelectorAll('a');
+                    const html = await response.text();
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const links = doc.querySelectorAll('a');
 
-                const archives = [];
-                links.forEach(link => {
-                    const href = link.getAttribute('href');
-                    if (href && href.endsWith('.tar.gz')) {
-                        // Extract version from filename like stackwatch-0.0.0-20260103-063251.tar.gz
-                        const filename = href.split('/').pop();
-                        const match = filename.match(/stackwatch-(.+)\.tar\.gz/);
-                        if (match) {
-                            archives.push({
-                                filename: filename,
-                                version: match[1],
-                                url: `${basePath}/archive/${filename}`
-                            });
+                    links.forEach(link => {
+                        const href = link.getAttribute('href');
+                        if (href && href.endsWith('.tar.gz')) {
+                            const filename = href.split('/').pop();
+                            const match = filename.match(/stackwatch-(.+)\.tar\.gz/);
+                            if (match) {
+                                allArchives.push({
+                                    filename: filename,
+                                    version: match[1],
+                                    url: `${basePath}/archive/${filename}`
+                                });
+                            }
                         }
-                    }
-                });
-
-                // Sort by version/date descending (newest first)
-                archives.sort((a, b) => b.version.localeCompare(a.version));
-
-                // Populate select
-                select.innerHTML = '';
-
-                if (archives.length === 0) {
-                    select.innerHTML = '<option value="">No archive versions available</option>';
-                    downloadBtn.setAttribute('disabled', 'true');
-                } else {
-                    select.innerHTML = '<option value="">-- Select a version --</option>';
-                    archives.forEach(archive => {
-                        const option = document.createElement('option');
-                        option.value = archive.url;
-                        option.dataset.filename = archive.filename;
-                        option.dataset.version = archive.version;
-                        option.textContent = `Version ${archive.version}`;
-                        select.appendChild(option);
                     });
+                } catch (e) {
+                    // Continue to next path
                 }
+            }
 
-                // Handle selection change
-                select.addEventListener('change', function() {
-                    const selectedOption = this.options[this.selectedIndex];
-                    if (this.value) {
-                        downloadBtn.href = this.value;
-                        downloadBtn.removeAttribute('disabled');
-                        archiveInfo.style.display = 'block';
-                        document.getElementById('archive-version').textContent = selectedOption.dataset.version;
-                        document.getElementById('archive-filename').textContent = selectedOption.dataset.filename;
-                    } else {
-                        downloadBtn.href = '#';
-                        downloadBtn.setAttribute('disabled', 'true');
-                        archiveInfo.style.display = 'none';
-                    }
-                });
+            // Sort by version/date descending (newest first)
+            allArchives.sort((a, b) => b.version.localeCompare(a.version));
 
-            } catch (e) {
+            // Populate select
+            select.innerHTML = '';
+
+            if (allArchives.length === 0) {
                 select.innerHTML = '<option value="">No archive versions available</option>';
                 downloadBtn.setAttribute('disabled', 'true');
+            } else {
+                select.innerHTML = '<option value="">-- Select a version --</option>';
+                allArchives.forEach(archive => {
+                    const option = document.createElement('option');
+                    option.value = archive.url;
+                    option.dataset.filename = archive.filename;
+                    option.dataset.version = archive.version;
+                    option.textContent = `Version ${archive.version}`;
+                    select.appendChild(option);
+                });
             }
+
+            // Handle selection change
+            select.addEventListener('change', function() {
+                const selectedOption = this.options[this.selectedIndex];
+                if (this.value) {
+                    downloadBtn.href = this.value;
+                    downloadBtn.removeAttribute('disabled');
+                    archiveInfo.style.display = 'block';
+                    document.getElementById('archive-version').textContent = selectedOption.dataset.version;
+                    document.getElementById('archive-filename').textContent = selectedOption.dataset.filename;
+                } else {
+                    downloadBtn.href = '#';
+                    downloadBtn.setAttribute('disabled', 'true');
+                    archiveInfo.style.display = 'none';
+                }
+            });
         }
 
         // Copy to clipboard
