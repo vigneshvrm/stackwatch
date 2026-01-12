@@ -5,12 +5,7 @@ pipeline {
         choice(
             name: 'RELEASE_TYPE',
             choices: ['beta', 'latest'],
-            description: 'Select release type: beta (new untested) or latest (tested, stable)'
-        )
-        string(
-            name: 'VERSION_TAG',
-            defaultValue: '',
-            description: 'Optional: Custom version tag (leave empty for auto-generated)'
+            description: 'beta = Build from source (new untested), latest = Promote current beta to latest (no rebuild)'
         )
     }
 
@@ -24,44 +19,63 @@ pipeline {
     }
 
     stages {
-        stage('Checkout') {
+        stage('Setup') {
             steps {
-                checkout scm
                 script {
                     // Get current date for folder structure
                     env.BUILD_YEAR = sh(script: 'date +%Y', returnStdout: true).trim()
                     env.BUILD_MONTH = sh(script: 'date +%m', returnStdout: true).trim()
                     env.BUILD_DATE = sh(script: 'date +%Y%m%d-%H%M%S', returnStdout: true).trim()
+                    env.YEAR_MONTH_PATH = "${env.ARTIFACT_BASE_PATH}/${env.BUILD_YEAR}/${env.BUILD_MONTH}"
 
+                    echo "=========================================="
+                    echo "Release Type: ${params.RELEASE_TYPE}"
+                    echo "Year/Month: ${env.BUILD_YEAR}/${env.BUILD_MONTH}"
+                    echo "=========================================="
+                }
+            }
+        }
+
+        //=====================================================
+        // BETA: Build from source and deploy to beta folder
+        //=====================================================
+        stage('Checkout') {
+            when {
+                expression { params.RELEASE_TYPE == 'beta' }
+            }
+            steps {
+                checkout scm
+                script {
                     // Get version from package.json
                     env.APP_VERSION = sh(script: "jq -r '.version' package.json", returnStdout: true).trim()
-
-                    // Set version tag
-                    if (params.VERSION_TAG?.trim()) {
-                        env.FINAL_VERSION = params.VERSION_TAG
-                    } else {
-                        env.FINAL_VERSION = "${env.APP_VERSION}-${env.BUILD_DATE}"
-                    }
-
+                    env.FINAL_VERSION = "${env.APP_VERSION}-${env.BUILD_DATE}"
                     echo "Building version: ${env.FINAL_VERSION}"
-                    echo "Release type: ${params.RELEASE_TYPE}"
                 }
             }
         }
 
         stage('Install Dependencies') {
+            when {
+                expression { params.RELEASE_TYPE == 'beta' }
+            }
             steps {
                 sh 'npm ci || npm install'
             }
         }
 
         stage('Build Frontend') {
+            when {
+                expression { params.RELEASE_TYPE == 'beta' }
+            }
             steps {
                 sh 'npm run build'
             }
         }
 
         stage('Create Package') {
+            when {
+                expression { params.RELEASE_TYPE == 'beta' }
+            }
             steps {
                 sh '''
                     echo "Creating build package..."
@@ -85,88 +99,164 @@ pipeline {
         }
 
         stage('Archive Artifact') {
+            when {
+                expression { params.RELEASE_TYPE == 'beta' }
+            }
             steps {
                 archiveArtifacts artifacts: "stackwatch-${FINAL_VERSION}.tar.gz", fingerprint: true
             }
         }
 
-        stage('Deploy to Artifact Server') {
+        stage('Deploy Beta') {
+            when {
+                expression { params.RELEASE_TYPE == 'beta' }
+            }
             steps {
                 sshagent(credentials: ["${CRED_ID}"]) {
                     sh '''
                         echo "=========================================="
-                        echo "Deploying to Artifact Server"
+                        echo "Deploying BETA build to Artifact Server"
                         echo "=========================================="
-                        echo "Server: ${ARTIFACT_SERVER}"
-                        echo "Release Type: ${RELEASE_TYPE}"
-                        echo "Version: ${FINAL_VERSION}"
-                        echo ""
 
-                        # Define paths
-                        YEAR_MONTH_PATH="${ARTIFACT_BASE_PATH}/${BUILD_YEAR}/${BUILD_MONTH}"
-                        TARGET_PATH="${YEAR_MONTH_PATH}/${RELEASE_TYPE}"
-                        ARCHIVE_PATH="${YEAR_MONTH_PATH}/archive"
+                        TARGET_PATH="${YEAR_MONTH_PATH}/beta"
 
-                        # Create directories on artifact server
-                        ssh -o StrictHostKeyChecking=no ${ARTIFACT_USER}@${ARTIFACT_SERVER} "
-                            mkdir -p ${TARGET_PATH}
-                            mkdir -p ${ARCHIVE_PATH}
-                        "
+                        # Create directory
+                        ssh -o StrictHostKeyChecking=no ${ARTIFACT_USER}@${ARTIFACT_SERVER} "mkdir -p ${TARGET_PATH}"
 
-                        # If deploying to 'latest', archive the current latest first
-                        if [ "${RELEASE_TYPE}" = "latest" ]; then
-                            echo "Archiving current latest version..."
-                            ssh -o StrictHostKeyChecking=no ${ARTIFACT_USER}@${ARTIFACT_SERVER} 'cd '"${TARGET_PATH}"' && if [ -L stackwatch-latest.tar.gz ]; then OLD_FILE=$(readlink stackwatch-latest.tar.gz); OLD_VER=$(cat version.txt 2>/dev/null || echo unknown); if [ -f "${OLD_FILE}" ]; then mv "${OLD_FILE}" '"${ARCHIVE_PATH}"'/stackwatch-${OLD_VER}.tar.gz && rm -f stackwatch-latest.tar.gz && echo "Archived ${OLD_FILE} to archive"; fi; fi'
-                        fi
-
-                        # Upload new package
+                        # Upload package
                         echo "Uploading package..."
                         scp -o StrictHostKeyChecking=no stackwatch-${FINAL_VERSION}.tar.gz ${ARTIFACT_USER}@${ARTIFACT_SERVER}:${TARGET_PATH}/
 
-                        # Create symlink and version file
+                        # Create symlink and metadata
                         ssh -o StrictHostKeyChecking=no ${ARTIFACT_USER}@${ARTIFACT_SERVER} "
                             cd ${TARGET_PATH}
 
                             # Remove old symlink
-                            rm -f stackwatch-${RELEASE_TYPE}.tar.gz
+                            rm -f stackwatch-beta.tar.gz
 
                             # Create new symlink
-                            ln -sf stackwatch-${FINAL_VERSION}.tar.gz stackwatch-${RELEASE_TYPE}.tar.gz
+                            ln -sf stackwatch-${FINAL_VERSION}.tar.gz stackwatch-beta.tar.gz
 
                             # Save version info
                             echo '${FINAL_VERSION}' > version.txt
                             echo '${BUILD_DATE}' > build-date.txt
 
                             # Create metadata JSON
-                            echo '{\"version\": \"${FINAL_VERSION}\", \"release_type\": \"${RELEASE_TYPE}\", \"build_date\": \"${BUILD_DATE}\", \"year\": \"${BUILD_YEAR}\", \"month\": \"${BUILD_MONTH}\"}' > metadata.json
+                            echo '{\"version\": \"${FINAL_VERSION}\", \"release_type\": \"beta\", \"build_date\": \"${BUILD_DATE}\", \"year\": \"${BUILD_YEAR}\", \"month\": \"${BUILD_MONTH}\"}' > metadata.json
 
-                            echo 'Deployment complete!'
-                            echo 'Download URL: https://${ARTIFACT_SERVER}/stackwatch/build/${BUILD_YEAR}/${BUILD_MONTH}/${RELEASE_TYPE}/stackwatch-${RELEASE_TYPE}.tar.gz'
+                            echo 'Beta deployment complete!'
                         "
+
+                        echo ""
+                        echo "Beta Download URL: https://${ARTIFACT_SERVER}/stackwatch/build/${BUILD_YEAR}/${BUILD_MONTH}/beta/stackwatch-beta.tar.gz"
                     '''
                 }
             }
         }
 
+        //=====================================================
+        // LATEST: Promote current beta to latest (no rebuild)
+        //=====================================================
         stage('Promote Beta to Latest') {
             when {
                 expression { params.RELEASE_TYPE == 'latest' }
             }
             steps {
-                echo "This build was deployed directly to 'latest' channel."
-                echo "Previous latest has been moved to archive."
+                sshagent(credentials: ["${CRED_ID}"]) {
+                    sh '''
+                        echo "=========================================="
+                        echo "Promoting BETA to LATEST"
+                        echo "=========================================="
+
+                        BETA_PATH="${YEAR_MONTH_PATH}/beta"
+                        LATEST_PATH="${YEAR_MONTH_PATH}/latest"
+                        ARCHIVE_PATH="${YEAR_MONTH_PATH}/archive"
+
+                        # Check if beta exists
+                        echo "Checking for beta version..."
+                        BETA_EXISTS=$(ssh -o StrictHostKeyChecking=no ${ARTIFACT_USER}@${ARTIFACT_SERVER} "test -f ${BETA_PATH}/stackwatch-beta.tar.gz && echo 'yes' || echo 'no'")
+
+                        if [ "${BETA_EXISTS}" != "yes" ]; then
+                            echo "ERROR: No beta version found at ${BETA_PATH}/"
+                            echo "Please run a beta build first before promoting to latest."
+                            exit 1
+                        fi
+
+                        # Get beta version
+                        BETA_VERSION=$(ssh -o StrictHostKeyChecking=no ${ARTIFACT_USER}@${ARTIFACT_SERVER} "cat ${BETA_PATH}/version.txt 2>/dev/null || echo 'unknown'")
+                        echo "Beta version to promote: ${BETA_VERSION}"
+
+                        # Create directories
+                        ssh -o StrictHostKeyChecking=no ${ARTIFACT_USER}@${ARTIFACT_SERVER} "mkdir -p ${LATEST_PATH} ${ARCHIVE_PATH}"
+
+                        # Archive current latest if exists
+                        echo "Checking for existing latest version..."
+                        ssh -o StrictHostKeyChecking=no ${ARTIFACT_USER}@${ARTIFACT_SERVER} '
+                            LATEST_PATH="'"${LATEST_PATH}"'"
+                            ARCHIVE_PATH="'"${ARCHIVE_PATH}"'"
+
+                            if [ -f "${LATEST_PATH}/stackwatch-latest.tar.gz" ]; then
+                                OLD_VERSION=$(cat "${LATEST_PATH}/version.txt" 2>/dev/null || echo "unknown")
+                                ACTUAL_FILE=$(readlink -f "${LATEST_PATH}/stackwatch-latest.tar.gz")
+
+                                if [ -f "${ACTUAL_FILE}" ]; then
+                                    echo "Archiving current latest: ${OLD_VERSION}"
+                                    cp "${ACTUAL_FILE}" "${ARCHIVE_PATH}/stackwatch-${OLD_VERSION}.tar.gz"
+                                    echo "Archived to: ${ARCHIVE_PATH}/stackwatch-${OLD_VERSION}.tar.gz"
+                                fi
+                            else
+                                echo "No existing latest version to archive"
+                            fi
+                        '
+
+                        # Copy beta to latest
+                        echo "Copying beta to latest..."
+                        ssh -o StrictHostKeyChecking=no ${ARTIFACT_USER}@${ARTIFACT_SERVER} '
+                            BETA_PATH="'"${BETA_PATH}"'"
+                            LATEST_PATH="'"${LATEST_PATH}"'"
+                            BETA_VERSION="'"${BETA_VERSION}"'"
+
+                            # Get actual beta file
+                            BETA_FILE=$(readlink -f "${BETA_PATH}/stackwatch-beta.tar.gz")
+
+                            # Copy to latest
+                            cp "${BETA_FILE}" "${LATEST_PATH}/stackwatch-${BETA_VERSION}.tar.gz"
+
+                            # Update symlink
+                            cd "${LATEST_PATH}"
+                            rm -f stackwatch-latest.tar.gz
+                            ln -sf "stackwatch-${BETA_VERSION}.tar.gz" stackwatch-latest.tar.gz
+
+                            # Copy metadata and update release_type
+                            cp "${BETA_PATH}/version.txt" "${LATEST_PATH}/version.txt"
+                            cp "${BETA_PATH}/build-date.txt" "${LATEST_PATH}/build-date.txt"
+                            sed "s/\"release_type\": \"beta\"/\"release_type\": \"latest\"/" "${BETA_PATH}/metadata.json" > "${LATEST_PATH}/metadata.json"
+
+                            echo "Promotion complete!"
+                        '
+
+                        echo ""
+                        echo "=========================================="
+                        echo "SUCCESS: Beta ${BETA_VERSION} promoted to Latest"
+                        echo "=========================================="
+                        echo "Latest Download URL: https://${ARTIFACT_SERVER}/stackwatch/build/${BUILD_YEAR}/${BUILD_MONTH}/latest/stackwatch-latest.tar.gz"
+                    '''
+                }
             }
         }
 
         stage('Git Tag') {
+            when {
+                expression { params.RELEASE_TYPE == 'beta' }
+            }
             steps {
                 sh '''
                     git config user.name "jenkins"
                     git config user.email "jenkins@stackwatch"
 
-                    TAG_NAME="${RELEASE_TYPE}-${FINAL_VERSION}"
+                    TAG_NAME="beta-${FINAL_VERSION}"
 
-                    git tag -a "${TAG_NAME}" -m "Release ${TAG_NAME} - ${RELEASE_TYPE} build"
+                    git tag -a "${TAG_NAME}" -m "Beta release ${TAG_NAME}"
                     git push origin "${TAG_NAME}" || echo "Tag push failed (may already exist)"
                 '''
             }
@@ -175,15 +265,29 @@ pipeline {
 
     post {
         success {
-            echo """
+            script {
+                if (params.RELEASE_TYPE == 'beta') {
+                    echo """
 ========================================
-BUILD SUCCESSFUL
+BETA BUILD SUCCESSFUL
 ========================================
-Version: ${FINAL_VERSION}
-Release Type: ${RELEASE_TYPE}
-Download URL: https://${ARTIFACT_SERVER}/stackwatch/build/${BUILD_YEAR}/${BUILD_MONTH}/${RELEASE_TYPE}/stackwatch-${RELEASE_TYPE}.tar.gz
+Version: ${env.FINAL_VERSION}
+Download: https://${env.ARTIFACT_SERVER}/stackwatch/build/${env.BUILD_YEAR}/${env.BUILD_MONTH}/beta/stackwatch-beta.tar.gz
+
+Next step: Test this beta, then run pipeline with 'latest' to promote
 ========================================
-            """
+                    """
+                } else {
+                    echo """
+========================================
+PROMOTION SUCCESSFUL
+========================================
+Beta has been promoted to Latest
+Download: https://${env.ARTIFACT_SERVER}/stackwatch/build/${env.BUILD_YEAR}/${env.BUILD_MONTH}/latest/stackwatch-latest.tar.gz
+========================================
+                    """
+                }
+            }
         }
         failure {
             echo "Pipeline FAILED - Check logs for details"
