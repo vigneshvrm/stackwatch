@@ -1,0 +1,180 @@
+---
+# STACKWATCH: Backup System Setup Playbook
+# Backend System Architect and Automation Engineer
+#
+# Purpose: Deploy backup scripts and configure automated cron jobs
+# Target: Ubuntu (localhost)
+# Run: ansible-playbook -i ../inventory/hosts setup-backups.yml --connection=local
+#
+# IMPORTANT: All configuration values are read from config/stackwatch.json
+
+- name: Setup StackWatch Backup System
+  hosts: localhost
+  become: yes
+  gather_facts: yes
+
+  vars:
+    # Path to Single Source of Truth configuration file
+    stackwatch_config_path: "{{ playbook_dir }}/../../config/stackwatch.json"
+    backup_scripts_src: "{{ playbook_dir }}/../../scripts"
+
+  tasks:
+    - name: Load StackWatch configuration from JSON
+      set_fact:
+        stackwatch_config: "{{ lookup('file', stackwatch_config_path) | from_json }}"
+
+    - name: Set backup variables from config
+      set_fact:
+        backup_dir: "{{ stackwatch_config.paths.backup_dir }}"
+        scripts_dir: "{{ stackwatch_config.paths.scripts_dir }}"
+        backup_retention_days: "{{ stackwatch_config.retention.backup_days }}"
+
+    - name: Display configuration being used
+      debug:
+        msg:
+          - "Backup Directory: {{ backup_dir }}"
+          - "Scripts Directory: {{ scripts_dir }}"
+          - "Backup Retention: {{ backup_retention_days }} days"
+
+    - name: Create StackWatch directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        mode: '0755'
+        owner: root
+        group: root
+      loop:
+        - "/opt/stackwatch"
+        - "{{ scripts_dir }}"
+        - "{{ backup_dir }}"
+        - "{{ backup_dir }}/prometheus"
+        - "{{ backup_dir }}/grafana"
+
+    - name: Copy stackwatch.json to deployment location
+      copy:
+        src: "{{ stackwatch_config_path }}"
+        dest: "/opt/stackwatch/config/stackwatch.json"
+        mode: '0644'
+        owner: root
+        group: root
+
+    - name: Create config directory in /opt/stackwatch
+      file:
+        path: "/opt/stackwatch/config"
+        state: directory
+        mode: '0755'
+        owner: root
+        group: root
+
+    - name: Copy Prometheus backup script
+      copy:
+        src: "{{ backup_scripts_src }}/backup-prometheus.sh"
+        dest: "{{ scripts_dir }}/backup-prometheus.sh"
+        mode: '0755'
+        owner: root
+        group: root
+
+    - name: Copy Grafana backup script
+      copy:
+        src: "{{ backup_scripts_src }}/backup-grafana.sh"
+        dest: "{{ scripts_dir }}/backup-grafana.sh"
+        mode: '0755'
+        owner: root
+        group: root
+
+    - name: Verify jq is installed (required for scripts)
+      command: which jq
+      register: jq_check
+      changed_when: false
+      failed_when: false
+
+    - name: Install jq if not present
+      apt:
+        name: jq
+        state: present
+      when: jq_check.rc != 0
+
+    - name: Create backup cron job file
+      copy:
+        dest: /etc/cron.d/stackwatch-backup
+        content: |
+          # StackWatch Automated Backups
+          # Managed by Ansible - Do not edit manually
+          #
+          # Prometheus: Daily at 2:00 AM
+          # Grafana: Daily at 3:00 AM
+          #
+          # Logs: /var/log/stackwatch-backup.log
+          # Retention: {{ backup_retention_days }} days
+
+          SHELL=/bin/bash
+          PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+
+          # Prometheus backup - 2:00 AM daily
+          0 2 * * * root {{ scripts_dir }}/backup-prometheus.sh >> /var/log/stackwatch-backup.log 2>&1
+
+          # Grafana backup - 3:00 AM daily
+          0 3 * * * root {{ scripts_dir }}/backup-grafana.sh >> /var/log/stackwatch-backup.log 2>&1
+        mode: '0644'
+        owner: root
+        group: root
+
+    - name: Create log file with proper permissions
+      file:
+        path: /var/log/stackwatch-backup.log
+        state: touch
+        mode: '0644'
+        owner: root
+        group: root
+
+    - name: Create logrotate configuration for backup logs
+      copy:
+        dest: /etc/logrotate.d/stackwatch-backup
+        content: |
+          /var/log/stackwatch-backup.log {
+              weekly
+              rotate 4
+              compress
+              delaycompress
+              missingok
+              notifempty
+              create 0644 root root
+          }
+        mode: '0644'
+        owner: root
+        group: root
+
+    - name: Test Prometheus backup script syntax
+      command: bash -n {{ scripts_dir }}/backup-prometheus.sh
+      register: prom_syntax
+      changed_when: false
+      failed_when: prom_syntax.rc != 0
+
+    - name: Test Grafana backup script syntax
+      command: bash -n {{ scripts_dir }}/backup-grafana.sh
+      register: graf_syntax
+      changed_when: false
+      failed_when: graf_syntax.rc != 0
+
+    - name: Display setup status
+      debug:
+        msg:
+          - "=========================================="
+          - "StackWatch Backup System Setup Complete"
+          - "=========================================="
+          - ""
+          - "Scripts installed:"
+          - "  - {{ scripts_dir }}/backup-prometheus.sh"
+          - "  - {{ scripts_dir }}/backup-grafana.sh"
+          - ""
+          - "Cron jobs configured:"
+          - "  - Prometheus: Daily at 2:00 AM"
+          - "  - Grafana: Daily at 3:00 AM"
+          - ""
+          - "Backup directory: {{ backup_dir }}"
+          - "Retention: {{ backup_retention_days }} days"
+          - "Log file: /var/log/stackwatch-backup.log"
+          - ""
+          - "To run backups manually:"
+          - "  {{ scripts_dir }}/backup-prometheus.sh"
+          - "  {{ scripts_dir }}/backup-grafana.sh"

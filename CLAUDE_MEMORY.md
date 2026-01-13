@@ -17,6 +17,65 @@ I am acting as your **Coder Expert & UI/UX Designer**. You (the user) have the i
 
 ---
 
+## Architecture Rules (CRITICAL - MUST FOLLOW)
+
+### Single Source of Truth - `config/stackwatch.json`
+
+**ALL configuration lives in ONE file**: `config/stackwatch.json`
+
+| Category | What's Stored |
+|----------|---------------|
+| versions | Prometheus, Grafana, Node Exporter, Windows Exporter |
+| images | Container image URLs |
+| resources | Memory, CPU limits for each service |
+| retention | Data retention days, storage limits, backup days |
+| paths | Data directories, backup directories |
+| ports | Service ports |
+
+**Rules:**
+- **Policy**: Manual updates only - you (user) control all changes
+- **NEVER hardcode values** in playbooks, scripts, Jenkinsfile, or frontend
+- **All consumers MUST read from this file**:
+  - Ansible playbooks (`deploy-prometheus.yml`, `deploy-grafana.yml`)
+  - Jenkins build
+  - Backup/upgrade scripts
+  - Frontend (if needed for display)
+
+**Why**: Single file = easy to maintain, no version drift, consistent deployments
+
+### Current Configuration (as of 2026-01-13)
+```json
+{
+  "versions": {
+    "prometheus": "v2.53.0",
+    "grafana": "11.2.0",
+    "node_exporter": "1.8.0",
+    "windows_exporter": "0.25.1"
+  },
+  "resources": {
+    "prometheus": { "memory": "4g", "cpus": "2" },
+    "grafana": { "memory": "2g", "cpus": "2" }
+  },
+  "retention": {
+    "prometheus_data_days": 90,
+    "prometheus_storage_limit": "50GB",
+    "backup_days": 7
+  }
+}
+```
+
+### Production Settings
+| Setting | Value | Purpose |
+|---------|-------|---------|
+| Prometheus retention | 90 days | Keep metrics for 3 months |
+| Storage limit | 50GB | Prevent disk overflow |
+| Prometheus memory | 4GB | Handle ~1000 samples/sec |
+| Grafana memory | 2GB | Multiple concurrent dashboards |
+| Backups | Daily at 2-3 AM | 7-day retention |
+| Image versions | Pinned | No `:latest` for stability |
+
+---
+
 ## Project: StackWatch
 
 ### What Is It?

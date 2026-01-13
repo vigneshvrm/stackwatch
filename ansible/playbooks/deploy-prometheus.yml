@@ -2,9 +2,12 @@
 # STACKWATCH: Prometheus Deployment Playbook
 # Backend System Architect and Automation Engineer
 #
-# Purpose: Deploy Prometheus container via Podman
+# Purpose: Deploy Prometheus container via Podman (Production-Grade)
 # Target: Ubuntu (localhost)
 # Run: ansible-playbook -i ../inventory/hosts deploy-prometheus.yml --connection=local
+#
+# IMPORTANT: All configuration values are read from config/stackwatch.json
+# Do NOT hardcode values in this playbook
 
 - name: Deploy StackWatch Prometheus
   hosts: localhost
@@ -12,14 +15,36 @@
   gather_facts: yes
 
   vars:
+    # Path to Single Source of Truth configuration file
+    stackwatch_config_path: "{{ playbook_dir }}/../../config/stackwatch.json"
     prometheus_container_name: "prometheus"
-    prometheus_image: "docker.io/prom/prometheus:latest"
-    prometheus_port: "9090"
-    prometheus_config_dir: "/etc/prometheus"
-    prometheus_data_dir: "/var/lib/prometheus/data"
-    prometheus_config_file: "{{ prometheus_config_dir }}/prometheus.yml"
 
   tasks:
+    - name: Load StackWatch configuration from JSON
+      set_fact:
+        stackwatch_config: "{{ lookup('file', stackwatch_config_path) | from_json }}"
+
+    - name: Set Prometheus variables from config
+      set_fact:
+        prometheus_version: "{{ stackwatch_config.versions.prometheus }}"
+        prometheus_image: "{{ stackwatch_config.images.prometheus }}:{{ stackwatch_config.versions.prometheus }}"
+        prometheus_port: "{{ stackwatch_config.ports.prometheus }}"
+        prometheus_memory: "{{ stackwatch_config.resources.prometheus.memory }}"
+        prometheus_cpus: "{{ stackwatch_config.resources.prometheus.cpus }}"
+        prometheus_config_dir: "{{ stackwatch_config.paths.prometheus_config }}"
+        prometheus_data_dir: "{{ stackwatch_config.paths.prometheus_data }}"
+        prometheus_retention_days: "{{ stackwatch_config.retention.prometheus_data_days }}"
+        prometheus_storage_limit: "{{ stackwatch_config.retention.prometheus_storage_limit }}"
+
+    - name: Display configuration being used
+      debug:
+        msg:
+          - "Prometheus Version: {{ prometheus_version }}"
+          - "Memory Limit: {{ prometheus_memory }}"
+          - "CPU Limit: {{ prometheus_cpus }}"
+          - "Data Retention: {{ prometheus_retention_days }} days"
+          - "Storage Limit: {{ prometheus_storage_limit }}"
+
     - name: Check if Podman is installed
       command: which podman
       register: podman_check
@@ -45,23 +70,24 @@
 
     - name: Check if Prometheus config file exists
       stat:
-        path: "{{ prometheus_config_file }}"
+        path: "{{ prometheus_config_dir }}/prometheus.yml"
       register: prometheus_config_stat
 
     - name: Backup existing Prometheus configuration
       copy:
-        src: "{{ prometheus_config_file }}"
-        dest: "{{ prometheus_config_file }}.backup.{{ ansible_date_time.epoch }}"
+        src: "{{ prometheus_config_dir }}/prometheus.yml"
+        dest: "{{ prometheus_config_dir }}/prometheus.yml.backup.{{ ansible_date_time.epoch }}"
         remote_src: yes
       when: prometheus_config_stat.stat.exists
       ignore_errors: yes
 
     - name: Create Prometheus configuration file
       copy:
-        dest: "{{ prometheus_config_file }}"
+        dest: "{{ prometheus_config_dir }}/prometheus.yml"
         content: |
           # STACKWATCH: Prometheus Configuration
           # Backend System Architect and Automation Engineer
+          # Version: {{ prometheus_version }}
 
           global:
             scrape_interval: 15s
@@ -118,17 +144,27 @@
       register: pull_result
       changed_when: "'Pulling' in pull_result.stdout or 'Downloading' in pull_result.stdout"
 
-    - name: Start Prometheus container
+    - name: Start Prometheus container (Production-Grade)
       command: >
         podman run -d
         --name {{ prometheus_container_name }}
+        --memory={{ prometheus_memory }}
+        --cpus={{ prometheus_cpus }}
+        --health-cmd='wget -q --spider http://localhost:9090/-/healthy || exit 1'
+        --health-interval=30s
+        --health-retries=3
         -v /etc/hosts:/etc/hosts:Z
         -v {{ prometheus_config_dir }}:/etc/prometheus:Z
+        -v {{ prometheus_data_dir }}:/prometheus:Z
         -p {{ prometheus_port }}:9090
         {{ prometheus_image }}
         --config.file=/etc/prometheus/prometheus.yml
         --web.external-url=/prometheus/
         --web.route-prefix=/
+        --storage.tsdb.retention.time={{ prometheus_retention_days }}d
+        --storage.tsdb.retention.size={{ prometheus_storage_limit }}
+        --storage.tsdb.path=/prometheus
+        --web.enable-lifecycle
       register: container_start
 
     - name: Wait for Prometheus to start
@@ -180,9 +216,20 @@
     - name: Display deployment status
       debug:
         msg:
-          - "Prometheus container: {{ prometheus_container_name }}"
-          - "Container running: {{ prometheus_container_name in running_containers.stdout }}"
-          - "Health check: {{ 'OK' if health_check.status == 200 else 'Failed' }}"
-          - "Access Prometheus: http://localhost:{{ prometheus_port }}"
-          - "Access via Nginx: http://$(hostname -I | awk '{print $1}')/prometheus"
-
+          - "=========================================="
+          - "Prometheus Production Deployment Complete"
+          - "=========================================="
+          - "Container: {{ prometheus_container_name }}"
+          - "Version: {{ prometheus_version }}"
+          - "Running: {{ prometheus_container_name in running_containers.stdout }}"
+          - "Health: {{ 'OK' if health_check.status == 200 else 'Failed' }}"
+          - ""
+          - "Production Settings:"
+          - "  Memory: {{ prometheus_memory }}"
+          - "  CPUs: {{ prometheus_cpus }}"
+          - "  Retention: {{ prometheus_retention_days }} days"
+          - "  Storage Limit: {{ prometheus_storage_limit }}"
+          - ""
+          - "Access:"
+          - "  Direct: http://localhost:{{ prometheus_port }}"
+          - "  Via Nginx: http://$(hostname -I | awk '{print $1}')/prometheus"

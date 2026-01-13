@@ -1,0 +1,42 @@
+{
+  "versions": {
+    "prometheus": "v2.53.0",
+    "grafana": "11.2.0",
+    "node_exporter": "1.8.0",
+    "windows_exporter": "0.25.1"
+  },
+  "images": {
+    "prometheus": "docker.io/prom/prometheus",
+    "grafana": "docker.io/grafana/grafana",
+    "node_exporter": "docker.io/prom/node-exporter"
+  },
+  "resources": {
+    "prometheus": {
+      "memory": "4g",
+      "cpus": "2"
+    },
+    "grafana": {
+      "memory": "2g",
+      "cpus": "2"
+    }
+  },
+  "retention": {
+    "prometheus_data_days": 90,
+    "prometheus_storage_limit": "50GB",
+    "backup_days": 7
+  },
+  "paths": {
+    "prometheus_data": "/var/lib/prometheus",
+    "grafana_data": "/var/lib/grafana",
+    "prometheus_config": "/etc/prometheus",
+    "grafana_config": "/etc/grafana",
+    "backup_dir": "/opt/stackwatch/backup",
+    "scripts_dir": "/opt/stackwatch/scripts"
+  },
+  "ports": {
+    "prometheus": 9090,
+    "grafana": 3000,
+    "node_exporter": 9100,
+    "windows_exporter": 9182
+  }
+}

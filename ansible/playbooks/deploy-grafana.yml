@@ -2,9 +2,12 @@
 # STACKWATCH: Grafana Deployment Playbook
 # Backend System Architect and Automation Engineer
 #
-# Purpose: Deploy Grafana container via Podman
+# Purpose: Deploy Grafana container via Podman (Production-Grade)
 # Target: Ubuntu (localhost)
 # Run: ansible-playbook -i ../inventory/hosts deploy-grafana.yml --connection=local
+#
+# IMPORTANT: All configuration values are read from config/stackwatch.json
+# Do NOT hardcode values in this playbook
 
 - name: Deploy StackWatch Grafana
   hosts: localhost
@@ -12,18 +15,41 @@
   gather_facts: yes
 
   vars:
+    # Path to Single Source of Truth configuration file
+    stackwatch_config_path: "{{ playbook_dir }}/../../config/stackwatch.json"
     grafana_container_name: "grafana"
-    grafana_image: "docker.io/grafana/grafana:latest"
-    grafana_port: "3000"
-    grafana_data_dir: "/var/lib/grafana"
-    grafana_config_dir: "/etc/grafana/config"
-    grafana_config_file: "{{ grafana_config_dir }}/grafana.ini"
-    grafana_provisioning_dir: "/etc/grafana/provisioning"
-    grafana_provisioning_dashboards: "{{ grafana_provisioning_dir }}/dashboards"
-    grafana_provisioning_datasources: "{{ grafana_provisioning_dir }}/datasources"
-    grafana_provisioning_alerting: "{{ grafana_provisioning_dir }}/alerting"
+    grafana_credentials_file: "/opt/stackwatch/.credentials"
 
   tasks:
+    - name: Load StackWatch configuration from JSON
+      set_fact:
+        stackwatch_config: "{{ lookup('file', stackwatch_config_path) | from_json }}"
+
+    - name: Set Grafana variables from config
+      set_fact:
+        grafana_version: "{{ stackwatch_config.versions.grafana }}"
+        grafana_image: "{{ stackwatch_config.images.grafana }}:{{ stackwatch_config.versions.grafana }}"
+        grafana_port: "{{ stackwatch_config.ports.grafana }}"
+        grafana_memory: "{{ stackwatch_config.resources.grafana.memory }}"
+        grafana_cpus: "{{ stackwatch_config.resources.grafana.cpus }}"
+        grafana_data_dir: "{{ stackwatch_config.paths.grafana_data }}"
+        grafana_config_dir: "{{ stackwatch_config.paths.grafana_config }}"
+
+    - name: Set derived paths
+      set_fact:
+        grafana_config_file: "{{ grafana_config_dir }}/config/grafana.ini"
+        grafana_provisioning_dir: "{{ grafana_config_dir }}/provisioning"
+        grafana_provisioning_dashboards: "{{ grafana_config_dir }}/provisioning/dashboards"
+        grafana_provisioning_datasources: "{{ grafana_config_dir }}/provisioning/datasources"
+        grafana_provisioning_alerting: "{{ grafana_config_dir }}/provisioning/alerting"
+
+    - name: Display configuration being used
+      debug:
+        msg:
+          - "Grafana Version: {{ grafana_version }}"
+          - "Memory Limit: {{ grafana_memory }}"
+          - "CPU Limit: {{ grafana_cpus }}"
+
     - name: Check if Podman is installed
       command: which podman
       register: podman_check
@@ -45,11 +71,11 @@
             ALL_IPS="${ALL_IPS}"$'\n'"${INTERFACE_IPS}"
           fi
         fi
-        
+
         # Filter and prioritize: public IPs first
         PUBLIC_IP=""
         PRIVATE_IP=""
-        
+
         while IFS= read -r ip; do
           [[ -z "$ip" ]] && continue
           if [[ "$ip" =~ ^10\. ]] || \
@@ -62,7 +88,7 @@
             [[ -z "$PUBLIC_IP" ]] && PUBLIC_IP="$ip"
           fi
         done <<< "$ALL_IPS"
-        
+
         # Prefer public IP, fallback to private IP
         if [[ -n "$PUBLIC_IP" ]]; then
           echo "$PUBLIC_IP"
@@ -85,6 +111,62 @@
         server_domain: "{{ lookup('env', 'GRAFANA_DOMAIN') | default(server_domain) }}"
       when: lookup('env', 'GRAFANA_DOMAIN') is defined
 
+    - name: Create StackWatch directory
+      file:
+        path: "/opt/stackwatch"
+        state: directory
+        mode: '0700'
+
+    - name: Check if credentials file exists
+      stat:
+        path: "{{ grafana_credentials_file }}"
+      register: credentials_stat
+
+    - name: Generate secure Grafana admin password
+      set_fact:
+        grafana_admin_password: "{{ lookup('password', '/dev/null length=24 chars=ascii_letters,digits') }}"
+      when: not credentials_stat.stat.exists
+      no_log: true
+
+    - name: Generate secure Grafana secret key
+      set_fact:
+        grafana_secret_key: "{{ lookup('password', '/dev/null length=32 chars=ascii_letters,digits') }}"
+      when: not credentials_stat.stat.exists
+      no_log: true
+
+    - name: Store credentials securely (first deployment)
+      copy:
+        content: |
+          # StackWatch Grafana Credentials
+          # Generated: {{ ansible_date_time.iso8601 }}
+          # KEEP THIS FILE SECURE - DO NOT SHARE
+          GRAFANA_ADMIN_PASSWORD={{ grafana_admin_password }}
+          GRAFANA_SECRET_KEY={{ grafana_secret_key }}
+        dest: "{{ grafana_credentials_file }}"
+        mode: '0600'
+        owner: root
+        group: root
+      when: not credentials_stat.stat.exists
+      no_log: true
+
+    - name: Load existing credentials
+      shell: |
+        source {{ grafana_credentials_file }}
+        echo "${GRAFANA_ADMIN_PASSWORD}|${GRAFANA_SECRET_KEY}"
+      args:
+        executable: /bin/bash
+      register: existing_credentials
+      when: credentials_stat.stat.exists
+      changed_when: false
+      no_log: true
+
+    - name: Set credentials from existing file
+      set_fact:
+        grafana_admin_password: "{{ existing_credentials.stdout.split('|')[0] }}"
+        grafana_secret_key: "{{ existing_credentials.stdout.split('|')[1] }}"
+      when: credentials_stat.stat.exists
+      no_log: true
+
     - name: Create Grafana directories
       file:
         path: "{{ item }}"
@@ -92,7 +174,7 @@
         mode: '0755'
       loop:
         - "{{ grafana_data_dir }}"
-        - "{{ grafana_config_dir }}"
+        - "{{ grafana_config_dir }}/config"
         - "{{ grafana_provisioning_dashboards }}"
         - "{{ grafana_provisioning_datasources }}"
         - "{{ grafana_provisioning_alerting }}"
@@ -106,7 +188,6 @@
       loop:
         - "{{ grafana_config_dir }}"
         - "{{ grafana_data_dir }}"
-        - "{{ grafana_provisioning_dir }}"
       ignore_errors: yes
 
     - name: Check if Grafana config file exists
@@ -128,6 +209,7 @@
         content: |
           # STACKWATCH: Grafana Configuration
           # Backend System Architect and Automation Engineer
+          # Version: {{ grafana_version }}
 
           [server]
           http_port = 3000
@@ -145,11 +227,13 @@
           [security]
           admin_user = admin
           cookie_samesite = lax
-          admin_password = admin
-          secret_key = CHANGE_THIS_SECRET_KEY_IN_PRODUCTION
+          # Password and secret_key set via environment variables for security
 
           [users]
           allow_sign_up = false
+
+          [auth.anonymous]
+          enabled = false
 
           [log]
           mode = console
@@ -177,10 +261,15 @@
       register: pull_result
       changed_when: "'Pulling' in pull_result.stdout or 'Downloading' in pull_result.stdout"
 
-    - name: Start Grafana container
+    - name: Start Grafana container (Production-Grade)
       command: >
         podman run -d
         --name {{ grafana_container_name }}
+        --memory={{ grafana_memory }}
+        --cpus={{ grafana_cpus }}
+        --health-cmd='wget -q --spider http://localhost:3000/api/health || exit 1'
+        --health-interval=30s
+        --health-retries=3
         --dns 8.8.8.8
         --dns 1.1.1.1
         -p {{ grafana_port }}:3000
@@ -190,8 +279,11 @@
         -v {{ grafana_provisioning_alerting }}:/etc/grafana/provisioning/alerting:Z
         -v {{ grafana_provisioning_datasources }}:/etc/grafana/provisioning/datasources:Z
         -v {{ grafana_provisioning_dashboards }}:/etc/grafana/provisioning/dashboards:Z
+        -e GF_SECURITY_ADMIN_PASSWORD={{ grafana_admin_password }}
+        -e GF_SECURITY_SECRET_KEY={{ grafana_secret_key }}
         {{ grafana_image }}
       register: container_start
+      no_log: true
 
     - name: Wait for Grafana to start
       wait_for:
@@ -242,11 +334,25 @@
     - name: Display deployment status
       debug:
         msg:
-          - "Grafana container: {{ grafana_container_name }}"
-          - "Container running: {{ grafana_container_name in running_containers.stdout }}"
-          - "Health check: {{ 'OK' if health_check.status == 200 else 'Failed' }}"
-          - "Grafana domain: {{ server_domain }}"
-          - "Access Grafana: http://localhost:{{ grafana_port }}"
-          - "Access via Nginx: http://{{ server_domain }}/grafana"
-          - "Default credentials: admin/admin - CHANGE IN PRODUCTION!"
-
+          - "========================================"
+          - "Grafana Production Deployment Complete"
+          - "========================================"
+          - "Container: {{ grafana_container_name }}"
+          - "Version: {{ grafana_version }}"
+          - "Running: {{ grafana_container_name in running_containers.stdout }}"
+          - "Health: {{ 'OK' if health_check.status == 200 else 'Failed' }}"
+          - ""
+          - "Production Settings:"
+          - "  Memory: {{ grafana_memory }}"
+          - "  CPUs: {{ grafana_cpus }}"
+          - "  Database: SQLite"
+          - ""
+          - "Access:"
+          - "  Direct: http://localhost:{{ grafana_port }}"
+          - "  Via Nginx: http://{{ server_domain }}/grafana"
+          - ""
+          - "Credentials:"
+          - "  Username: admin"
+          - "  Password: See {{ grafana_credentials_file }}"
+          - ""
+          - "IMPORTANT: Keep {{ grafana_credentials_file }} secure!"
