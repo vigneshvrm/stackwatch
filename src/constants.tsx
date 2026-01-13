@@ -1,7 +1,8 @@
 import { ServiceConfig, ArchitectureMeta } from './types';
+import packageJson from '../package.json';
 
 export const APP_METADATA: ArchitectureMeta = {
-  version: '1.0.0',
+  version: packageJson.version,
   buildDate: new Date().toISOString().split('T')[0],
   environment: 'production',
 };

@@ -5,7 +5,7 @@ import Sidebar from './components/Sidebar';
 import ServiceCard from './components/ServiceCard';
 import HelpPage from './components/HelpPage';
 import ThemeToggle from './components/ThemeToggle';
-import { SERVICES } from './constants';
+import { SERVICES, APP_METADATA } from './constants';
 
 const DashboardHeader: React.FC<{ onMenuClick: () => void }> = ({ onMenuClick }) => {
   return (
@@ -89,7 +89,7 @@ const Dashboard: React.FC = () => {
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 text-sm text-slate-500 dark:text-slate-400">
                 <p>&copy; {new Date().getFullYear()} StackWatch. All rights reserved.</p>
                 <div className="flex items-center space-x-4">
-                  <span className="font-mono text-xs">v1.0.0</span>
+                  <span className="font-mono text-xs">v{APP_METADATA.version}</span>
                   <span>|</span>
                   <span>Secure Routing via Nginx</span>
                 </div>
