@@ -177,19 +177,43 @@ The project uses Jenkins for CI/CD with three release channels:
 
 | Release Type | Description |
 |--------------|-------------|
-| `beta` | Build from source, deploy to beta folder |
-| `latest` | Promote current beta to latest (no rebuild) |
+| `beta` | Build from source, deploy to beta folder (versioned) |
+| `latest` | Promote selected beta to latest (no rebuild) |
 | `archive` | Previous latest versions (auto-archived for rollback) |
+
+### Pipeline Parameters
+
+| Parameter | Description |
+|-----------|-------------|
+| `RELEASE_TYPE` | `beta` or `latest` |
+| `BETA_VERSION_TO_PROMOTE` | For `latest`: specific version to promote (e.g., `1.0.0-20260113-143022`) |
+| `LIST_AVAILABLE_BETAS` | List all available beta versions without promoting |
+
+### Workflow
+
+1. **Build Beta**: Run with `RELEASE_TYPE=beta`
+   - Builds from source and creates versioned package
+   - Multiple beta versions are kept (last 5)
+   - Outputs specific version string for promotion
+
+2. **List Betas**: Run with `RELEASE_TYPE=latest` and `LIST_AVAILABLE_BETAS=true`
+   - Shows all available beta versions with status
+
+3. **Promote to Latest**: Run with `RELEASE_TYPE=latest` and `BETA_VERSION_TO_PROMOTE=<version>`
+   - Promotes specific beta version to latest
+   - Archives current latest for rollback
+   - Marks beta as "promoted"
 
 ### Build URLs
 
 | Channel | URL |
 |---------|-----|
-| Beta | `https://artifact.stackwatch.io/stackwatch/build/YYYY/MM/beta/stackwatch-beta.tar.gz` |
+| Beta (specific) | `https://artifact.stackwatch.io/stackwatch/build/YYYY/MM/beta/stackwatch-<version>.tar.gz` |
+| Beta (latest) | `https://artifact.stackwatch.io/stackwatch/build/YYYY/MM/beta/stackwatch-beta.tar.gz` |
 | Latest | `https://artifact.stackwatch.io/stackwatch/build/YYYY/MM/latest/stackwatch-latest.tar.gz` |
 | Archive | `https://artifact.stackwatch.io/stackwatch/build/YYYY/MM/archive/stackwatch-<version>.tar.gz` |
 
-**Note:** When promoting beta to latest, the previous latest version is automatically archived for rollback purposes.
+**Note:** Multiple beta builds can run concurrently - each creates a uniquely versioned package. Only the specific version you select gets promoted to latest.
 
 ## Production Settings
 
