@@ -221,7 +221,7 @@ copy_ansible() {
 # Copy client deployment README if exists
 copy_client_readme() {
     local readme_file="${PROJECT_ROOT}/CLIENT_DEPLOYMENT.md"
-    
+
     if [[ -f "${readme_file}" ]]; then
         log_info "Copying client deployment README..."
         cp "${readme_file}" "${PACKAGE_DIR}/" || {
@@ -230,6 +230,21 @@ copy_client_readme() {
     else
         log_warn "CLIENT_DEPLOYMENT.md not found (will be created in package)"
     fi
+}
+
+# Create metadata.json with version info
+create_metadata() {
+    log_info "Creating metadata.json..."
+
+    local build_date=$(date +%Y%m%d-%H%M%S)
+    local build_year=$(date +%Y)
+    local build_month=$(date +%m)
+
+    cat > "${PACKAGE_DIR}/metadata.json" << EOF
+{"version": "${VERSION}", "release_type": "beta", "build_date": "${build_date}", "year": "${build_year}", "month": "${build_month}"}
+EOF
+
+    log_info "  ✓ Created: metadata.json (version: ${VERSION})"
 }
 
 # Create tar.gz package
@@ -307,7 +322,8 @@ main() {
     copy_scripts
     copy_ansible
     copy_client_readme
-    
+    create_metadata
+
     # Create tarball
     create_tarball
     
