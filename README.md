@@ -182,8 +182,13 @@ The project uses Jenkins for CI/CD with two release types:
 
 ### Build URLs
 
-- Beta: `https://artifact.stackwatch.io/stackwatch/build/YYYY/MM/beta/stackwatch-beta.tar.gz`
-- Latest: `https://artifact.stackwatch.io/stackwatch/build/YYYY/MM/latest/stackwatch-latest.tar.gz`
+| Channel | URL |
+|---------|-----|
+| Beta | `https://artifact.stackwatch.io/stackwatch/build/YYYY/MM/beta/stackwatch-beta.tar.gz` |
+| Latest | `https://artifact.stackwatch.io/stackwatch/build/YYYY/MM/latest/stackwatch-latest.tar.gz` |
+| Archive | `https://artifact.stackwatch.io/stackwatch/build/YYYY/MM/archive/stackwatch-<version>.tar.gz` |
+
+**Note:** When promoting beta to latest, the previous latest version is automatically archived for rollback purposes.
 
 ## Production Settings
 
