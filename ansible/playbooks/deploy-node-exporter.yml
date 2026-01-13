@@ -7,6 +7,7 @@
 # - Linux servers only
 # - Backward compatible
 # - Based on working example from stackwatch-lab
+# - Reads configuration from config/stackwatch.json (Single Source of Truth)
 
 - name: Install Secure Node Exporter on Linux
   hosts: linux_servers
@@ -17,20 +18,20 @@
   any_errors_fatal: false
 
   vars:
+    # Path to Single Source of Truth configuration file
+    stackwatch_config_path: "{{ playbook_dir }}/../../config/stackwatch.json"
+
     # These will be set from the frontend/CLI via extra_vars
     # Default values (can be overridden by extra_vars which have higher precedence)
     target_os: 'auto'
-    node_exporter_port: '9100'
     prometheus_auto_configure: false
     # Option to configure firewall (default: true)
     configure_firewall: true
-    
-    node_exporter_version: "1.10.2"
+
     node_exporter_user: "node_exporter"
     node_exporter_group: "node_exporter"
-    node_exporter_listen_address: "0.0.0.0:{{ node_exporter_port }}"
     node_exporter_binary: "/usr/local/bin/node_exporter"
-    
+
     # Architecture mapping
     linux_arch_map:
       x86_64: amd64
@@ -39,6 +40,23 @@
       armv6l: armv6
 
   tasks:
+    - name: Load StackWatch configuration from JSON
+      set_fact:
+        stackwatch_config: "{{ lookup('file', stackwatch_config_path) | from_json }}"
+      delegate_to: localhost
+      run_once: true
+
+    - name: Set variables from config (with fallback defaults)
+      set_fact:
+        node_exporter_port: "{{ stackwatch_config.ports.node_exporter | default('9100') }}"
+        node_exporter_version: "{{ stackwatch_config.versions.node_exporter | default('1.10.2') }}"
+        node_exporter_listen_address: "0.0.0.0:{{ stackwatch_config.ports.node_exporter | default('9100') }}"
+
+    - name: Display configuration being used
+      debug:
+        msg:
+          - "Node Exporter Version: {{ node_exporter_version }}"
+          - "Node Exporter Port: {{ node_exporter_port }}"
     - name: Detect Linux distribution
       debug:
         msg:

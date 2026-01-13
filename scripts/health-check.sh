@@ -7,6 +7,7 @@
 # - Read-only health validation
 # - Does NOT modify services
 # - Backward compatible
+# - Reads ALL configuration from config/stackwatch.json (Single Source of Truth)
 
 set -euo pipefail
 
@@ -36,16 +37,54 @@ log_error() {
 }
 
 log_success() {
-    echo -e "${GREEN}[✓]${NC} $1"
+    echo -e "${GREEN}[OK]${NC} $1"
     ((HEALTHY++))
 }
+
+# =============================================================================
+# CONFIGURATION FROM SINGLE SOURCE OF TRUTH
+# =============================================================================
+
+# Script directory and config file path
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CONFIG_FILE="${SCRIPT_DIR}/../config/stackwatch.json"
+
+# Check if jq is available and config file exists
+load_config() {
+    if [[ ! -f "$CONFIG_FILE" ]]; then
+        return 1
+    fi
+
+    if ! command -v jq &> /dev/null; then
+        return 1
+    fi
+
+    return 0
+}
+
+# Load configuration from stackwatch.json or use fallback defaults
+if load_config; then
+    # Ports
+    PROMETHEUS_PORT=$(jq -r '.ports.prometheus' "$CONFIG_FILE")
+    GRAFANA_PORT=$(jq -r '.ports.grafana' "$CONFIG_FILE")
+    NODE_EXPORTER_PORT=$(jq -r '.ports.node_exporter' "$CONFIG_FILE")
+else
+    # Fallback defaults (for backward compatibility)
+    PROMETHEUS_PORT="9090"
+    GRAFANA_PORT="3000"
+    NODE_EXPORTER_PORT="9100"
+fi
+
+# =============================================================================
+# FUNCTIONS
+# =============================================================================
 
 # Check service health
 check_service() {
     local name=$1
     local url=$2
     local expected_status=${3:-200}
-    
+
     if curl -s -f -o /dev/null -w "%{http_code}" --max-time 5 "${url}" | grep -q "${expected_status}"; then
         log_success "${name}: OK"
         return 0
@@ -58,7 +97,7 @@ check_service() {
 # Check container status
 check_container() {
     local name=$1
-    
+
     if podman ps --format "{{.Names}}" | grep -q "^${name}$"; then
         log_success "${name} container: Running"
         return 0
@@ -73,9 +112,10 @@ main() {
     echo "=========================================="
     echo "StackWatch Health Check Report"
     echo "Date: $(date)"
+    echo "Configuration: config/stackwatch.json"
     echo "=========================================="
     echo ""
-    
+
     # Check Nginx
     log_info "Checking Nginx..."
     if systemctl is-active --quiet nginx; then
@@ -83,29 +123,29 @@ main() {
     else
         log_error "Nginx service: Not running"
     fi
-    
+
     # Check StackWatch Frontend
     log_info "Checking StackWatch Frontend..."
     check_service "StackWatch Frontend" "http://localhost/" "200" || true
-    
+
     # Check Prometheus
     log_info "Checking Prometheus..."
     check_container "prometheus"
-    check_service "Prometheus Health" "http://localhost:9090/-/healthy" "200" || true
+    check_service "Prometheus Health" "http://localhost:${PROMETHEUS_PORT}/-/healthy" "200" || true
     check_service "Prometheus via Nginx" "http://localhost/prometheus/-/healthy" "200" || true
-    
+
     # Check Grafana
     log_info "Checking Grafana..."
     check_container "grafana"
-    check_service "Grafana Health" "http://localhost:3000/api/health" "200" || true
+    check_service "Grafana Health" "http://localhost:${GRAFANA_PORT}/api/health" "200" || true
     check_service "Grafana via Nginx" "http://localhost/grafana/api/health" "200" || true
-    
+
     # Check Node Exporter (if accessible)
     log_info "Checking Node Exporter targets..."
     if command -v ansible &> /dev/null; then
         log_info "Node Exporter targets should be checked via Prometheus /api/v1/targets"
     fi
-    
+
     # Summary
     echo ""
     echo "=========================================="
@@ -115,7 +155,12 @@ main() {
     echo "Unhealthy: ${UNHEALTHY}"
     echo "Warnings: ${WARNINGS}"
     echo ""
-    
+    echo "Ports Configuration:"
+    echo "  Prometheus: ${PROMETHEUS_PORT}"
+    echo "  Grafana: ${GRAFANA_PORT}"
+    echo "  Node Exporter: ${NODE_EXPORTER_PORT}"
+    echo ""
+
     if [[ ${UNHEALTHY} -eq 0 ]]; then
         log_info "Overall Status: HEALTHY"
         exit 0
@@ -126,4 +171,3 @@ main() {
 }
 
 main "$@"
-

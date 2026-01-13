@@ -6,6 +6,10 @@
 # Purpose: Deploys StackWatch from /opt/stackwatch installation
 #          Copies frontend to /var/www/stackwatch/dist/ and runs deployment
 #
+# CRITICAL RULES:
+# - Reads ALL configuration from config/stackwatch.json (Single Source of Truth)
+# - Backward compatible with fallback defaults
+#
 # Usage: sudo /opt/stackwatch/scripts/deploy-from-opt.sh
 
 set -euo pipefail
@@ -16,14 +20,55 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-# Configuration
-INSTALL_DIR="/opt/stackwatch"
-WEB_ROOT="/var/www/stackwatch/dist"
+# =============================================================================
+# CONFIGURATION FROM SINGLE SOURCE OF TRUTH
+# =============================================================================
+
+# Script directory and config file path
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CONFIG_FILE="${SCRIPT_DIR}/../config/stackwatch.json"
+
+# Check if jq is available and config file exists
+load_config() {
+    if [[ ! -f "$CONFIG_FILE" ]]; then
+        return 1
+    fi
+
+    if ! command -v jq &> /dev/null; then
+        return 1
+    fi
+
+    return 0
+}
+
+# Load configuration from stackwatch.json or use fallback defaults
+if load_config; then
+    # Paths
+    INSTALL_DIR=$(jq -r '.paths.install_dir' "$CONFIG_FILE")
+    WEB_ROOT=$(jq -r '.paths.web_root' "$CONFIG_FILE")
+    LOG_DIR=$(jq -r '.paths.log_dir' "$CONFIG_FILE")
+
+    # Ports (for display in summary)
+    PROMETHEUS_PORT=$(jq -r '.ports.prometheus' "$CONFIG_FILE")
+    GRAFANA_PORT=$(jq -r '.ports.grafana' "$CONFIG_FILE")
+    NODE_EXPORTER_PORT=$(jq -r '.ports.node_exporter' "$CONFIG_FILE")
+    WINDOWS_EXPORTER_PORT=$(jq -r '.ports.windows_exporter' "$CONFIG_FILE")
+else
+    # Fallback defaults (for backward compatibility)
+    INSTALL_DIR="/opt/stackwatch"
+    WEB_ROOT="/var/www/stackwatch/dist"
+    LOG_DIR="/var/log/stackwatch"
+    PROMETHEUS_PORT="9090"
+    GRAFANA_PORT="3000"
+    NODE_EXPORTER_PORT="9100"
+    WINDOWS_EXPORTER_PORT="9182"
+fi
+
+# Derived paths (based on INSTALL_DIR)
 FRONTEND_SOURCE="${INSTALL_DIR}/dist"
 SCRIPTS_DIR="${INSTALL_DIR}/scripts"
 ANSIBLE_DIR="${INSTALL_DIR}/ansible"
 ANSIBLE_INVENTORY="${ANSIBLE_DIR}/inventory/hosts"
-LOG_DIR="/var/log/stackwatch"
 LOG_FILE="${LOG_DIR}/deploy.log"
 
 # Deployment mode detection
@@ -405,8 +450,8 @@ main() {
         log_info "      powershell -ExecutionPolicy Bypass -File C:\\tmp\\deploy-windows-exporter.ps1"
         log_info ""
         log_info "4. Verify Monitoring Agents:"
-        log_info "   - Node Exporter: http://<linux-server>:9100/metrics"
-        log_info "   - Windows Exporter: http://<windows-server>:9100/metrics"
+        log_info "   - Node Exporter: http://<linux-server>:${NODE_EXPORTER_PORT}/metrics"
+        log_info "   - Windows Exporter: http://<windows-server>:${WINDOWS_EXPORTER_PORT}/metrics"
         log_info ""
         log_info "5. Configure Prometheus:"
         log_info "   Add monitoring targets to your Prometheus configuration"

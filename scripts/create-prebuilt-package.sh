@@ -92,15 +92,16 @@ validate_directories() {
 # Create package structure
 create_package_structure() {
     log_info "Creating package structure..."
-    
+
     # Create temporary directory
     mkdir -p "${PACKAGE_DIR}"
-    
+
     # Create subdirectories
     mkdir -p "${PACKAGE_DIR}/dist"
     mkdir -p "${PACKAGE_DIR}/scripts"
     mkdir -p "${PACKAGE_DIR}/ansible"
-    
+    mkdir -p "${PACKAGE_DIR}/config"
+
     log_info "Package structure created"
 }
 
@@ -222,6 +223,26 @@ copy_ansible() {
     log_info "Ansible files copied: ${copied_count} playbooks + inventory"
 }
 
+# Copy config directory (Single Source of Truth)
+copy_config() {
+    log_info "Copying configuration files..."
+
+    local source_dir="${PROJECT_ROOT}/config"
+    local dest_dir="${PACKAGE_DIR}/config"
+
+    if [[ -f "${source_dir}/stackwatch.json" ]]; then
+        cp "${source_dir}/stackwatch.json" "${dest_dir}/" || {
+            log_error "Failed to copy stackwatch.json"
+            exit 1
+        }
+        log_info "  ✓ Copied: config/stackwatch.json (Single Source of Truth)"
+    else
+        log_warn "  ⚠ config/stackwatch.json not found (skipping)"
+    fi
+
+    log_info "Configuration files copied"
+}
+
 # Copy client deployment README if exists
 copy_client_readme() {
     local readme_file="${PROJECT_ROOT}/CLIENT_DEPLOYMENT.md"
@@ -283,6 +304,8 @@ display_package_info() {
     log_info ""
     log_info "Package Contents (CLIENT MONITORING TOOLS ONLY):"
     log_info "  - Frontend build (dist/)"
+    log_info "  - Configuration (config/):"
+    log_info "      * stackwatch.json (Single Source of Truth)"
     log_info "  - Client deployment scripts (scripts/):"
     log_info "      * deploy-from-opt.sh (client mode)"
     log_info "      * health-check.sh"
@@ -325,6 +348,7 @@ main() {
     copy_frontend
     copy_scripts
     copy_ansible
+    copy_config
     copy_client_readme
     create_metadata
 

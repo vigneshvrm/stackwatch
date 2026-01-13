@@ -4,14 +4,27 @@
 # Simple HTTP server wrapper around health-check.sh
 # Returns JSON status for /api/health endpoint
 #
+# CRITICAL RULES:
+# - Reads port from config/stackwatch.json (Single Source of Truth)
+# - Falls back to default port 8888 if config unavailable
+#
 # Usage: ./health-api.sh [port]
-# Default port: 8888
+# Default port: 8888 (or from config)
 
 set -euo pipefail
 
-PORT=${1:-8888}
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CONFIG_FILE="${SCRIPT_DIR}/../config/stackwatch.json"
 HEALTH_CHECK_SCRIPT="${SCRIPT_DIR}/health-check.sh"
+
+# Load port from config if available
+DEFAULT_PORT="8888"
+if [[ -f "$CONFIG_FILE" ]] && command -v jq &> /dev/null; then
+    DEFAULT_PORT=$(jq -r '.ports.health_api // "8888"' "$CONFIG_FILE")
+fi
+
+# Allow command line override
+PORT=${1:-$DEFAULT_PORT}
 
 # Check if health-check.sh exists
 if [[ ! -f "${HEALTH_CHECK_SCRIPT}" ]]; then

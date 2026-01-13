@@ -5,6 +5,9 @@
 # Purpose: Deploy and configure Nginx for StackWatch
 # Target: Ubuntu (localhost)
 # Run: ansible-playbook -i ../inventory/hosts deploy-nginx.yml --connection=local
+#
+# IMPORTANT: All configuration values are read from config/stackwatch.json
+# Do NOT hardcode values in this playbook
 
 - name: Deploy StackWatch Nginx Configuration
   hosts: localhost
@@ -12,15 +15,38 @@
   gather_facts: yes
 
   vars:
-    nginx_config: "/etc/nginx/sites-available/stackwatch"
-    nginx_enabled: "/etc/nginx/sites-enabled/stackwatch"
-    web_root: "/var/www/stackwatch/dist"
+    # Path to Single Source of Truth configuration file
+    stackwatch_config_path: "{{ playbook_dir }}/../../config/stackwatch.json"
     frontend_sources:
       - "/opt/stackwatch/dist"
       - "{{ playbook_dir }}/../../dist"
       - "{{ playbook_dir }}/../../prebuilt/dist"
 
   tasks:
+    - name: Load StackWatch configuration from JSON
+      set_fact:
+        stackwatch_config: "{{ lookup('file', stackwatch_config_path) | from_json }}"
+
+    - name: Set variables from config
+      set_fact:
+        nginx_config: "{{ stackwatch_config.paths.nginx_config }}"
+        nginx_enabled: "{{ stackwatch_config.paths.nginx_enabled }}"
+        web_root: "{{ stackwatch_config.paths.web_root }}"
+        prometheus_port: "{{ stackwatch_config.ports.prometheus }}"
+        grafana_port: "{{ stackwatch_config.ports.grafana }}"
+        health_api_port: "{{ stackwatch_config.ports.health_api }}"
+        http_port: "{{ stackwatch_config.ports.http }}"
+        proxy_connect_timeout: "{{ stackwatch_config.nginx.proxy_connect_timeout }}"
+        proxy_read_timeout: "{{ stackwatch_config.nginx.proxy_read_timeout }}"
+
+    - name: Display configuration being used
+      debug:
+        msg:
+          - "Nginx Config: {{ nginx_config }}"
+          - "Web Root: {{ web_root }}"
+          - "Prometheus Port: {{ prometheus_port }}"
+          - "Grafana Port: {{ grafana_port }}"
+          - "Health API Port: {{ health_api_port }}"
     - name: Check if Nginx is installed
       command: which nginx
       register: nginx_check
@@ -58,12 +84,13 @@
         content: |
           # STACKWATCH: Nginx Configuration
           # Backend System Architect and Automation Engineer
-          # 
+          # Generated from: config/stackwatch.json (Single Source of Truth)
+          #
           # CRITICAL: Serves frontend UI - does NOT modify frontend code
           # Backward compatible routing
 
           server {
-              listen 80;
+              listen {{ http_port }};
               server_name _;
               root {{ web_root }};
               index index.html;
@@ -75,36 +102,36 @@
 
               # Health API endpoint (proxy to health-api.sh service)
               location /api/health {
-                  proxy_pass http://127.0.0.1:8888/api/health;
+                  proxy_pass http://127.0.0.1:{{ health_api_port }}/api/health;
                   proxy_set_header Host $host;
                   proxy_set_header X-Real-IP $remote_addr;
                   proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
                   proxy_set_header X-Forwarded-Proto $scheme;
-                  proxy_connect_timeout 5s;
-                  proxy_read_timeout 10s;
+                  proxy_connect_timeout {{ proxy_connect_timeout }};
+                  proxy_read_timeout {{ proxy_read_timeout }};
               }
 
               # Route to Prometheus (backend service)
               location /prometheus/ {
-                  proxy_pass http://localhost:9090/;
+                  proxy_pass http://localhost:{{ prometheus_port }}/;
                   proxy_set_header Host $host;
                   proxy_set_header X-Real-IP $remote_addr;
                   proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
                   proxy_set_header X-Forwarded-Proto $scheme;
                   proxy_set_header X-Forwarded-Host $host;
                   proxy_set_header X-Forwarded-Port $server_port;
-                  
+
                   # WebSocket support (if needed)
                   proxy_http_version 1.1;
                   proxy_set_header Upgrade $http_upgrade;
                   proxy_set_header Connection "upgrade";
-                  
+
                   # Rewrite redirects to include /prometheus prefix
-                  proxy_redirect http://localhost:9090/ /prometheus/;
-                  proxy_redirect http://$host:9090/ /prometheus/;
+                  proxy_redirect http://localhost:{{ prometheus_port }}/ /prometheus/;
+                  proxy_redirect http://$host:{{ prometheus_port }}/ /prometheus/;
                   proxy_redirect default;
               }
-              
+
               # Handle Prometheus API endpoints without trailing slash
               location /prometheus {
                   return 301 /prometheus/;
@@ -114,18 +141,18 @@
               # CRITICAL: Use 127.0.0.1 (not localhost) and NO trailing slash in proxy_pass
               # root_url in Grafana must be hardcoded with NO trailing slash
               location /grafana/ {
-                  proxy_pass http://127.0.0.1:3000;
+                  proxy_pass http://127.0.0.1:{{ grafana_port }};
                   proxy_set_header Host $host;
                   proxy_set_header X-Real-IP $remote_addr;
                   proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
                   proxy_set_header X-Forwarded-Proto $scheme;
-                  
+
                   # WebSocket support (if needed)
                   proxy_http_version 1.1;
                   proxy_set_header Upgrade $http_upgrade;
                   proxy_set_header Connection "upgrade";
               }
-              
+
               # Handle Grafana without trailing slash
               location /grafana {
                   return 301 /grafana/;

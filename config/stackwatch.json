@@ -27,16 +27,48 @@
   },
   "paths": {
     "prometheus_data": "/var/lib/prometheus",
-    "grafana_data": "/var/lib/grafana",
     "prometheus_config": "/etc/prometheus",
+    "grafana_data": "/var/lib/grafana",
     "grafana_config": "/etc/grafana",
+    "grafana_provisioning": "/etc/grafana/provisioning",
+    "nginx_config": "/etc/nginx/sites-available/stackwatch",
+    "nginx_enabled": "/etc/nginx/sites-enabled/stackwatch",
+    "web_root": "/var/www/stackwatch/dist",
+    "install_dir": "/opt/stackwatch",
     "backup_dir": "/opt/stackwatch/backup",
-    "scripts_dir": "/opt/stackwatch/scripts"
+    "scripts_dir": "/opt/stackwatch/scripts",
+    "log_dir": "/var/log/stackwatch"
   },
   "ports": {
     "prometheus": 9090,
     "grafana": 3000,
     "node_exporter": 9100,
-    "windows_exporter": 9182
+    "windows_exporter": 9182,
+    "health_api": 8888,
+    "http": 80,
+    "https": 443
+  },
+  "prometheus": {
+    "scrape_interval": "15s",
+    "evaluation_interval": "15s"
+  },
+  "grafana": {
+    "admin_user": "admin",
+    "database_type": "sqlite3",
+    "database_path": "/var/lib/grafana/data/grafana.db",
+    "uid": 472
+  },
+  "health_check": {
+    "interval": "30s",
+    "retries": 3,
+    "timeout": 60
+  },
+  "dns": {
+    "primary": "8.8.8.8",
+    "secondary": "1.1.1.1"
+  },
+  "nginx": {
+    "proxy_connect_timeout": "5s",
+    "proxy_read_timeout": "10s"
   }
 }
