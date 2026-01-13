@@ -158,9 +158,9 @@ copy_scripts() {
     log_info "Client scripts copied: ${copied_count} files"
 }
 
-# Copy ansible directory (CLIENT PLAYBOOKS ONLY)
+# Copy ansible directory (ALL PLAYBOOKS for full infrastructure deployment)
 copy_ansible() {
-    log_info "Copying client ansible playbooks..."
+    log_info "Copying ansible playbooks and configuration..."
 
     local source_dir="${PROJECT_ROOT}/ansible"
     local dest_dir="${PACKAGE_DIR}/ansible"
@@ -194,14 +194,18 @@ copy_ansible() {
         log_info "  ✓ Copied: inventory/ directory"
     fi
 
-    # Define client-side playbooks to include (monitoring agents only)
-    local client_playbooks=(
+    # Copy ALL playbooks (infrastructure + monitoring agents)
+    local all_playbooks=(
+        "configure-firewall.yml"
+        "deploy-nginx.yml"
+        "deploy-prometheus.yml"
+        "deploy-grafana.yml"
         "deploy-node-exporter.yml"
     )
 
-    # Copy only client playbooks
+    # Copy all playbooks
     local copied_count=0
-    for playbook in "${client_playbooks[@]}"; do
+    for playbook in "${all_playbooks[@]}"; do
         local source_file="${source_dir}/playbooks/${playbook}"
         if [[ -f "${source_file}" ]]; then
             cp "${source_file}" "${dest_dir}/playbooks/" || {
@@ -215,7 +219,7 @@ copy_ansible() {
         fi
     done
 
-    log_info "Client ansible files copied: ${copied_count} playbooks + inventory"
+    log_info "Ansible files copied: ${copied_count} playbooks + inventory"
 }
 
 # Copy client deployment README if exists
