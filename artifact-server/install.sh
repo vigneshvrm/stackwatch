@@ -86,13 +86,14 @@ show_help() {
 }
 
 # Parse arguments
-VERSION="${DEFAULT_VERSION}"
+# Note: Using STACKWATCH_VERSION to avoid conflict with VERSION from /etc/os-release
+STACKWATCH_VERSION="${DEFAULT_VERSION}"
 INSTALL_DIR="${DEFAULT_INSTALL_DIR}"
 
 while [[ $# -gt 0 ]]; do
     case $1 in
         --version)
-            VERSION="$2"
+            STACKWATCH_VERSION="$2"
             shift 2
             ;;
         --install-dir)
@@ -201,7 +202,7 @@ download_package() {
     if [[ "${http_code}" != "200" ]] || [[ ! -s "${output_file}" ]]; then
         log_error "Failed to download package (HTTP ${http_code})"
 
-        if [[ "${VERSION}" != "latest" ]] && [[ "${VERSION}" != "beta" ]]; then
+        if [[ "${STACKWATCH_VERSION}" != "latest" ]] && [[ "${STACKWATCH_VERSION}" != "beta" ]]; then
             log_info "Checking available versions in archive..."
             echo ""
             local current_year=$(date +%Y)
@@ -322,7 +323,7 @@ main() {
     print_banner
 
     log_info "StackWatch Installer v1.0"
-    log_info "Version to install: ${VERSION}"
+    log_info "Version to install: ${STACKWATCH_VERSION}"
     log_info "Install directory: ${INSTALL_DIR}"
     echo ""
 
@@ -335,7 +336,7 @@ main() {
 
     # Get download URL
     local download_url
-    download_url=$(get_download_url "${VERSION}")
+    download_url=$(get_download_url "${STACKWATCH_VERSION}")
 
     # Download package
     local archive_file="${TEMP_DIR}/stackwatch.tar.gz"
