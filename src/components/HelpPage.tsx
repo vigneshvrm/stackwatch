@@ -337,25 +337,7 @@ For additional support, please contact your system administrator.
 
             {/* Markdown Content */}
             {!docLoading && markdownContent && (
-              <article className="prose prose-slate dark:prose-invert max-w-none
-                prose-headings:font-bold prose-headings:text-slate-900 dark:prose-headings:text-white
-                prose-h1:text-3xl prose-h1:sm:text-4xl prose-h1:mb-6 prose-h1:pb-4 prose-h1:border-b prose-h1:border-slate-200 dark:prose-h1:border-slate-700
-                prose-h2:text-2xl prose-h2:mt-10 prose-h2:mb-4 prose-h2:pb-2 prose-h2:border-b prose-h2:border-slate-200/50 dark:prose-h2:border-slate-700/50
-                prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3
-                prose-p:text-slate-600 dark:prose-p:text-slate-300 prose-p:leading-relaxed
-                prose-a:text-blue-600 dark:prose-a:text-blue-400 prose-a:no-underline hover:prose-a:underline
-                prose-strong:text-slate-900 dark:prose-strong:text-white
-                prose-code:text-blue-600 dark:prose-code:text-blue-400 prose-code:bg-slate-100 dark:prose-code:bg-slate-800 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-md prose-code:text-sm prose-code:before:content-[''] prose-code:after:content-['']
-                prose-pre:bg-slate-900 dark:prose-pre:bg-slate-950 prose-pre:border prose-pre:border-slate-700/50 prose-pre:rounded-xl
-                prose-img:rounded-xl prose-img:shadow-lg
-                prose-ul:my-4 prose-ol:my-4
-                prose-li:text-slate-600 dark:prose-li:text-slate-300
-                prose-table:w-full prose-table:my-6 prose-table:border-collapse
-                prose-th:bg-slate-100 dark:prose-th:bg-slate-800 prose-th:p-3 prose-th:text-left prose-th:text-sm prose-th:font-semibold prose-th:border prose-th:border-slate-200 dark:prose-th:border-slate-700
-                prose-td:p-3 prose-td:text-sm prose-td:border prose-td:border-slate-200 dark:prose-td:border-slate-700
-                prose-blockquote:border-l-4 prose-blockquote:border-blue-500 prose-blockquote:bg-blue-500/5 prose-blockquote:py-2 prose-blockquote:px-4 prose-blockquote:rounded-r-xl prose-blockquote:not-italic
-                prose-hr:border-slate-200 dark:prose-hr:border-slate-700
-              ">
+              <article className="markdown-content">
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
                   {markdownContent}
                 </ReactMarkdown>

@@ -19,7 +19,9 @@
       "Bash(wsl -d Ubuntu -e bash -c \"cd /mnt/c/stackbill/Course/Node-red/vibe-code/stackwatch && git push origin main\")",
       "Bash(wsl:*)",
       "Bash(git commit -m \"$\\(cat <<''EOF''\nAdd one-liner installer for StackWatch\n\n- Create install.sh for curl | bash installation \\(like Helm\\)\n- Support --version flag for beta/latest/specific versions\n- Support --install-dir flag for custom installation path\n- Update nginx config to serve install.sh with text/plain content type\n- Update download page with Quick Install section\n- Update setup script to deploy install.sh to artifact server\n\nUsage: curl -fsSL https://artifact.stackwatch.io/install.sh | sudo bash\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
-      "Bash(git commit -m \"$\\(cat <<''EOF''\nFix release workflow: beta builds from source, latest promotes beta\n\n- beta: Builds fresh from source code, deploys to /beta/ folder\n- latest: Promotes current beta to /latest/ \\(no rebuild, just copy\\)\n- Archives old latest to /archive/ before promotion\n- Fails if no beta exists when trying to promote\n\nProper workflow:\n1. Run pipeline with ''beta'' to build and test\n2. Run pipeline with ''latest'' to promote tested beta\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nFix release workflow: beta builds from source, latest promotes beta\n\n- beta: Builds fresh from source code, deploys to /beta/ folder\n- latest: Promotes current beta to /latest/ \\(no rebuild, just copy\\)\n- Archives old latest to /archive/ before promotion\n- Fails if no beta exists when trying to promote\n\nProper workflow:\n1. Run pipeline with ''beta'' to build and test\n2. Run pipeline with ''latest'' to promote tested beta\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git commit:*)",
+      "Bash(xargs:*)"
     ]
   }
 }

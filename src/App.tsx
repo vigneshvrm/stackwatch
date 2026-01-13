@@ -2,9 +2,6 @@ import React, { useState } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from './contexts/ThemeContext';
 import Sidebar from './components/Sidebar';
-import QuickStats from './components/QuickStats';
-import ServerStatusGrid from './components/ServerStatusGrid';
-import RecentAlerts from './components/RecentAlerts';
 import ServiceCard from './components/ServiceCard';
 import HelpPage from './components/HelpPage';
 import ThemeToggle from './components/ThemeToggle';
@@ -25,30 +22,11 @@ const DashboardHeader: React.FC<{ onMenuClick: () => void }> = ({ onMenuClick })
             </svg>
           </button>
 
-          {/* Search */}
-          <div className="flex-1 max-w-xl mx-4 hidden sm:block">
-            <div className="relative">
-              <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-              <input
-                type="text"
-                placeholder="Search servers, metrics, alerts..."
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-100/80 dark:bg-slate-800/50 border border-slate-200/50 dark:border-slate-700/50 text-slate-900 dark:text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all"
-              />
-            </div>
-          </div>
+          {/* Spacer for centering */}
+          <div className="flex-1" />
 
           {/* Right side */}
           <div className="flex items-center space-x-3">
-            {/* Notifications */}
-            <button className="relative p-2 rounded-xl text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-              </svg>
-              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-            </button>
-
             <ThemeToggle />
 
             {/* Profile */}
@@ -85,46 +63,21 @@ const Dashboard: React.FC = () => {
 
           <div className="relative px-4 sm:px-6 lg:px-8 py-8 space-y-8">
             {/* Welcome Section */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">
-                  Welcome back
-                </h1>
-                <p className="text-slate-500 dark:text-slate-400 mt-1">
-                  Here's what's happening with your infrastructure today.
-                </p>
-              </div>
-              <div className="flex items-center space-x-2">
-                <span className="text-sm text-slate-500 dark:text-slate-400">Last updated:</span>
-                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Just now</span>
-                <button className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-all">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                  </svg>
-                </button>
-              </div>
+            <div className="text-center max-w-2xl mx-auto">
+              <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white mb-3">
+                Welcome to StackWatch
+              </h1>
+              <p className="text-slate-500 dark:text-slate-400 text-lg">
+                Your centralized observability gateway for monitoring infrastructure
+              </p>
             </div>
 
-            {/* Quick Stats */}
-            <QuickStats />
-
-            {/* Main Grid */}
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-              {/* Server Status - Takes 2 columns */}
-              <div className="xl:col-span-2">
-                <ServerStatusGrid />
-              </div>
-
-              {/* Recent Alerts */}
-              <div className="xl:col-span-1">
-                <RecentAlerts />
-              </div>
-            </div>
-
-            {/* Quick Access Services */}
-            <div>
-              <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Quick Access</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {/* Services Grid */}
+            <div className="max-w-4xl mx-auto">
+              <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4 text-center">
+                Quick Access
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {SERVICES.map((service) => (
                   <ServiceCard key={service.id} service={service} />
                 ))}
@@ -132,7 +85,7 @@ const Dashboard: React.FC = () => {
             </div>
 
             {/* Footer */}
-            <footer className="pt-8 border-t border-slate-200/50 dark:border-slate-700/50">
+            <footer className="pt-8 border-t border-slate-200/50 dark:border-slate-700/50 max-w-4xl mx-auto w-full">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 text-sm text-slate-500 dark:text-slate-400">
                 <p>&copy; {new Date().getFullYear()} StackWatch. All rights reserved.</p>
                 <div className="flex items-center space-x-4">
