@@ -166,16 +166,21 @@ get_download_url() {
     local version="$1"
     local download_url=""
 
+    # Get current year and month for the path
+    local current_year=$(date +%Y)
+    local current_month=$(date +%m)
+    local base_path="${ARTIFACT_URL}/stackwatch/build/${current_year}/${current_month}"
+
     case "${version}" in
         latest)
-            download_url="${ARTIFACT_URL}/latest/stackwatch-latest.tar.gz"
+            download_url="${base_path}/latest/stackwatch-latest.tar.gz"
             ;;
         beta)
-            download_url="${ARTIFACT_URL}/beta/stackwatch-beta.tar.gz"
+            download_url="${base_path}/beta/stackwatch-beta.tar.gz"
             ;;
         *)
             # Specific version - check in archive
-            download_url="${ARTIFACT_URL}/archive/stackwatch-${version}.tar.gz"
+            download_url="${base_path}/archive/stackwatch-${version}.tar.gz"
             ;;
     esac
 
@@ -199,8 +204,11 @@ download_package() {
         if [[ "${VERSION}" != "latest" ]] && [[ "${VERSION}" != "beta" ]]; then
             log_info "Checking available versions in archive..."
             echo ""
+            local current_year=$(date +%Y)
+            local current_month=$(date +%m)
+            local archive_url="${ARTIFACT_URL}/stackwatch/build/${current_year}/${current_month}/archive/"
             log_info "Try one of these versions:"
-            curl -fsSL "${ARTIFACT_URL}/archive/" 2>/dev/null | grep -oP 'stackwatch-\K[0-9]+\.[0-9]+\.[0-9]+(?=\.tar\.gz)' | sort -V | tail -10 || true
+            curl -fsSL "${archive_url}" 2>/dev/null | grep -oP 'stackwatch-\K[0-9.-]+(?=\.tar\.gz)' | sort -V | tail -10 || true
         fi
         exit 1
     fi
