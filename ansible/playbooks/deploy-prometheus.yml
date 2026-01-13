@@ -68,6 +68,14 @@
         state: directory
         mode: '0755'
 
+    - name: Set Prometheus data directory ownership (UID 65534 - nobody)
+      file:
+        path: "{{ prometheus_data_dir }}"
+        owner: "65534"
+        group: "65534"
+        recurse: yes
+      ignore_errors: yes
+
     - name: Check if Prometheus config file exists
       stat:
         path: "{{ prometheus_config_dir }}/prometheus.yml"
