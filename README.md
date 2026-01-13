@@ -173,12 +173,13 @@ powershell -ExecutionPolicy Bypass -File scripts/deploy-windows-exporter.ps1
 
 ## CI/CD Pipeline
 
-The project uses Jenkins for CI/CD with two release types:
+The project uses Jenkins for CI/CD with three release channels:
 
 | Release Type | Description |
 |--------------|-------------|
 | `beta` | Build from source, deploy to beta folder |
 | `latest` | Promote current beta to latest (no rebuild) |
+| `archive` | Previous latest versions (auto-archived for rollback) |
 
 ### Build URLs
 
@@ -236,5 +237,5 @@ Proprietary - StackWatch
 1. Fork the repository
 2. Create your feature branch
 3. Commit your changes
-4. Push to the branch
+4. Push to the branchArchive
 5. Create a Pull Request
